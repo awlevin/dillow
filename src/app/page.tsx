@@ -173,11 +173,12 @@ export default function Home() {
   const [t, setT] = useState(0.5); // slider position in the current [lo, hi] range
   const [exactMode, setExactMode] = useState(false);
   const [exact, setExact] = useState("");
-  const [editingName, setEditingName] = useState(false);
+  const [editingName, setEditingName] = useState(true);
   const [showMap, setShowMap] = useState(false);
   const [streak, setStreak] = useState(0);
   const [statsVersion, setStatsVersion] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -186,7 +187,9 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
-        setName(localStorage.getItem("dillow:name") ?? "");
+        const savedName = localStorage.getItem("dillow:name") ?? "";
+        setName(savedName);
+        if (savedName) setEditingName(false); // returning player → show "Playing as X"
         setStreak(loadStreak());
         const res = await fetch("/api/daily");
         if (!res.ok) throw new Error("load failed");
@@ -363,10 +366,9 @@ export default function Home() {
               {!done && clue.lat != null && clue.lon != null && (
                 <button
                   onClick={() => setShowMap((v) => !v)}
-                  aria-label={showMap ? "Hide location" : "Show location"}
-                  className="font-medium text-emerald-700 hover:underline"
+                  className="ml-auto font-medium text-emerald-700 hover:underline"
                 >
-                  📍<span className="hidden sm:inline"> {showMap ? "Hide" : "Location"}</span>
+                  📍 {showMap ? "Hide" : "Map"}
                 </button>
               )}
             </div>
@@ -405,31 +407,45 @@ export default function Home() {
             {!done ? (
               <div className="mt-1 flex flex-col gap-3">
                 {rows.length === 0 &&
-                  (name.trim() && !editingName ? (
+                  (editingName ? (
+                    <input
+                      ref={nameInputRef}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onBlur={() => {
+                        const t = name.trim();
+                        if (t) {
+                          localStorage.setItem("dillow:name", t);
+                          setEditingName(false);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const t = name.trim();
+                          if (t) {
+                            localStorage.setItem("dillow:name", t);
+                            setEditingName(false);
+                            e.currentTarget.blur();
+                          }
+                        }
+                      }}
+                      placeholder="Your name (to join the leaderboard)"
+                      maxLength={24}
+                      className="rounded-lg border border-stone-300 px-3 py-2 text-center text-sm outline-none focus:border-emerald-500"
+                    />
+                  ) : (
                     <p className="text-center text-sm text-stone-500">
-                      Playing as <span className="font-semibold text-stone-700">{name.trim()}</span>{" "}
-                      ·{" "}
+                      Playing as <span className="font-semibold text-stone-700">{name.trim()}</span> ·{" "}
                       <button
-                        onClick={() => setEditingName(true)}
+                        onClick={() => {
+                          setEditingName(true);
+                          setTimeout(() => nameInputRef.current?.focus(), 0);
+                        }}
                         className="font-medium text-emerald-700 hover:underline"
                       >
                         change
                       </button>
                     </p>
-                  ) : (
-                    <input
-                      value={name}
-                      autoFocus={editingName}
-                      onChange={(e) => {
-                        setName(e.target.value);
-                        localStorage.setItem("dillow:name", e.target.value.trim());
-                      }}
-                      onBlur={() => name.trim() && setEditingName(false)}
-                      onKeyDown={(e) => e.key === "Enter" && name.trim() && setEditingName(false)}
-                      placeholder="Your name (to join the leaderboard)"
-                      maxLength={24}
-                      className="rounded-lg border border-stone-300 px-3 py-2 text-center text-sm outline-none focus:border-emerald-500"
-                    />
                   ))}
 
                 {/* Over/under slider */}
