@@ -1,0 +1,5 @@
+# Never upload local secrets or build artifacts to Vercel.
+.env*.local
+.next
+node_modules
+RESEARCH.md
