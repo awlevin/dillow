@@ -661,16 +661,17 @@ function RevealCard({ reveal, rows, shareText }: { reveal: Reveal; rows: Row[]; 
 
       <button
         onClick={async () => {
-          const url = window.location.href;
+          const text = `${shareText}\n${window.location.href}`;
           if (typeof navigator !== "undefined" && navigator.share) {
             try {
-              await navigator.share({ title: "Dillow", text: shareText, url });
+              await navigator.share({ text });
               return;
-            } catch {
-              return; // user cancelled the share sheet
+            } catch (e) {
+              if ((e as { name?: string }).name === "AbortError") return; // user cancelled
+              // otherwise fall through to clipboard (e.g. desktop with no share target)
             }
           }
-          navigator.clipboard?.writeText(`${shareText}\n${url}`);
+          navigator.clipboard?.writeText(text);
           setCopied(true);
           setTimeout(() => setCopied(false), 1500);
         }}
