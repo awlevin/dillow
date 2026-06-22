@@ -32,6 +32,15 @@ body {
   animation: reveal 0.35s ease-out;
 }
 
+/* Hide scrollbar on the swipeable photo carousel */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Bigger, touch-friendly price slider */
 input[type="range"] {
   -webkit-appearance: none;

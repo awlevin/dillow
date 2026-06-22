@@ -67,10 +67,12 @@ export const MAX_ATTEMPTS = 5;
 export const WIN_THRESHOLD = 0.05; // land within 5% to win
 
 export type Direction = "higher" | "lower" | "match";
-export type Band = "🟩" | "🟨" | "🟧" | "🟥" | "⬛";
+export type Band = "✅" | "🟩" | "🟨" | "🟧" | "🟥";
 
 // Feedback for a single guess that does NOT reveal the price: which way to move
 // and how warm you are. `higher` means the true price is above your guess.
+// Bands escalate from bad → nailed it: 🟥 red, 🟧 orange, 🟨 yellow, 🟩 green,
+// ✅ within the win threshold.
 export function feedback(guess: number, actual: number): {
   direction: Direction;
   band: Band;
@@ -79,8 +81,15 @@ export function feedback(guess: number, actual: number): {
   const absPct = Math.abs(guess - actual) / actual;
   const within = absPct <= WIN_THRESHOLD;
   const direction: Direction = within ? "match" : guess < actual ? "higher" : "lower";
-  const band: Band =
-    absPct <= 0.05 ? "🟩" : absPct <= 0.12 ? "🟨" : absPct <= 0.25 ? "🟧" : absPct <= 0.5 ? "🟥" : "⬛";
+  const band: Band = within
+    ? "✅"
+    : absPct <= 0.12
+      ? "🟩"
+      : absPct <= 0.25
+        ? "🟨"
+        : absPct <= 0.45
+          ? "🟧"
+          : "🟥";
   return { direction, band, within };
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { PropertyMap } from "./PropertyMap";
 import { rdcpixLoader, rdcpixThumb, rdcpixResize } from "@/lib/rdcpix";
@@ -71,6 +71,41 @@ function getId(): string {
   return id;
 }
 
+const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+
+// Streak = consecutive days finished. Active only if the last play was today or
+// yesterday; otherwise it has lapsed and reads as 0.
+function loadStreak(): number {
+  try {
+    const raw = localStorage.getItem("dillow:streak");
+    if (!raw) return 0;
+    const { count, lastDate } = JSON.parse(raw);
+    const today = isoDay(new Date());
+    const yest = isoDay(new Date(Date.now() - 86_400_000));
+    return lastDate === today || lastDate === yest ? count : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function recordPlay(): number {
+  const today = isoDay(new Date());
+  const yest = isoDay(new Date(Date.now() - 86_400_000));
+  let count = 1;
+  try {
+    const raw = localStorage.getItem("dillow:streak");
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (s.lastDate === today) return s.count; // already counted today
+      if (s.lastDate === yest) count = s.count + 1;
+    }
+  } catch {
+    /* start fresh */
+  }
+  localStorage.setItem("dillow:streak", JSON.stringify({ count, lastDate: today }));
+  return count;
+}
+
 export default function Home() {
   const [date, setDate] = useState("");
   const [clue, setClue] = useState<Clue | null>(null);
@@ -84,6 +119,8 @@ export default function Home() {
   const [exact, setExact] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -93,6 +130,7 @@ export default function Home() {
     (async () => {
       try {
         setName(localStorage.getItem("dillow:name") ?? "");
+        setStreak(loadStreak());
         const res = await fetch("/api/daily");
         if (!res.ok) throw new Error("load failed");
         const data = await res.json();
@@ -157,7 +195,10 @@ export default function Home() {
       setHi(nHi);
       setT(0.5);
       setExact("");
-      if (newReveal) setReveal(newReveal);
+      if (newReveal) {
+        setReveal(newReveal);
+        setStreak(recordPlay());
+      }
       localStorage.setItem(
         `dillow:game:${date}`,
         JSON.stringify({ rows: newRows, lo: nLo, hi: nHi, reveal: newReveal }),
@@ -176,7 +217,7 @@ export default function Home() {
     const head = won
       ? `Dillow ${date} — ${rows.length}/${MAX_ATTEMPTS} 🎯`
       : `Dillow ${date} — X/${MAX_ATTEMPTS}`;
-    return `${head}\n${grid}\n${reveal.result.finalScore} pts · play → `;
+    return `${head}\n${grid}\n${reveal.result.finalScore} pts`;
   }, [reveal, rows, date]);
 
   return (
@@ -195,26 +236,46 @@ export default function Home() {
 
       {clue && (
         <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
-          <div className="relative aspect-[3/2] bg-stone-100">
-            <Image
-              key={clue.photos[photoIdx]}
-              src={clue.photos[photoIdx]}
-              alt="Property"
-              fill
-              sizes="(max-width: 640px) 100vw, 576px"
-              loader={rdcpixLoader}
-              placeholder="blur"
-              blurDataURL={rdcpixThumb(clue.photos[photoIdx])}
-              className="object-cover"
-            />
+          <div className="relative bg-stone-100">
+            <div
+              ref={carouselRef}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                const i = Math.round(el.scrollLeft / el.clientWidth);
+                if (i !== photoIdx) setPhotoIdx(i);
+              }}
+              className="no-scrollbar flex aspect-[3/2] snap-x snap-mandatory overflow-x-auto"
+            >
+              {clue.photos.map((src, i) => (
+                <div key={src} className="relative h-full w-full shrink-0 snap-center">
+                  <Image
+                    src={src}
+                    alt={`Photo ${i + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 576px"
+                    loader={rdcpixLoader}
+                    placeholder="blur"
+                    blurDataURL={rdcpixThumb(src)}
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
             {clue.photos.length > 1 && (
-              <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+              <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
                 {clue.photos.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => setPhotoIdx(i)}
+                    onClick={() =>
+                      carouselRef.current?.scrollTo({
+                        left: i * carouselRef.current.clientWidth,
+                        behavior: "smooth",
+                      })
+                    }
                     aria-label={`Photo ${i + 1}`}
-                    className={`h-2 w-2 rounded-full ${i === photoIdx ? "bg-white" : "bg-white/50"}`}
+                    className={`pointer-events-auto h-2 w-2 rounded-full transition ${
+                      i === photoIdx ? "bg-white" : "bg-white/50"
+                    }`}
                   />
                 ))}
               </div>
@@ -262,7 +323,7 @@ export default function Home() {
                     <span className="font-semibold text-stone-700">{usd(r.guess)}</span>
                     <span className="flex items-center gap-2 text-stone-500">
                       {r.direction === "match"
-                        ? "Within 5% 🎯"
+                        ? "Nailed it"
                         : r.direction === "higher"
                           ? "Higher ↑"
                           : "Lower ↓"}
@@ -389,8 +450,13 @@ export default function Home() {
 
       <Yesterday />
 
-      <footer className="text-center text-xs text-stone-400">
-        Real listings from across the US via realtor.com.
+      <footer className="flex flex-col items-center gap-1 text-center">
+        {streak > 0 && (
+          <p className="text-sm font-bold text-orange-600">
+            🔥 {streak}-day streak{streak >= 3 ? " — on fire!" : ""}
+          </p>
+        )}
+        <p className="text-xs text-stone-400">Real listings from across the US via realtor.com.</p>
       </footer>
     </main>
   );
@@ -445,8 +511,17 @@ function RevealCard({ reveal, rows, shareText }: { reveal: Reveal; rows: Row[]; 
       )}
 
       <button
-        onClick={() => {
-          navigator.clipboard?.writeText(shareText + window.location.href);
+        onClick={async () => {
+          const url = window.location.href;
+          if (typeof navigator !== "undefined" && navigator.share) {
+            try {
+              await navigator.share({ title: "Dillow", text: shareText, url });
+              return;
+            } catch {
+              return; // user cancelled the share sheet
+            }
+          }
+          navigator.clipboard?.writeText(`${shareText}\n${url}`);
           setCopied(true);
           setTimeout(() => setCopied(false), 1500);
         }}
