@@ -86,6 +86,21 @@ export async function dayCount(date: string): Promise<number> {
   return redis.zcard(setKey(date));
 }
 
+// ── Gallery cache ────────────────────────────────────────────────────────────
+// Full photo galleries fetched at runtime (admin/cron) live in Redis, since
+// Vercel's filesystem is read-only and can't update the committed snapshot.
+const galleryKey = (id: string) => `gallery:${id}`;
+
+export async function getGallery(id: string): Promise<string[] | null> {
+  if (!redis) return null;
+  return (await redis.get<string[]>(galleryKey(id))) ?? null;
+}
+
+export async function saveGallery(id: string, photos: string[]): Promise<void> {
+  if (!redis || !photos.length) return;
+  await redis.set(galleryKey(id), photos); // persist
+}
+
 // ── Admin: rotate the property of the day ────────────────────────────────────
 // A per-day offset shifts the deterministic daily pick for everyone.
 const offsetKey = (date: string) => `offset:${date}`;

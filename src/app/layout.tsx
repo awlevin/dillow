@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 const DESCRIPTION =
-  "Wordle for real estate — guess a real US home's price in 5 tries. New listing every day.";
+  "A new US home every day — study the photos and stats, then guess its price in 5 tries. Higher or lower until you nail it.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dillow.vercel.app"),

@@ -24,7 +24,7 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  async function call(action: "verify" | "rotate") {
+  async function call(action: "verify" | "rotate" | "enrich") {
     setBusy(true);
     setError(null);
     setMsg(null);
@@ -40,6 +40,8 @@ export default function Admin() {
       setCurrent(data.current);
       if (action === "rotate") {
         setMsg(`Rotated — now showing ${data.current.city}, ${data.current.state}.`);
+      } else if (action === "enrich") {
+        setMsg(`${data.current.photos} photos now loaded for ${data.current.city}.`);
       }
     } catch (e) {
       setError((e as Error).message);
@@ -104,9 +106,18 @@ export default function Admin() {
           >
             {busy ? "Rotating…" : "🔄 Rotate property of the day"}
           </button>
+          <button
+            onClick={() => call("enrich")}
+            disabled={busy}
+            className="rounded-lg border border-emerald-600 px-5 py-2.5 font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-50"
+          >
+            {busy ? "…" : "🖼️ Load more photos for this property"}
+          </button>
           <p className="text-xs text-stone-400">
-            Rotating swaps today&apos;s home for everyone and resets today&apos;s leaderboard +
-            in-progress games. Press again to keep cycling through the pool.
+            Rotating swaps today&apos;s home for everyone (and auto-loads its full photo gallery),
+            resetting today&apos;s leaderboard + in-progress games. &ldquo;Load more photos&rdquo;
+            fetches the full gallery for the current property without rotating. Each costs one
+            realtor16 request.
           </p>
           {msg && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{msg}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}

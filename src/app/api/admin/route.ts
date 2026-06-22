@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { dayKey, getDailyProperty } from "@/lib/game";
 import type { Property } from "@/lib/types";
+import { fetchDetails } from "@/lib/providers/realtor16";
 import {
   getDailyOffset,
   bumpDailyOffset,
   clearDailyState,
+  getGallery,
+  saveGallery,
   leaderboardEnabled,
 } from "@/lib/leaderboard";
 
@@ -13,7 +16,7 @@ export const dynamic = "force-dynamic";
 // Set ADMIN_PASSWORD to override; defaults to the value Aaron chose.
 const PASSWORD = process.env.ADMIN_PASSWORD ?? "8228";
 
-function summary(p: Property) {
+function summary(p: Property, photos: string[]) {
   return {
     city: p.city,
     state: p.state,
@@ -21,9 +24,28 @@ function summary(p: Property) {
     beds: p.beds,
     baths: p.baths,
     sqft: p.sqft,
-    photos: p.photos.length,
-    photo: p.photos[0] ?? null,
+    photos: photos.length,
+    photo: photos[0] ?? null,
   };
+}
+
+// Effective photos = the cached runtime gallery if richer, else snapshot photos.
+async function effectivePhotos(p: Property): Promise<string[]> {
+  const g = await getGallery(p.id);
+  return g && g.length > p.photos.length ? g : p.photos;
+}
+
+// Fetch + cache a full gallery (1 realtor16 request). No-op if already rich or
+// quota is exhausted (fetchDetails returns null on a non-OK response).
+async function enrich(p: Property): Promise<string[]> {
+  const current = await effectivePhotos(p);
+  if (current.length > 3) return current; // already rich
+  const det = await fetchDetails(p.id);
+  if (det && det.photos.length > current.length) {
+    await saveGallery(p.id, det.photos);
+    return det.photos;
+  }
+  return current;
 }
 
 export async function POST(req: Request) {
@@ -42,7 +64,13 @@ export async function POST(req: Request) {
 
   if (body.action === "verify") {
     const property = getDailyProperty(date, await getDailyOffset(date));
-    return NextResponse.json({ ok: true, current: summary(property) });
+    return NextResponse.json({ ok: true, current: summary(property, await effectivePhotos(property)) });
+  }
+
+  if (body.action === "enrich") {
+    const property = getDailyProperty(date, await getDailyOffset(date));
+    const photos = await enrich(property);
+    return NextResponse.json({ ok: true, current: summary(property, photos) });
   }
 
   if (body.action === "rotate") {
@@ -52,7 +80,8 @@ export async function POST(req: Request) {
     const offset = await bumpDailyOffset(date);
     const cleared = await clearDailyState(date);
     const property = getDailyProperty(date, offset);
-    return NextResponse.json({ ok: true, rotated: true, offset, cleared, current: summary(property) });
+    const photos = await enrich(property); // give the new property a full gallery
+    return NextResponse.json({ ok: true, rotated: true, offset, cleared, current: summary(property, photos) });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
