@@ -94,6 +94,58 @@ async function fetchOne(location: string, key: string): Promise<Property[]> {
   return extractResults(json).map(normalize).filter((p): p is Property => p !== null);
 }
 
+// Full photo gallery (interiors) + year_built for one listing. ONE request each,
+// so callers should use it sparingly (e.g. only for upcoming featured listings).
+export async function fetchDetails(
+  propertyId: string,
+): Promise<{ photos: string[]; yearBuilt: number | null } | null> {
+  const key = process.env.REALTOR_16_RAPID_API_KEY ?? process.env.REALTOR_16_API_KEY;
+  if (!key) throw new Error("REALTOR_16_RAPID_API_KEY is not set");
+
+  const url = new URL(`https://${HOST}/property/details`);
+  url.searchParams.set("property_id", propertyId);
+  const res = await fetch(url, {
+    headers: { "x-rapidapi-host": HOST, "x-rapidapi-key": key },
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+
+  const node = findPhotoNode(await res.json());
+  if (!node) return null;
+  const photos = [
+    ...new Set(
+      (node.photos ?? [])
+        .map((p) => p?.href)
+        .filter((h): h is string => Boolean(h))
+        .map(hiRes),
+    ),
+  ];
+  const yb = node.description?.year_built;
+  return { photos: photos.slice(0, 8), yearBuilt: typeof yb === "number" ? yb : null };
+}
+
+// Find the nested object that holds a non-empty photos array.
+function findPhotoNode(
+  o: unknown,
+): { photos?: Array<{ href?: string }>; description?: { year_built?: number } } | null {
+  if (Array.isArray(o)) {
+    for (const x of o) {
+      const r = findPhotoNode(x);
+      if (r) return r;
+    }
+  } else if (o && typeof o === "object") {
+    const obj = o as Record<string, unknown>;
+    if (Array.isArray(obj.photos) && obj.photos.length) {
+      return obj as { photos?: Array<{ href?: string }>; description?: { year_built?: number } };
+    }
+    for (const v of Object.values(obj)) {
+      const r = findPhotoNode(v);
+      if (r) return r;
+    }
+  }
+  return null;
+}
+
 function extractResults(json: unknown): RawResult[] {
   const j = json as Record<string, unknown>;
   const candidates = [
