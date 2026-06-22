@@ -12,8 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const DESCRIPTION =
-  "A new US home every day — study the photos and stats, then guess its price in 5 tries. Higher or lower until you nail it.";
+const DESCRIPTION = "A new home every day. Guess the price and see if you can win!";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dillow.vercel.app"),
