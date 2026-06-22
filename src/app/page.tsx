@@ -285,10 +285,9 @@ export default function Home() {
     if (!reveal) return "";
     const grid = rows.map((r) => r.band).join("");
     const won = reveal.result.within;
-    const head = won
-      ? `Dillow ${date} — ${rows.length}/${MAX_ATTEMPTS} 🎯`
-      : `Dillow ${date} — X/${MAX_ATTEMPTS}`;
-    return `${head}\n${grid}`;
+    const pct = Math.round(Math.abs(reveal.result.pctError) * 100);
+    const tries = won ? `${rows.length}/${MAX_ATTEMPTS} 🎯` : `X/${MAX_ATTEMPTS}`;
+    return `Dillow ${date} — ${tries} · ${pct}% off\n${grid}`;
   }, [reveal, rows, date]);
 
   return (
