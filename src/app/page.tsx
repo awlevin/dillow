@@ -166,20 +166,17 @@ export default function Home() {
   const [date, setDate] = useState("");
   const [clue, setClue] = useState<Clue | null>(null);
   const [photoIdx, setPhotoIdx] = useState(0);
-  const [name, setName] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [lo, setLo] = useState(PRICE_MIN);
   const [hi, setHi] = useState(PRICE_MAX);
   const [t, setT] = useState(0.5); // slider position in the current [lo, hi] range
   const [exactMode, setExactMode] = useState(false);
   const [exact, setExact] = useState("");
-  const [editingName, setEditingName] = useState(true);
   const [showMap, setShowMap] = useState(false);
   const [streak, setStreak] = useState(0);
   const [statsVersion, setStatsVersion] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -188,9 +185,6 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
-        const savedName = localStorage.getItem("dillow:name") ?? "";
-        setName(savedName);
-        if (savedName) setEditingName(false); // returning player → show "Playing as X"
         if (!localStorage.getItem("dillow:seenTutorial")) setShowHelp(true); // first visit
         setStreak(loadStreak());
         const res = await fetch("/api/daily");
@@ -228,13 +222,11 @@ export default function Home() {
     }
     setError(null);
     setSubmitting(true);
-    const trimmed = name.trim();
-    if (trimmed) localStorage.setItem("dillow:name", trimmed);
     try {
       const res = await fetch("/api/attempt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guess: guessValue, id: getId(), name: trimmed }),
+        body: JSON.stringify({ guess: guessValue, id: getId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
@@ -423,48 +415,6 @@ export default function Home() {
 
             {!done ? (
               <div className="mt-1 flex flex-col gap-3">
-                {rows.length === 0 &&
-                  (editingName ? (
-                    <input
-                      ref={nameInputRef}
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      onBlur={() => {
-                        const t = name.trim();
-                        if (t) {
-                          localStorage.setItem("dillow:name", t);
-                          setEditingName(false);
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          const t = name.trim();
-                          if (t) {
-                            localStorage.setItem("dillow:name", t);
-                            setEditingName(false);
-                            e.currentTarget.blur();
-                          }
-                        }
-                      }}
-                      placeholder="Your name (to join the leaderboard)"
-                      maxLength={24}
-                      className="rounded-lg border border-stone-300 px-3 py-2 text-center text-sm outline-none focus:border-emerald-500"
-                    />
-                  ) : (
-                    <p className="text-center text-sm text-stone-500">
-                      Playing as <span className="font-semibold text-stone-700">{name.trim()}</span> ·{" "}
-                      <button
-                        onClick={() => {
-                          setEditingName(true);
-                          setTimeout(() => nameInputRef.current?.focus(), 0);
-                        }}
-                        className="font-medium text-emerald-700 hover:underline"
-                      >
-                        change
-                      </button>
-                    </p>
-                  ))}
-
                 {/* Over/under slider */}
                 <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
                   <p className="text-center text-[11px] font-medium uppercase tracking-wide text-stone-400">
@@ -543,7 +493,7 @@ export default function Home() {
                 {error && <p className="text-sm text-red-600">{error}</p>}
               </div>
             ) : (
-              <RevealCard reveal={reveal!} rows={rows} shareText={shareText} />
+              <RevealCard reveal={reveal!} rows={rows} shareText={shareText} date={date} />
             )}
           </div>
         </section>
@@ -570,6 +520,12 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 }
 
 function HowToPlay({ onClose }: { onClose: () => void }) {
+  const [closing, setClosing] = useState(false);
+  const dismiss = () => {
+    if (closing) return;
+    setClosing(true);
+    setTimeout(onClose, 320); // let the exit animation finish before unmounting
+  };
   const examples = [
     { price: "$2,000,000", hint: "Lower ↓", band: "🟥" },
     { price: "$900,000", hint: "Higher ↑", band: "🟨" },
@@ -577,15 +533,19 @@ function HowToPlay({ onClose }: { onClose: () => void }) {
   ];
   return (
     <div
-      className="animate-modalfade fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
-      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center ${
+        closing ? "animate-modalfadeout" : "animate-modalfade"
+      }`}
+      onClick={dismiss}
     >
       <div
-        className="animate-modalpop relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
+        className={`relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ${
+          closing ? "animate-modalpopout" : "animate-modalpop"
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           aria-label="Close"
           className="absolute right-4 top-4 text-xl text-stone-400 transition hover:text-stone-700"
         >
@@ -656,7 +616,7 @@ function HowToPlay({ onClose }: { onClose: () => void }) {
         <p className="mt-1 text-center text-xs text-stone-400">cold → nailed it</p>
 
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="mt-5 w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
         >
           Got it
@@ -752,10 +712,66 @@ function StatsPanel({ version }: { version: number }) {
   );
 }
 
-function RevealCard({ reveal, rows, shareText }: { reveal: Reveal; rows: Row[]; shareText: string }) {
+function RevealCard({
+  reveal,
+  rows,
+  shareText,
+  date,
+}: {
+  reveal: Reveal;
+  rows: Row[];
+  shareText: string;
+  date: string;
+}) {
   const { result, property, leaderboard } = reveal;
   const [copied, setCopied] = useState(false);
+  const [joinName, setJoinName] = useState("");
+  const [joinRank, setJoinRank] = useState<{ rank: number; count: number } | null>(
+    leaderboard?.rank != null ? { rank: leaderboard.rank, count: leaderboard.count ?? 0 } : null,
+  );
+  const [joining, setJoining] = useState(false);
   const won = result.within;
+
+  const join = async (nameArg?: string) => {
+    const name = (nameArg ?? joinName).trim();
+    if (!name || joining) return;
+    setJoining(true);
+    localStorage.setItem("dillow:name", name);
+    try {
+      const res = await fetch("/api/leaderboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: getId(), name }),
+      });
+      const data = await res.json();
+      if (res.ok && typeof data.rank === "number") {
+        setJoinRank({ rank: data.rank, count: data.count });
+        try {
+          const raw = localStorage.getItem(`dillow:game:${date}`);
+          if (raw) {
+            const g = JSON.parse(raw);
+            if (g.reveal) {
+              g.reveal.leaderboard = { enabled: true, rank: data.rank, count: data.count };
+              localStorage.setItem(`dillow:game:${date}`, JSON.stringify(g));
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      const saved = localStorage.getItem("dillow:name") ?? "";
+      setJoinName(saved);
+      if (saved && !joinRank && leaderboard?.enabled) await join(saved); // returning → auto-join
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="animate-reveal mt-1 flex flex-col gap-3 rounded-xl bg-emerald-50 p-4 text-center">
@@ -782,12 +798,36 @@ function RevealCard({ reveal, rows, shareText }: { reveal: Reveal; rows: Row[]; 
         </p>
       )}
 
-      {leaderboard?.enabled && leaderboard.rank != null && (
-        <p className="rounded-lg bg-white/70 px-3 py-2 text-sm text-emerald-800">
-          🏆 You&apos;re <span className="font-bold">#{leaderboard.rank}</span> of {leaderboard.count}{" "}
-          today · full results drop tomorrow
-        </p>
-      )}
+      {leaderboard?.enabled &&
+        (joinRank ? (
+          <p className="rounded-lg bg-white/70 px-3 py-2 text-sm text-emerald-800">
+            🏆 You&apos;re <span className="font-bold">#{joinRank.rank}</span> of {joinRank.count}{" "}
+            today · full results drop tomorrow
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2 rounded-lg bg-white/70 p-3 text-left">
+            <p className="text-sm font-medium text-stone-700">
+              Add your name to today&apos;s leaderboard
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={joinName}
+                onChange={(e) => setJoinName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && join()}
+                placeholder="Your name"
+                maxLength={24}
+                className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+              />
+              <button
+                onClick={() => join()}
+                disabled={joining}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {joining ? "…" : "Join"}
+              </button>
+            </div>
+          </div>
+        ))}
 
       <button
         onClick={async () => {

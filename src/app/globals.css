@@ -73,6 +73,30 @@ body {
 .animate-bandpop {
   animation: bandpop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.4) both;
 }
+@keyframes modalfadeout {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes modalpopout {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(34px) scale(0.86) rotate(1.5deg);
+  }
+}
+.animate-modalfadeout {
+  animation: modalfadeout 0.3s ease-in forwards;
+}
+.animate-modalpopout {
+  animation: modalpopout 0.32s cubic-bezier(0.45, 0, 0.7, 1) forwards;
+}
 
 /* Hide scrollbar on the swipeable photo carousel */
 .no-scrollbar {
