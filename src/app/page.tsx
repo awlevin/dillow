@@ -536,8 +536,16 @@ export default function Home() {
 
       <StatsPanel version={statsVersion} />
 
-      <footer className="text-center">
+      <footer className="flex flex-col items-center gap-1 text-center">
         <p className="text-xs text-stone-400">Real listings from across the US via realtor.com.</p>
+        <a
+          href="https://github.com/awlevin/dillow"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-stone-300 transition-colors hover:text-stone-500 hover:underline"
+        >
+          source
+        </a>
       </footer>
     </main>
   );
