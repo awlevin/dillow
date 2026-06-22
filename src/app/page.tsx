@@ -49,7 +49,38 @@ const usd = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const compact = (n: number) =>
   n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M` : `$${Math.round(n / 1000)}K`;
-const prettyType = (t: string) => t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+const TYPE_NAMES: Record<string, string> = {
+  single_family: "House",
+  multi_family: "Multi-family home",
+  condos: "Condo",
+  condo: "Condo",
+  condo_townhome: "Condo",
+  condo_townhome_rowhome_coop: "Condo",
+  townhomes: "Townhome",
+  townhouse: "Townhome",
+  apartment: "Apartment",
+  apartments: "Apartment",
+  coop: "Co-op",
+  duplex_triplex: "Duplex",
+  land: "Lot",
+  farm: "Farm",
+  mobile: "Mobile home",
+};
+// A clean singular noun for the listing type ("Condo", "House", …).
+const typeName = (t: string | null): string | null =>
+  !t
+    ? null
+    : (TYPE_NAMES[t] ??
+      t
+        .replace(/_/g, " ")
+        .replace(/s$/, "")
+        .replace(/\b\w/g, (c) => c.toUpperCase()));
+
+// "Condo in Austin, TX" — falls back to just the location if type is unknown.
+const propertyTitle = (c: { propertyType: string | null; city: string; state: string }) => {
+  const n = typeName(c.propertyType);
+  return n ? `${n} in ${c.city}, ${c.state}` : `${c.city}, ${c.state}`;
+};
 
 // Round to 3 significant figures so slider values read as "nice" prices.
 function niceRound(p: number): number {
@@ -92,18 +123,43 @@ function recordPlay(): number {
   const today = isoDay(new Date());
   const yest = isoDay(new Date(Date.now() - 86_400_000));
   let count = 1;
+  let best = 1;
   try {
     const raw = localStorage.getItem("dillow:streak");
     if (raw) {
       const s = JSON.parse(raw);
+      best = s.best ?? s.count ?? 0;
       if (s.lastDate === today) return s.count; // already counted today
       if (s.lastDate === yest) count = s.count + 1;
     }
   } catch {
     /* start fresh */
   }
-  localStorage.setItem("dillow:streak", JSON.stringify({ count, lastDate: today }));
+  best = Math.max(best, count);
+  localStorage.setItem("dillow:streak", JSON.stringify({ count, lastDate: today, best }));
   return count;
+}
+
+// Per-game history for long-term stats (accuracy by price band, win rate, etc.).
+type StatEntry = {
+  date: string;
+  price: number;
+  pct: number; // abs % error of best guess
+  attempts: number;
+  won: boolean;
+  state: string;
+};
+
+function recordStats(e: StatEntry) {
+  try {
+    const raw = localStorage.getItem("dillow:stats");
+    const arr: StatEntry[] = raw ? JSON.parse(raw) : [];
+    if (arr.some((x) => x.date === e.date)) return; // one record per day
+    arr.push(e);
+    localStorage.setItem("dillow:stats", JSON.stringify(arr.slice(-400)));
+  } catch {
+    /* ignore */
+  }
 }
 
 export default function Home() {
@@ -120,6 +176,7 @@ export default function Home() {
   const [editingName, setEditingName] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [statsVersion, setStatsVersion] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -198,6 +255,15 @@ export default function Home() {
       if (newReveal) {
         setReveal(newReveal);
         setStreak(recordPlay());
+        recordStats({
+          date,
+          price: data.property.price,
+          pct: Math.abs(data.result.pctError),
+          attempts: data.result.attemptsUsed,
+          won: data.result.within,
+          state: data.property.state,
+        });
+        setStatsVersion((v) => v + 1);
       }
       localStorage.setItem(
         `dillow:game:${date}`,
@@ -217,7 +283,7 @@ export default function Home() {
     const head = won
       ? `Dillow ${date} — ${rows.length}/${MAX_ATTEMPTS} 🎯`
       : `Dillow ${date} — X/${MAX_ATTEMPTS}`;
-    return `${head}\n${grid}\n${reveal.result.finalScore} pts`;
+    return `${head}\n${grid}`;
   }, [reveal, rows, date]);
 
   return (
@@ -288,34 +354,30 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-3 p-4 sm:p-5">
-            <p className="text-lg font-semibold text-stone-800">
-              {clue.city}, {clue.state}
-            </p>
-            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-stone-600">
+            <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
               {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
               {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
               {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
               {clue.yearBuilt != null && <Stat label="Built" value={clue.yearBuilt} />}
-              {clue.propertyType && <Stat label="Type" value={prettyType(clue.propertyType)} />}
+              {!done && clue.lat != null && clue.lon != null && (
+                <button
+                  onClick={() => setShowMap((v) => !v)}
+                  aria-label={showMap ? "Hide location" : "Show location"}
+                  className="font-medium text-emerald-700 hover:underline"
+                >
+                  📍<span className="hidden sm:inline"> {showMap ? "Hide" : "Location"}</span>
+                </button>
+              )}
             </div>
 
             {/* Optional location peek — collapsed by default to avoid overload. */}
-            {!done && clue.lat != null && clue.lon != null && (
+            {!done && showMap && clue.lat != null && clue.lon != null && (
               <div className="-mt-1">
-                <button
-                  onClick={() => setShowMap((v) => !v)}
-                  className="text-sm font-medium text-emerald-700 hover:underline"
-                >
-                  📍 {showMap ? "Hide" : "Location"}
-                </button>
-                {showMap && (
-                  <div className="mt-2">
-                    <PropertyMap lat={clue.lat} lon={clue.lon} />
-                    <p className="mt-1 text-center text-xs text-stone-400">
-                      Location is a clue — but the exact price is still up to you.
-                    </p>
-                  </div>
-                )}
+                <PropertyMap lat={clue.lat} lon={clue.lon} />
+                <p className="mt-1 text-center text-xs text-stone-400">
+                  Location is a clue — but the exact price is still up to you.
+                </p>
               </div>
             )}
 
@@ -454,14 +516,11 @@ export default function Home() {
         </section>
       )}
 
-      <Yesterday />
+      <Yesterday streak={streak} />
 
-      <footer className="flex flex-col items-center gap-1 text-center">
-        {streak > 0 && (
-          <p className="text-sm font-bold text-orange-600">
-            🔥 {streak}-day streak{streak >= 3 ? " — on fire!" : ""}
-          </p>
-        )}
+      <StatsPanel version={statsVersion} />
+
+      <footer className="text-center">
         <p className="text-xs text-stone-400">Real listings from across the US via realtor.com.</p>
       </footer>
     </main>
@@ -474,6 +533,92 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <span className="font-semibold text-stone-800">{value}</span>{" "}
       <span className="text-stone-400">{label}</span>
     </span>
+  );
+}
+
+const PRICE_BANDS = [
+  { label: "Under $500k", min: 0, max: 500_000 },
+  { label: "$500k–$1.5M", min: 500_000, max: 1_500_000 },
+  { label: "$1.5M–$5M", min: 1_500_000, max: 5_000_000 },
+  { label: "Over $5M", min: 5_000_000, max: Infinity },
+];
+
+const median = (arr: number[]) => {
+  if (!arr.length) return 0;
+  const a = [...arr].sort((x, y) => x - y);
+  const m = Math.floor(a.length / 2);
+  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+};
+
+const missColor = (p: number) =>
+  p < 0.1 ? "text-emerald-600" : p < 0.2 ? "text-amber-600" : "text-red-500";
+
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-stone-50 p-2 text-center">
+      <p className="text-xl font-black text-emerald-700">{value}</p>
+      <p className="text-xs text-stone-400">{label}</p>
+    </div>
+  );
+}
+
+function StatsPanel({ version }: { version: number }) {
+  const [stats, setStats] = useState<StatEntry[]>([]);
+  const [best, setBest] = useState(0);
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = localStorage.getItem("dillow:stats");
+        setStats(raw ? JSON.parse(raw) : []);
+        const s = localStorage.getItem("dillow:streak");
+        setBest(s ? (JSON.parse(s).best ?? 0) : 0);
+      } catch {
+        setStats([]);
+      }
+    })();
+  }, [version]);
+
+  if (stats.length === 0) return null;
+
+  const played = stats.length;
+  const wins = stats.filter((s) => s.won).length;
+  const medMiss = median(stats.map((s) => s.pct));
+
+  const bands = PRICE_BANDS.map((b) => {
+    const inBand = stats.filter((s) => s.price >= b.min && s.price < b.max);
+    return { label: b.label, count: inBand.length, avg: median(inBand.map((s) => s.pct)) };
+  }).filter((b) => b.count > 0);
+
+  return (
+    <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">Your stats</h2>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Metric label="Played" value={String(played)} />
+        <Metric label="Bullseye rate" value={`${Math.round((wins / played) * 100)}%`} />
+        <Metric label="Median miss" value={`${Math.round(medMiss * 100)}%`} />
+        <Metric label="Best streak" value={String(best)} />
+      </div>
+      {bands.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
+            Accuracy by price
+          </p>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {bands.map((b) => (
+              <li key={b.label} className="flex items-center justify-between text-sm">
+                <span className="text-stone-600">{b.label}</span>
+                <span className="text-stone-400">
+                  <span className={`font-semibold ${missColor(b.avg)}`}>
+                    {Math.round(b.avg * 100)}% off
+                  </span>{" "}
+                  · {b.count} {b.count === 1 ? "home" : "homes"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -498,9 +643,7 @@ function RevealCard({ reveal, rows, shareText }: { reveal: Reveal; rows: Row[]; 
         </div>
       </div>
       <p className="text-sm text-stone-600">
-        {Math.round(Math.abs(result.pctError) * 100)}% off ·{" "}
-        <span className="font-semibold">{result.finalScore} pts</span> ·{" "}
-        {rows.map((r) => r.band).join("")}
+        {Math.round(Math.abs(result.pctError) * 100)}% off · {rows.map((r) => r.band).join("")}
       </p>
 
       {property.address && (
@@ -557,7 +700,7 @@ type Board = {
   count?: number;
 };
 
-function Yesterday() {
+function Yesterday({ streak }: { streak: number }) {
   const [board, setBoard] = useState<Board | null>(null);
   useEffect(() => {
     fetch("/api/leaderboard")
@@ -571,9 +714,16 @@ function Yesterday() {
 
   return (
     <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">
-        Yesterday&apos;s results{date ? ` · ${date}` : ""}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">
+          Yesterday&apos;s results{date ? ` · ${date}` : ""}
+        </h2>
+        {streak > 0 && (
+          <span className="shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-sm font-bold text-orange-600">
+            🔥 {streak}-day streak
+          </span>
+        )}
+      </div>
       {property && (
         <div className="mt-3 flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -601,8 +751,7 @@ function Yesterday() {
                 {e.name}
               </span>
               <span className="text-stone-500">
-                {Math.round(Math.abs(e.pctError) * 100)}% off · {e.attempts}/{MAX_ATTEMPTS} ·{" "}
-                <span className="font-semibold text-stone-700">{e.score}</span>
+                {Math.round(Math.abs(e.pctError) * 100)}% off · {e.attempts}/{MAX_ATTEMPTS}
               </span>
             </li>
           ))}
