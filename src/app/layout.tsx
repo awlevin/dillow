@@ -13,8 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://dillow.vercel.app"),
   title: "Dillow — Guess the Price",
   description: "A daily real estate price-guessing game. New home every day.",
+  openGraph: {
+    title: "Dillow — Guess the Price",
+    description: "Higher or lower? Nail the daily home's price in 5 tries.",
+    url: "https://dillow.vercel.app",
+    siteName: "Dillow",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dillow — Guess the Price",
+    description: "Higher or lower? Nail the daily home's price in 5 tries.",
+  },
 };
 
 export default function RootLayout({

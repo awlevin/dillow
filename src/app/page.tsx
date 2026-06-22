@@ -223,7 +223,12 @@ export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-6 sm:gap-5 sm:py-10">
       <header className="text-center">
-        <h1 className="text-3xl font-black tracking-tight text-emerald-900 sm:text-4xl">dillow</h1>
+        <h1 className="flex items-center justify-center gap-2 text-3xl font-black tracking-tight text-emerald-900 sm:text-4xl">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-lg text-white sm:h-9 sm:w-9">
+            ?
+          </span>
+          dillow
+        </h1>
         <p className="mt-1 text-xs text-stone-500 sm:text-sm">
           Higher or lower? Nail the price in {MAX_ATTEMPTS} tries.
         </p>
