@@ -13,6 +13,7 @@ import {
   submitEntry,
   getGame,
   saveGame,
+  getDailyOffset,
   type GameState,
 } from "@/lib/leaderboard";
 
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
 
   try {
     const date = dayKey();
-    const property = getDailyProperty(date);
+    const property = getDailyProperty(date, await getDailyOffset(date));
     const price = property.price;
     const fb = feedback(guess, price);
     const thisScore = scoreGuess(guess, price).score;

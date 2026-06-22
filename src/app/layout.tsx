@@ -12,21 +12,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DESCRIPTION =
+  "Wordle for real estate — guess a real US home's price in 5 tries. New listing every day.";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://dillow.vercel.app"),
   title: "Dillow — Guess the Price",
-  description: "A daily real estate price-guessing game. New home every day.",
+  description: DESCRIPTION,
   openGraph: {
     title: "Dillow — Guess the Price",
-    description: "Higher or lower? Nail the daily home's price in 5 tries.",
+    description: DESCRIPTION,
     url: "https://dillow.vercel.app",
     siteName: "Dillow",
     type: "website",
+    // og image is auto-attached from app/opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
     title: "Dillow — Guess the Price",
-    description: "Higher or lower? Nail the daily home's price in 5 tries.",
+    description: DESCRIPTION,
   },
 };
 

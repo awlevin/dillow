@@ -85,3 +85,32 @@ export async function dayCount(date: string): Promise<number> {
   if (!redis) return 0;
   return redis.zcard(setKey(date));
 }
+
+// ── Admin: rotate the property of the day ────────────────────────────────────
+// A per-day offset shifts the deterministic daily pick for everyone.
+const offsetKey = (date: string) => `offset:${date}`;
+
+export async function getDailyOffset(date: string): Promise<number> {
+  if (!redis) return 0;
+  return (await redis.get<number>(offsetKey(date))) ?? 0;
+}
+
+export async function bumpDailyOffset(date: string): Promise<number> {
+  if (!redis) return 0;
+  return redis.incr(offsetKey(date));
+}
+
+// Wipe today's leaderboard + every player's in-progress game so everyone starts
+// fresh on the newly-rotated property.
+export async function clearDailyState(date: string): Promise<number> {
+  if (!redis) return 0;
+  const keys: string[] = [setKey(date), metaKey(date)];
+  let cursor = 0;
+  do {
+    const [next, batch] = await redis.scan(cursor, { match: `${gameKey(date, "")}*`, count: 200 });
+    cursor = Number(next);
+    keys.push(...batch);
+  } while (cursor !== 0);
+  if (keys.length) await redis.del(...keys);
+  return keys.length;
+}

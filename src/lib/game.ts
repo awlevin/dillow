@@ -44,10 +44,12 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
-export function getDailyProperty(key = dayKey()): Property {
+// `offset` lets an admin rotate the property of the day: it shifts the otherwise
+// deterministic pick to the next listing(s) in the pool.
+export function getDailyProperty(key = dayKey(), offset = 0): Property {
   const pool = getPool();
   if (!pool.length) throw new Error("Property pool is empty — run POST /api/refresh");
-  return pool[hash(key) % pool.length];
+  return pool[(hash(key) + offset) % pool.length];
 }
 
 // ── Scoring ──────────────────────────────────────────────────────────────────
