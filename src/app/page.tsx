@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { PropertyMap } from "./PropertyMap";
 import { rdcpixLoader, rdcpixThumb, rdcpixResize } from "@/lib/rdcpix";
+import { narrowBounds } from "@/lib/game";
 
 const MAX_ATTEMPTS = 5;
 const PRICE_MIN = 50_000;
@@ -233,12 +234,13 @@ export default function Home() {
 
       const newRow: Row = { guess: guessValue, band: data.band, direction: data.direction };
       const newRows = [...rows, newRow];
-      // Narrow the range from the feedback (the over/under squeeze).
+      // Narrow the range from the feedback: the direction sets the near bound to
+      // the guess, and the warmth band sets the far bound (it caps how far off
+      // the guess can be). See narrowBounds in lib/game.
       let nLo = lo;
       let nHi = hi;
       if (!data.gameOver) {
-        if (data.direction === "higher") nLo = guessValue;
-        else if (data.direction === "lower") nHi = guessValue;
+        ({ lo: nLo, hi: nHi } = narrowBounds(lo, hi, guessValue, data.direction, data.band));
       }
       const newReveal: Reveal | null = data.gameOver
         ? { result: data.result, property: data.property, leaderboard: data.leaderboard }
