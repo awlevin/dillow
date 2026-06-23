@@ -163,6 +163,98 @@ function recordStats(e: StatEntry) {
   }
 }
 
+// Turn the over/under band into a hot-or-cold reaction for the guess burst.
+// Bands escalate bad → great (🟥 🟧 🟨 🟩), so warmth tracks them inversely.
+function warmth(
+  band: string,
+  direction: Row["direction"],
+): { emoji: string; label: string; cls: string } {
+  if (direction === "match")
+    return { emoji: "🎯", label: "Bullseye!", cls: "bg-emerald-600 text-white" };
+  switch (band) {
+    case "🟩":
+      return { emoji: "🔥", label: "Red hot", cls: "bg-orange-500 text-white" };
+    case "🟨":
+      return { emoji: "♨️", label: "Getting warm", cls: "bg-amber-400 text-amber-950" };
+    case "🟧":
+      return { emoji: "❄️", label: "Cold", cls: "bg-sky-400 text-white" };
+    default:
+      return { emoji: "🥶", label: "Ice cold", cls: "bg-sky-600 text-white" };
+  }
+}
+
+// A short buzz on supported devices — silently ignored where unavailable.
+function buzz(pattern: number | number[]) {
+  try {
+    navigator.vibrate?.(pattern);
+  } catch {
+    /* not supported */
+  }
+}
+
+// Eased count-up from 0 → target for the suspenseful price reveal.
+function useCountUp(target: number, duration = 1100): number {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    let start = 0;
+    const tick = (ts: number) => {
+      if (!start) start = ts;
+      const p = Math.min(1, (ts - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      setVal(Math.round(target * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return val;
+}
+
+// Deterministic 0..1 hash so confetti scatters look random but stay pure
+// (React 19's compiler forbids Math.random during render).
+const scatter = (n: number) => {
+  const x = Math.sin(n * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+// Hand-rolled emoji confetti — a celebratory shower for a win, no deps.
+function Confetti() {
+  const emojis = ["🎉", "🎊", "💰", "🏡", "✨", "🔑", "💵", "🥳"];
+  const pieces = Array.from({ length: 38 }, (_, i) => ({
+    id: i,
+    left: scatter(i + 1) * 100,
+    delay: scatter(i + 2) * 0.5,
+    duration: 2.4 + scatter(i + 3) * 1.8,
+    drift: (scatter(i + 4) - 0.5) * 90,
+    rot: scatter(i + 5) * 720 - 360,
+    emoji: emojis[i % emojis.length],
+    size: 18 + Math.round(scatter(i + 6) * 12),
+  }));
+  return (
+    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden" aria-hidden>
+      {pieces.map((p) => (
+        <span
+          key={p.id}
+          className="animate-confetti absolute top-0 leading-none"
+          style={
+            {
+              left: `${p.left}%`,
+              fontSize: `${p.size}px`,
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+              "--drift": `${p.drift}px`,
+              "--rot": `${p.rot}deg`,
+            } as React.CSSProperties
+          }
+        >
+          {p.emoji}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
   const [date, setDate] = useState("");
   const [clue, setClue] = useState<Clue | null>(null);
@@ -182,6 +274,25 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Transient hot/cold reaction that bursts up after each guess.
+  const [burst, setBurst] = useState<{ band: string; direction: Row["direction"]; key: number } | null>(
+    null,
+  );
+  const [celebrate, setCelebrate] = useState(false); // confetti shower on a win
+
+  // Auto-dismiss the warmth burst once its float-up animation has played.
+  useEffect(() => {
+    if (!burst) return;
+    const id = setTimeout(() => setBurst(null), 1500);
+    return () => clearTimeout(id);
+  }, [burst]);
+
+  // Let the confetti finish falling, then tear it down.
+  useEffect(() => {
+    if (!celebrate) return;
+    const id = setTimeout(() => setCelebrate(false), 4500);
+    return () => clearTimeout(id);
+  }, [celebrate]);
 
   useEffect(() => {
     (async () => {
@@ -246,6 +357,17 @@ export default function Home() {
         ? { result: data.result, property: data.property, leaderboard: data.leaderboard }
         : null;
 
+      const won = data.gameOver && data.result?.within;
+      // Reward the moment: a celebratory buzz + confetti on a win, a soft
+      // double-tap when out of guesses, a light tick on every other guess.
+      buzz(won ? [0, 35, 45, 90] : data.gameOver ? [0, 30, 60, 30] : 12);
+      if (won) setCelebrate(true);
+      // Hot-or-cold burst floats up after each non-final guess; once the game
+      // is over the reveal card carries the moment instead.
+      if (!data.gameOver) {
+        setBurst({ band: data.band, direction: data.direction, key: Date.now() });
+      }
+
       setRows(newRows);
       setLo(nLo);
       setHi(nHi);
@@ -286,6 +408,7 @@ export default function Home() {
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-6 sm:gap-5 sm:py-10">
+      {celebrate && <Confetti />}
       {showHelp && (
         <HowToPlay
           onClose={() => {
@@ -408,7 +531,7 @@ export default function Home() {
                         : r.direction === "higher"
                           ? "Higher ↑"
                           : "Lower ↓"}
-                      <span className="text-base">{r.band}</span>
+                      <span className="animate-bandpop inline-block text-base">{r.band}</span>
                     </span>
                   </li>
                 ))}
@@ -416,7 +539,32 @@ export default function Home() {
             )}
 
             {!done ? (
-              <div className="mt-1 flex flex-col gap-3">
+              <div className="relative mt-1 flex flex-col gap-3">
+                {/* Hot-or-cold reaction that bursts up over the Guess button. */}
+                {burst &&
+                  (() => {
+                    const w = warmth(burst.band, burst.direction);
+                    const nudge =
+                      burst.direction === "higher"
+                        ? "aim higher ↑"
+                        : burst.direction === "lower"
+                          ? "aim lower ↓"
+                          : null;
+                    return (
+                      <div
+                        key={burst.key}
+                        className="animate-burst pointer-events-none absolute bottom-16 left-1/2 z-20"
+                      >
+                        <div
+                          className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold shadow-lg ${w.cls}`}
+                        >
+                          <span className="text-lg">{w.emoji}</span>
+                          <span>{w.label}</span>
+                          {nudge && <span className="opacity-80">· {nudge}</span>}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 {/* Over/under slider */}
                 <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
                   <p className="text-center text-[11px] font-medium uppercase tracking-wide text-stone-400">
@@ -466,7 +614,7 @@ export default function Home() {
                 <button
                   onClick={submit}
                   disabled={submitting}
-                  className="rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                  className="rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
                 >
                   {submitting ? "…" : `Guess ${usd(guessValue)}`}
                 </button>
@@ -733,6 +881,8 @@ function RevealCard({
   );
   const [joining, setJoining] = useState(false);
   const won = result.within;
+  // Slot-machine count-up to the real price — a beat of suspense on reveal.
+  const animatedPrice = useCountUp(property.price);
 
   const join = async (nameArg?: string) => {
     const name = (nameArg ?? joinName).trim();
@@ -787,7 +937,9 @@ function RevealCard({
         </div>
         <div>
           <p className="text-xs uppercase tracking-wide text-stone-400">Actual</p>
-          <p className="text-2xl font-black text-emerald-700">{usd(property.price)}</p>
+          <p className="animate-pricepop text-2xl font-black tabular-nums text-emerald-700">
+            {usd(animatedPrice)}
+          </p>
         </div>
       </div>
       <p className="text-sm text-stone-600">
