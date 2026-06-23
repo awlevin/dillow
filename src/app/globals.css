@@ -156,3 +156,111 @@ input[type="range"]::-moz-range-thumb {
 .animate-rowin {
   animation: rowin 0.25s ease-out;
 }
+
+/* Hot/cold "warmth" pill that bursts up from the Guess button on each guess.
+   X-centering is baked into the keyframe, so anchor with left-1/2 only. */
+@keyframes burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 12px) scale(0.6);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.12);
+  }
+  32% {
+    transform: translate(-50%, -2px) scale(1);
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -44px) scale(0.95);
+  }
+}
+.animate-burst {
+  animation: burst 1.5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+/* Falling emoji confetti for a win. Drift + spin come from per-piece vars. */
+@keyframes confetti {
+  0% {
+    opacity: 0;
+    transform: translateY(-12vh) translateX(0) rotate(0);
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(106vh) translateX(var(--drift, 0)) rotate(var(--rot, 360deg));
+  }
+}
+.animate-confetti {
+  animation-name: confetti;
+  animation-timing-function: cubic-bezier(0.3, 0.2, 0.5, 1);
+  animation-fill-mode: forwards;
+}
+
+/* Satisfying little thump when the revealed price lands. */
+@keyframes pricepop {
+  0% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-pricepop {
+  animation: pricepop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.4) both;
+}
+
+/* Each ticking seconds digit gives a tiny flip/thump as it changes. */
+@keyframes tickpop {
+  0% {
+    transform: translateY(-22%);
+    opacity: 0.3;
+  }
+  55% {
+    transform: translateY(6%);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animate-tickpop {
+  animation: tickpop 0.42s cubic-bezier(0.2, 0.8, 0.3, 1.3) both;
+}
+
+/* Slow drifting shimmer behind the "next home" banner. */
+@keyframes nextglow {
+  0%,
+  100% {
+    transform: translateX(-12%);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateX(12%);
+    opacity: 0.9;
+  }
+}
+.animate-nextglow {
+  animation: nextglow 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-burst,
+  .animate-confetti,
+  .animate-pricepop,
+  .animate-bandpop,
+  .animate-tickpop,
+  .animate-nextglow {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+}

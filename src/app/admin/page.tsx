@@ -34,8 +34,15 @@ export default function Admin() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password, action }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed");
+      // Parse defensively: a timeout/crash can return an empty or non-JSON body,
+      // which would otherwise throw "Unexpected end of JSON input" here.
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) {
+        throw new Error(
+          data.error ?? `Request failed (${res.status}). The photo service may be slow — try again.`,
+        );
+      }
       setAuthed(true);
       setCurrent(data.current);
       if (action === "rotate") {

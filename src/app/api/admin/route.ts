@@ -12,6 +12,10 @@ import {
 } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
+// Enrich/rotate make an upstream realtor16 request that can be slow; give it
+// headroom beyond the default so a slow gallery fetch doesn't 504 with an empty
+// body (which surfaces to the client as "Unexpected end of JSON input").
+export const maxDuration = 30;
 
 // Set ADMIN_PASSWORD to override; defaults to the value Aaron chose.
 const PASSWORD = process.env.ADMIN_PASSWORD ?? "8228";
@@ -62,27 +66,38 @@ export async function POST(req: Request) {
 
   const date = dayKey();
 
-  if (body.action === "verify") {
-    const property = getDailyProperty(date, await getDailyOffset(date));
-    return NextResponse.json({ ok: true, current: summary(property, await effectivePhotos(property)) });
-  }
-
-  if (body.action === "enrich") {
-    const property = getDailyProperty(date, await getDailyOffset(date));
-    const photos = await enrich(property);
-    return NextResponse.json({ ok: true, current: summary(property, photos) });
-  }
-
-  if (body.action === "rotate") {
-    if (!leaderboardEnabled()) {
-      return NextResponse.json({ error: "Redis not configured — cannot rotate." }, { status: 503 });
+  // Always return JSON, even on failure: an unhandled throw (slow/failed
+  // realtor16 fetch, Redis blip) would otherwise return an empty body and the
+  // client's res.json() would throw "Unexpected end of JSON input".
+  try {
+    if (body.action === "verify") {
+      const property = getDailyProperty(date, await getDailyOffset(date));
+      return NextResponse.json({ ok: true, current: summary(property, await effectivePhotos(property)) });
     }
-    const offset = await bumpDailyOffset(date);
-    const cleared = await clearDailyState(date);
-    const property = getDailyProperty(date, offset);
-    const photos = await enrich(property); // give the new property a full gallery
-    return NextResponse.json({ ok: true, rotated: true, offset, cleared, current: summary(property, photos) });
-  }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    if (body.action === "enrich") {
+      const property = getDailyProperty(date, await getDailyOffset(date));
+      const photos = await enrich(property);
+      return NextResponse.json({ ok: true, current: summary(property, photos) });
+    }
+
+    if (body.action === "rotate") {
+      if (!leaderboardEnabled()) {
+        return NextResponse.json({ error: "Redis not configured — cannot rotate." }, { status: 503 });
+      }
+      const offset = await bumpDailyOffset(date);
+      const cleared = await clearDailyState(date);
+      const property = getDailyProperty(date, offset);
+      const photos = await enrich(property); // give the new property a full gallery
+      return NextResponse.json({ ok: true, rotated: true, offset, cleared, current: summary(property, photos) });
+    }
+
+    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  } catch (err) {
+    console.error(`[admin] ${String(body.action)} failed:`, err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Request failed" },
+      { status: 500 },
+    );
+  }
 }

@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { fetchPool } from "@/lib/providers";
+import { fetchPool, enrichPool } from "@/lib/providers";
+import { MIN_PHOTOS } from "@/lib/game";
 
-// MANUAL refresh only. Each call spends ONE realtor16 request (you have ~30/mo),
-// so this is never triggered automatically — you POST to it on purpose to pull a
-// fresh batch of listings into the committed snapshot at src/data/pool.json.
+// MANUAL refresh only. A search spends one realtor16 request and enrichment
+// spends one per listing, so this is never triggered automatically — you POST to
+// it on purpose to rebuild the committed snapshot at src/data/pool.json.
+//
+// Each listing is enriched to its full gallery and any with fewer than
+// MIN_PHOTOS photos is dropped, so the snapshot only ever contains properties
+// that satisfy the minimum-photo guarantee.
 //
 // Guard: in production a token is required. Set REFRESH_TOKEN and call with
 //   POST /api/refresh?token=YOUR_TOKEN
@@ -16,10 +21,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const pool = await fetchPool(); // ← the single API call (honors PROPERTY_PROVIDER)
+    const raw = await fetchPool(); // search (honors PROPERTY_PROVIDER)
+    const enriched = await enrichPool(raw); // full galleries
+    const pool = enriched.filter((p) => p.photos.length >= MIN_PHOTOS);
     if (!pool.length) {
       return NextResponse.json(
-        { error: "Provider returned no usable properties." },
+        { error: `No properties with at least ${MIN_PHOTOS} photos.` },
         { status: 502 },
       );
     }

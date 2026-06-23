@@ -77,15 +77,30 @@ export async function fetchProperties(): Promise<Property[]> {
   return all.filter((p) => !seen.has(p.id) && (seen.add(p.id), true));
 }
 
+// realtor16 enforces a per-second rate limit (independent of the monthly quota)
+// and returns 429 when callers exceed it — common when enriching many listings.
+// Retry 429s with exponential backoff so batch enrichment doesn't silently drop
+// rate-limited listings. `init` is passed through to fetch (cache, revalidate).
+async function rapidFetch(url: URL, key: string, init: RequestInit = {}): Promise<Response> {
+  let res!: Response;
+  for (let attempt = 0; attempt <= 5; attempt++) {
+    res = await fetch(url, {
+      ...init,
+      headers: { "x-rapidapi-host": HOST, "x-rapidapi-key": key },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (res.status !== 429) break;
+    await new Promise((r) => setTimeout(r, 500 * 2 ** attempt)); // 0.5s → 16s
+  }
+  return res;
+}
+
 async function fetchOne(location: string, key: string): Promise<Property[]> {
   const url = new URL(`https://${HOST}/search/forsale`);
   url.searchParams.set("location", location);
   url.searchParams.set("limit", String(LIMIT));
 
-  const res = await fetch(url, {
-    headers: { "x-rapidapi-host": HOST, "x-rapidapi-key": key },
-    next: { revalidate: 3600 },
-  });
+  const res = await rapidFetch(url, key, { next: { revalidate: 3600 } });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
     throw new Error(`realtor16 ${res.status} ${res.statusText} ${body}`.trim());
@@ -104,13 +119,15 @@ export async function fetchDetails(
 
   const url = new URL(`https://${HOST}/property/details`);
   url.searchParams.set("property_id", propertyId);
-  const res = await fetch(url, {
-    headers: { "x-rapidapi-host": HOST, "x-rapidapi-key": key },
-    cache: "no-store",
-  });
+  const res = await rapidFetch(url, key, { cache: "no-store" });
   if (!res.ok) return null;
 
-  const node = findPhotoNode(await res.json());
+  // RapidAPI occasionally returns a 200 with an empty/non-JSON body (proxy
+  // hiccup, rate-limit interstitial); treat that as "no details" rather than
+  // letting it throw and bubble up as a 500 with an empty response body.
+  const json = await res.json().catch(() => null);
+  if (json === null) return null;
+  const node = findPhotoNode(json);
   if (!node) return null;
   const photos = [
     ...new Set(
@@ -122,6 +139,32 @@ export async function fetchDetails(
   ];
   const yb = node.description?.year_built;
   return { photos: photos.slice(0, 8), yearBuilt: typeof yb === "number" ? yb : null };
+}
+
+// Enrich a batch of listings with full galleries — one details request each,
+// with bounded concurrency — so the committed snapshot carries real galleries
+// instead of the 1–2 photos the search endpoint returns. Listings that already
+// have a full gallery are skipped; failures keep the original photos.
+export async function enrichPool(props: Property[], concurrency = 2): Promise<Property[]> {
+  const out = [...props];
+  let next = 0;
+  async function worker() {
+    while (next < out.length) {
+      const idx = next++;
+      const p = out[idx];
+      if (p.photos.length >= 8) continue; // already a full gallery
+      try {
+        const det = await fetchDetails(p.id);
+        if (det && det.photos.length > p.photos.length) {
+          out[idx] = { ...p, photos: det.photos, yearBuilt: det.yearBuilt ?? p.yearBuilt };
+        }
+      } catch (err) {
+        console.warn(`[realtor16] enrich ${p.id} failed:`, err);
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, out.length) }, worker));
+  return out;
 }
 
 // Find the nested object that holds a non-empty photos array.
