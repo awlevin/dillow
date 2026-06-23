@@ -28,14 +28,30 @@ export function snapshotFetchedAt(): string {
 }
 
 // ── Deterministic daily selection ────────────────────────────────────────────
-// Everyone in the world gets the same property for a given UTC day.
+// Everyone in the world gets the same property for a given day, and the day
+// rolls over at midnight Eastern (not UTC) so the "new home" drops at a sane
+// local-feeling hour for the (US) audience rather than mid-afternoon. The
+// client countdown in page.tsx targets the same boundary.
+export const GAME_TZ = "America/New_York";
+
+// en-CA formats as YYYY-MM-DD, which is exactly our key shape.
+const dayFmt = new Intl.DateTimeFormat("en-CA", {
+  timeZone: GAME_TZ,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export function dayKey(d = new Date()): string {
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  return dayFmt.format(d); // YYYY-MM-DD in GAME_TZ
 }
 
-// dayKey shifted by N days (e.g. yesterday = dayKeyOffset(-1)).
+// dayKey shifted by N days (e.g. yesterday = dayKeyOffset(-1)). Shifts the
+// calendar date via UTC noon so it stays DST-proof — noon never lands near a
+// midnight boundary, so the formatted date advances by exactly `deltaDays`.
 export function dayKeyOffset(deltaDays: number, base = new Date()): string {
-  return dayKey(new Date(base.getTime() + deltaDays * 86_400_000));
+  const [y, m, d] = dayKey(base).split("-").map(Number);
+  return dayFmt.format(new Date(Date.UTC(y, m - 1, d + deltaDays, 12)));
 }
 
 // A valid past date string we have content for — used to gate the next-day reveal.
