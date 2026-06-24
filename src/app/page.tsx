@@ -357,11 +357,24 @@ export default function Home() {
   // The map rides along as the final carousel slide (see below). The title line
   // and this helper both jump there and pop it open.
   const hasMap = !!(clue && clue.lat != null && clue.lon != null);
+  // Glide the carousel to the map slide (the last one). We only scroll — we
+  // don't flip mapActive — so the tap-to-explore overlay still greets the user;
+  // toggling state here would mutate the slide mid-scroll and scroll-snap would
+  // yank it back to the first photo.
   const openMap = () => {
     const el = carouselRef.current;
-    if (!el || !clue) return;
-    el.scrollTo({ left: clue.photos.length * el.clientWidth, behavior: "smooth" });
-    setMapActive(true);
+    // Instant, not smooth: scroll-snap: mandatory yanks a smooth programmatic
+    // scroll back to the first slide before it lands.
+    if (el) el.scrollTo({ left: el.scrollWidth });
+  };
+
+  // Exact-mode shortcut: type "250", tap K → 250,000 (or M → 250,000,000) so
+  // players don't retype trailing zeroes on every guess. Multiplies whatever is
+  // in the field, then clamps to the valid range so the shown value is the guess.
+  const applyUnit = (mult: number) => {
+    const base = Number(exact.replace(/[^0-9]/g, "")) || 0;
+    if (!base) return;
+    setExact(Math.min(hi, Math.max(lo, base * mult)).toLocaleString());
   };
 
   async function submit() {
@@ -444,7 +457,7 @@ export default function Home() {
   }, [reveal, rows, date]);
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-6 sm:gap-5 sm:py-10">
+    <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 py-4 sm:gap-5 sm:py-10">
       {celebrate && <Confetti />}
       {showHelp && (
         <HowToPlay
@@ -462,7 +475,7 @@ export default function Home() {
           </span>
           dillow
         </h1>
-        <p className="mt-1 text-xs text-stone-500 sm:text-sm">
+        <p className="mt-1 hidden text-xs text-stone-500 sm:block sm:text-sm">
           Higher or lower? Nail the price in {MAX_ATTEMPTS} tries.
         </p>
         <button
@@ -489,7 +502,7 @@ export default function Home() {
                 const i = Math.round(el.scrollLeft / el.clientWidth);
                 if (i !== photoIdx) setPhotoIdx(i);
               }}
-              className="no-scrollbar flex aspect-[3/2] snap-x snap-mandatory overflow-x-auto"
+              className="no-scrollbar flex aspect-[16/10] snap-x snap-mandatory overflow-x-auto sm:aspect-[3/2]"
             >
               {clue.photos.map((src, i) => (
                 <div key={src} className="relative h-full w-full shrink-0 snap-center">
@@ -516,7 +529,7 @@ export default function Home() {
                   </div>
                   {!mapActive ? (
                     <button
-                      onClick={openMap}
+                      onClick={() => setMapActive(true)}
                       aria-label="Explore the property location on a map"
                       className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-stone-900/35 text-white transition hover:bg-stone-900/45"
                     >
@@ -567,7 +580,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="flex flex-col gap-3 p-4 sm:p-5">
+          <div className="flex flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
             {hasMap ? (
               <button
                 onClick={openMap}
@@ -609,7 +622,7 @@ export default function Home() {
             )}
 
             {!done ? (
-              <div className="relative mt-1 flex flex-col gap-3">
+              <div className="relative mt-1 flex flex-col gap-2 sm:gap-3">
                 {/* Hot-or-cold reaction that bursts up over the Guess button. */}
                 {burst &&
                   (() => {
@@ -636,13 +649,13 @@ export default function Home() {
                     );
                   })()}
                 {/* Over/under slider */}
-                <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
+                <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 sm:p-4">
                   {/* Input-mode toggle — a clear segmented control so "type an
                       exact price" is discoverable, not a tiny text link. */}
                   <div
                     role="tablist"
                     aria-label="Guess input mode"
-                    className="mx-auto mb-3 grid w-full max-w-[240px] grid-cols-2 gap-1 rounded-lg bg-stone-200/80 p-1 text-sm font-semibold"
+                    className="mx-auto mb-2 grid w-full max-w-[240px] grid-cols-2 gap-1 rounded-lg bg-stone-200/80 p-1 text-sm font-semibold sm:mb-3"
                   >
                     <button
                       role="tab"
@@ -668,7 +681,7 @@ export default function Home() {
                   <p className="text-center text-[11px] font-medium uppercase tracking-wide text-stone-400">
                     {rows.length === 0 ? "Drag, or tap Guess to start in the middle" : "Higher or lower?"}
                   </p>
-                  <p className="text-center text-3xl font-black tracking-tight text-emerald-800">
+                  <p className="text-center text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">
                     {usd(guessValue)}
                   </p>
                   {!exactMode ? (
@@ -679,7 +692,7 @@ export default function Home() {
                         max={1000}
                         value={Math.round(t * 1000)}
                         onChange={(e) => setT(Number(e.target.value) / 1000)}
-                        className="mt-3 h-2 w-full cursor-pointer touch-none accent-emerald-600"
+                        className="mt-2 h-2 w-full cursor-pointer touch-none accent-emerald-600 sm:mt-3"
                         aria-label="Price guess"
                       />
                       <div className="flex justify-between text-xs text-stone-400">
@@ -688,7 +701,7 @@ export default function Home() {
                       </div>
                     </>
                   ) : (
-                    <div className="mt-3 flex items-center rounded-lg border border-stone-300 bg-white px-3">
+                    <div className="mt-2 flex items-center gap-1 rounded-lg border border-stone-300 bg-white pl-3 pr-1.5 sm:mt-3">
                       <span className="text-stone-400">$</span>
                       <input
                         autoFocus
@@ -703,8 +716,22 @@ export default function Home() {
                         }
                         onKeyDown={(e) => e.key === "Enter" && !submitting && submit()}
                         placeholder={`${compact(lo)} – ${compact(hi)}`}
-                        className="w-full bg-transparent px-2 py-2 outline-none"
+                        className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none"
                       />
+                      <button
+                        type="button"
+                        onClick={() => applyUnit(1_000)}
+                        className="rounded-md bg-stone-100 px-2.5 py-1.5 text-sm font-bold text-stone-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+                      >
+                        K
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyUnit(1_000_000)}
+                        className="rounded-md bg-stone-100 px-2.5 py-1.5 text-sm font-bold text-stone-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+                      >
+                        M
+                      </button>
                     </div>
                   )}
                 </div>
