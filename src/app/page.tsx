@@ -173,23 +173,6 @@ function recordStats(e: StatEntry) {
   }
 }
 
-// Soft background tint for the newest guess's warmth flash. Bands escalate
-// bad → great (🟥 🟧 🟨 🟩), so a closer guess flashes warmer; a far one, cooler.
-// This carries the hot/cold signal inline, where the popup used to.
-function bandFlash(band: string, direction: Row["direction"]): string {
-  if (direction === "match") return "#6ee7b7"; // emerald-300
-  switch (band) {
-    case "🟩":
-      return "#fdba74"; // orange-300 — red hot
-    case "🟨":
-      return "#fcd34d"; // amber-300 — warm
-    case "🟧":
-      return "#7dd3fc"; // sky-300 — cold
-    default:
-      return "#38bdf8"; // sky-400 — ice cold
-  }
-}
-
 // A short buzz on supported devices — silently ignored where unavailable.
 function buzz(pattern: number | number[]) {
   try {
@@ -585,32 +568,22 @@ export default function Home() {
 
             {rows.length > 0 && (
               <ul className="flex flex-col gap-1.5">
-                {rows.map((r, i) => {
-                  const newest = i === rows.length - 1;
-                  return (
-                    <li
-                      key={i}
-                      style={
-                        newest
-                          ? ({ "--flash": bandFlash(r.band, r.direction) } as React.CSSProperties)
-                          : undefined
-                      }
-                      className={`flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2 text-sm ${
-                        newest ? "animate-rowflash" : "animate-rowin"
-                      }`}
-                    >
-                      <span className="font-semibold text-stone-700">{usd(r.guess)}</span>
-                      <span className="flex items-center gap-2 text-stone-500">
-                        {r.direction === "match"
-                          ? "Nailed it"
-                          : r.direction === "higher"
-                            ? "Higher ↑"
-                            : "Lower ↓"}
-                        <span className="animate-bandpop inline-block text-base">{r.band}</span>
-                      </span>
-                    </li>
-                  );
-                })}
+                {rows.map((r, i) => (
+                  <li
+                    key={i}
+                    className="animate-rowin flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2 text-sm"
+                  >
+                    <span className="font-semibold text-stone-700">{usd(r.guess)}</span>
+                    <span className="flex items-center gap-2 text-stone-500">
+                      {r.direction === "match"
+                        ? "Nailed it"
+                        : r.direction === "higher"
+                          ? "Higher ↑"
+                          : "Lower ↓"}
+                      <span className="animate-bandpop inline-block text-base">{r.band}</span>
+                    </span>
+                  </li>
+                ))}
               </ul>
             )}
 

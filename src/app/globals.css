@@ -161,25 +161,6 @@ input[type="range"]::-moz-range-thumb {
   animation: rowin 0.34s cubic-bezier(0.2, 0.8, 0.3, 1.25) both;
 }
 
-/* The newest guess also flashes its warmth colour (hot = warm hue, cold = blue),
-   carrying the hot/cold signal that used to live in the popup. --flash is set
-   per-row inline; it fades back to the row's resting bg-stone-50. */
-@keyframes rowflash {
-  0% {
-    background-color: var(--flash);
-    box-shadow: 0 0 0 1px var(--flash);
-  }
-  100% {
-    background-color: transparent;
-    box-shadow: 0 0 0 1px transparent;
-  }
-}
-.animate-rowflash {
-  animation:
-    rowin 0.34s cubic-bezier(0.2, 0.8, 0.3, 1.25) both,
-    rowflash 1.1s ease-out;
-}
-
 /* Falling emoji confetti for a win. Drift + spin come from per-piece vars. */
 @keyframes confetti {
   0% {
@@ -255,7 +236,6 @@ input[type="range"]::-moz-range-thumb {
   .animate-pricepop,
   .animate-bandpop,
   .animate-rowin,
-  .animate-rowflash,
   .animate-tickpop,
   .animate-nextglow {
     animation-duration: 0.01ms;
