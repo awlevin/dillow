@@ -173,23 +173,20 @@ function recordStats(e: StatEntry) {
   }
 }
 
-// Turn the over/under band into a hot-or-cold reaction for the guess burst.
-// Bands escalate bad → great (🟥 🟧 🟨 🟩), so warmth tracks them inversely.
-function warmth(
-  band: string,
-  direction: Row["direction"],
-): { emoji: string; label: string; cls: string } {
-  if (direction === "match")
-    return { emoji: "🎯", label: "Bullseye!", cls: "bg-emerald-600 text-white" };
+// Soft background tint for the newest guess's warmth flash. Bands escalate
+// bad → great (🟥 🟧 🟨 🟩), so a closer guess flashes warmer; a far one, cooler.
+// This carries the hot/cold signal inline, where the popup used to.
+function bandFlash(band: string, direction: Row["direction"]): string {
+  if (direction === "match") return "#6ee7b7"; // emerald-300
   switch (band) {
     case "🟩":
-      return { emoji: "🔥", label: "Red hot", cls: "bg-orange-500 text-white" };
+      return "#fdba74"; // orange-300 — red hot
     case "🟨":
-      return { emoji: "♨️", label: "Getting warm", cls: "bg-amber-400 text-amber-950" };
+      return "#fcd34d"; // amber-300 — warm
     case "🟧":
-      return { emoji: "❄️", label: "Cold", cls: "bg-sky-400 text-white" };
+      return "#7dd3fc"; // sky-300 — cold
     default:
-      return { emoji: "🥶", label: "Ice cold", cls: "bg-sky-600 text-white" };
+      return "#38bdf8"; // sky-400 — ice cold
   }
 }
 
@@ -284,18 +281,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Transient hot/cold reaction that bursts up after each guess.
-  const [burst, setBurst] = useState<{ band: string; direction: Row["direction"]; key: number } | null>(
-    null,
-  );
   const [celebrate, setCelebrate] = useState(false); // confetti shower on a win
-
-  // Auto-dismiss the warmth burst once its float-up animation has played.
-  useEffect(() => {
-    if (!burst) return;
-    const id = setTimeout(() => setBurst(null), 1500);
-    return () => clearTimeout(id);
-  }, [burst]);
 
   // Let the confetti finish falling, then tear it down.
   useEffect(() => {
@@ -412,11 +398,8 @@ export default function Home() {
       // double-tap when out of guesses, a light tick on every other guess.
       buzz(won ? [0, 35, 45, 90] : data.gameOver ? [0, 30, 60, 30] : 12);
       if (won) setCelebrate(true);
-      // Hot-or-cold burst floats up after each non-final guess; once the game
-      // is over the reveal card carries the moment instead.
-      if (!data.gameOver) {
-        setBurst({ band: data.band, direction: data.direction, key: Date.now() });
-      }
+      // The hot/cold signal now rides in on the new guess row's warmth flash
+      // (see bandFlash + animate-rowflash), so there's no separate popup.
 
       setRows(newRows);
       setLo(nLo);
@@ -602,90 +585,62 @@ export default function Home() {
 
             {rows.length > 0 && (
               <ul className="flex flex-col gap-1.5">
-                {rows.map((r, i) => (
-                  <li
-                    key={i}
-                    className="animate-rowin flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2 text-sm"
-                  >
-                    <span className="font-semibold text-stone-700">{usd(r.guess)}</span>
-                    <span className="flex items-center gap-2 text-stone-500">
-                      {r.direction === "match"
-                        ? "Nailed it"
-                        : r.direction === "higher"
-                          ? "Higher ↑"
-                          : "Lower ↓"}
-                      <span className="animate-bandpop inline-block text-base">{r.band}</span>
-                    </span>
-                  </li>
-                ))}
+                {rows.map((r, i) => {
+                  const newest = i === rows.length - 1;
+                  return (
+                    <li
+                      key={i}
+                      style={
+                        newest
+                          ? ({ "--flash": bandFlash(r.band, r.direction) } as React.CSSProperties)
+                          : undefined
+                      }
+                      className={`flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2 text-sm ${
+                        newest ? "animate-rowflash" : "animate-rowin"
+                      }`}
+                    >
+                      <span className="font-semibold text-stone-700">{usd(r.guess)}</span>
+                      <span className="flex items-center gap-2 text-stone-500">
+                        {r.direction === "match"
+                          ? "Nailed it"
+                          : r.direction === "higher"
+                            ? "Higher ↑"
+                            : "Lower ↓"}
+                        <span className="animate-bandpop inline-block text-base">{r.band}</span>
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
 
             {!done ? (
-              <div className="relative mt-1 flex flex-col gap-2 sm:gap-3">
-                {/* Hot-or-cold reaction that bursts up over the Guess button. */}
-                {burst &&
-                  (() => {
-                    const w = warmth(burst.band, burst.direction);
-                    const nudge =
-                      burst.direction === "higher"
-                        ? "aim higher ↑"
-                        : burst.direction === "lower"
-                          ? "aim lower ↓"
-                          : null;
-                    return (
-                      <div
-                        key={burst.key}
-                        className="animate-burst pointer-events-none absolute bottom-16 left-1/2 z-20"
-                      >
-                        <div
-                          className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold shadow-lg ${w.cls}`}
-                        >
-                          <span className="text-lg">{w.emoji}</span>
-                          <span>{w.label}</span>
-                          {nudge && <span className="opacity-80">· {nudge}</span>}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                {/* Over/under slider */}
+              <div className="mt-1 flex flex-col gap-2 sm:gap-3">
+                {/* Over/under slider — tap the pencil to type an exact price */}
                 <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 sm:p-4">
-                  {/* Input-mode toggle — a clear segmented control so "type an
-                      exact price" is discoverable, not a tiny text link. */}
-                  <div
-                    role="tablist"
-                    aria-label="Guess input mode"
-                    className="mx-auto mb-2 grid w-full max-w-[240px] grid-cols-2 gap-1 rounded-lg bg-stone-200/80 p-1 text-sm font-semibold sm:mb-3"
-                  >
-                    <button
-                      role="tab"
-                      aria-selected={!exactMode}
-                      onClick={() => setExactMode(false)}
-                      className={`rounded-md py-1.5 transition ${
-                        !exactMode ? "bg-white text-emerald-700 shadow-sm" : "text-stone-500 hover:text-stone-700"
-                      }`}
-                    >
-                      🎚️ Slider
-                    </button>
-                    <button
-                      role="tab"
-                      aria-selected={exactMode}
-                      onClick={() => setExactMode(true)}
-                      className={`rounded-md py-1.5 transition ${
-                        exactMode ? "bg-white text-emerald-700 shadow-sm" : "text-stone-500 hover:text-stone-700"
-                      }`}
-                    >
-                      ⌨️ Exact $
-                    </button>
-                  </div>
                   <p className="text-center text-[11px] font-medium uppercase tracking-wide text-stone-400">
                     {rows.length === 0 ? "Drag, or tap Guess to start in the middle" : "Higher or lower?"}
                   </p>
-                  <p className="text-center text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">
-                    {usd(guessValue)}
-                  </p>
                   {!exactMode ? (
                     <>
+                      {/* Price is the hero; a quiet pencil to its right opens
+                          exact entry — far less busy than a segmented toggle. */}
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">
+                          {usd(guessValue)}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setExactMode(true)}
+                          aria-label="Type an exact price"
+                          title="Type an exact price"
+                          className="-mr-1 rounded-md p-1 text-stone-300 transition hover:bg-stone-200/60 hover:text-emerald-600"
+                        >
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
+                            <path d="M2.695 14.762l-1.262 3.155a.5.5 0 0 0 .65.65l3.155-1.262a4 4 0 0 0 1.343-.886L17.5 5.501a2.121 2.121 0 0 0-3-3L3.58 13.419a4 4 0 0 0-.885 1.343Z" />
+                          </svg>
+                        </button>
+                      </div>
                       <input
                         type="range"
                         min={0}
@@ -701,8 +656,9 @@ export default function Home() {
                       </div>
                     </>
                   ) : (
-                    <div className="mt-2 flex items-center gap-1 rounded-lg border border-stone-300 bg-white pl-3 pr-1.5 sm:mt-3">
-                      <span className="text-stone-400">$</span>
+                    <>
+                    <div className="flex items-center gap-1 rounded-lg border border-stone-300 bg-white pl-3 pr-1.5 focus-within:border-emerald-500">
+                      <span className="text-lg font-black text-emerald-800">$</span>
                       <input
                         autoFocus
                         inputMode="numeric"
@@ -716,7 +672,7 @@ export default function Home() {
                         }
                         onKeyDown={(e) => e.key === "Enter" && !submitting && submit()}
                         placeholder={`${compact(lo)} – ${compact(hi)}`}
-                        className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none"
+                        className="min-w-0 flex-1 bg-transparent px-1 py-2 text-lg font-black text-emerald-800 outline-none placeholder:font-normal placeholder:text-stone-300"
                       />
                       <button
                         type="button"
@@ -733,6 +689,17 @@ export default function Home() {
                         M
                       </button>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setExactMode(false)}
+                      className="mx-auto mt-2 flex items-center gap-1.5 text-xs font-medium text-stone-400 transition hover:text-emerald-600"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                        <path d="M10 3.75a2 2 0 1 0-3.937.5H3a.75.75 0 0 0 0 1.5h3.063A2 2 0 0 0 10 6.25h7a.75.75 0 0 0 0-1.5h-7A2 2 0 0 0 10 3.75ZM3 9.25h7.063a2 2 0 0 1 3.874 0H17a.75.75 0 0 1 0 1.5h-3.063a2 2 0 0 1-3.874 0H3a.75.75 0 0 1 0-1.5ZM3 14.25h3.063a2 2 0 0 1 3.874 0H17a.75.75 0 0 1 0 1.5h-7.063a2 2 0 0 1-3.874 0H3a.75.75 0 0 1 0-1.5Z" />
+                      </svg>
+                      use slider
+                    </button>
+                    </>
                   )}
                 </div>
 
