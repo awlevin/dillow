@@ -625,7 +625,7 @@ export default function Home() {
                     <>
                       {/* Price is the hero; a quiet pencil to its right opens
                           exact entry — far less busy than a segmented toggle. */}
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="relative flex items-center justify-center">
                         <p className="text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">
                           {usd(guessValue)}
                         </p>
@@ -634,7 +634,7 @@ export default function Home() {
                           onClick={() => setExactMode(true)}
                           aria-label="Type an exact price"
                           title="Type an exact price"
-                          className="-mr-1 rounded-md p-1 text-stone-300 transition hover:bg-stone-200/60 hover:text-emerald-600"
+                          className="absolute right-0 rounded-md p-1 text-stone-300 transition hover:bg-stone-200/60 hover:text-emerald-600"
                         >
                           <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
                             <path d="M2.695 14.762l-1.262 3.155a.5.5 0 0 0 .65.65l3.155-1.262a4 4 0 0 0 1.343-.886L17.5 5.501a2.121 2.121 0 0 0-3-3L3.58 13.419a4 4 0 0 0-.885 1.343Z" />
