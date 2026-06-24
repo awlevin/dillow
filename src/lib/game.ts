@@ -23,6 +23,25 @@ export function getPool(): Property[] {
   return POOL;
 }
 
+// The slider's top bound. Derived from the priciest listing in the whole pool
+// (not today's pick) so it never leaks the day's answer, yet always reaches the
+// most expensive home we might feature. Rounded up to a "nice" 1/2/5 × 10ⁿ
+// value with headroom so even the top listing isn't pinned to the very end of
+// the slider. Floor keeps the bound sane when the pool is small/cheap.
+const PRICE_CEILING_FLOOR = 25_000_000;
+function niceCeil(n: number): number {
+  if (n <= 0) return PRICE_CEILING_FLOOR;
+  const pow = Math.pow(10, Math.floor(Math.log10(n)));
+  const lead = n / pow;
+  const step = lead <= 1 ? 1 : lead <= 2 ? 2 : lead <= 5 ? 5 : 10;
+  return step * pow;
+}
+export function priceCeiling(): number {
+  const pool = ELIGIBLE.length ? ELIGIBLE : POOL;
+  const max = pool.reduce((m, p) => Math.max(m, p.price), 0);
+  return Math.max(PRICE_CEILING_FLOOR, niceCeil(max * 1.2));
+}
+
 export function snapshotFetchedAt(): string {
   return snapshot.fetchedAt;
 }
