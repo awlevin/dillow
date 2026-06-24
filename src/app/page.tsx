@@ -671,7 +671,7 @@ export default function Home() {
                           )
                         }
                         onKeyDown={(e) => e.key === "Enter" && !submitting && submit()}
-                        placeholder={`${compact(lo)} – ${compact(hi)}`}
+                        placeholder="Enter a price"
                         className="min-w-0 flex-1 bg-transparent px-1 py-2 text-lg font-black text-emerald-800 outline-none placeholder:font-normal placeholder:text-stone-300"
                       />
                       <button
