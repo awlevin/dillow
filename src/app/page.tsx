@@ -322,10 +322,19 @@ export default function Home() {
         const saved = localStorage.getItem(`dillow:game:${data.date}`);
         if (saved) {
           const g = JSON.parse(saved);
-          setRows(g.rows ?? []);
-          setLo(g.lo ?? floor);
-          setHi(g.hi ?? ceiling);
+          const savedRows: Row[] = g.rows ?? [];
+          setRows(savedRows);
           setReveal(g.reveal ?? null);
+          // Rebuild the slider range by replaying the guesses from the CURRENT
+          // [floor, ceiling] instead of trusting the stored bounds. Saves made
+          // under the old $25M cap pinned the range below the real price; this
+          // self-heals them.
+          let b = { lo: floor, hi: ceiling };
+          for (const r of savedRows) {
+            b = narrowBounds(b.lo, b.hi, r.guess, r.direction, r.band as Parameters<typeof narrowBounds>[4]);
+          }
+          setLo(b.lo);
+          setHi(b.hi);
         } else {
           setLo(floor);
           setHi(ceiling);
