@@ -275,7 +275,7 @@ export default function Home() {
   const [t, setT] = useState(0.5); // slider position in the current [lo, hi] range
   const [exactMode, setExactMode] = useState(false);
   const [exact, setExact] = useState("");
-  const [showMap, setShowMap] = useState(false);
+  const [mapActive, setMapActive] = useState(false); // map carousel slide tapped open
   const [streak, setStreak] = useState(0);
   const [statsVersion, setStatsVersion] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
@@ -344,6 +344,16 @@ export default function Home() {
   const guessValue = exactMode
     ? Math.min(hi, Math.max(lo, Number(exact.replace(/[^0-9]/g, "")) || 0))
     : pivot;
+
+  // The map rides along as the final carousel slide (see below). The title line
+  // and this helper both jump there and pop it open.
+  const hasMap = !!(clue && clue.lat != null && clue.lon != null);
+  const openMap = () => {
+    const el = carouselRef.current;
+    if (!el || !clue) return;
+    el.scrollTo({ left: clue.photos.length * el.clientWidth, behavior: "smooth" });
+    setMapActive(true);
+  };
 
   async function submit() {
     if (!Number.isFinite(guessValue) || guessValue <= 0) {
@@ -486,54 +496,87 @@ export default function Home() {
                   />
                 </div>
               ))}
+              {/* Location as the final slide. The iframe stays inert behind a
+                  tap-to-open overlay so a swipe slides past it instead of getting
+                  swallowed by the map; once opened, a corner button re-locks it
+                  so the carousel stays swipeable. */}
+              {hasMap && (
+                <div key="map" className="relative h-full w-full shrink-0 snap-center bg-stone-100">
+                  <div className={mapActive ? "h-full w-full" : "pointer-events-none h-full w-full"}>
+                    <PropertyMap lat={clue.lat!} lon={clue.lon!} fill />
+                  </div>
+                  {!mapActive ? (
+                    <button
+                      onClick={openMap}
+                      aria-label="Explore the property location on a map"
+                      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-stone-900/35 text-white transition hover:bg-stone-900/45"
+                    >
+                      <span className="text-4xl drop-shadow">📍</span>
+                      <span className="rounded-full bg-white/95 px-4 py-1.5 text-sm font-semibold text-stone-800 shadow">
+                        Tap to explore the map
+                      </span>
+                      {!done && (
+                        <span className="px-6 text-center text-xs text-white/90 drop-shadow">
+                          Location is a clue — the price is still up to you
+                        </span>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setMapActive(false)}
+                      className="absolute right-2 top-2 z-10 rounded-full bg-stone-900/70 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85"
+                    >
+                      ✕ Done
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            {clue.photos.length > 1 && (
+            {clue.photos.length + (hasMap ? 1 : 0) > 1 && (
               <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-                {clue.photos.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() =>
-                      carouselRef.current?.scrollTo({
-                        left: i * carouselRef.current.clientWidth,
-                        behavior: "smooth",
-                      })
-                    }
-                    aria-label={`Photo ${i + 1}`}
-                    className={`pointer-events-auto h-2 w-2 rounded-full transition ${
-                      i === photoIdx ? "bg-white" : "bg-white/50"
-                    }`}
-                  />
-                ))}
+                {Array.from({ length: clue.photos.length + (hasMap ? 1 : 0) }).map((_, i) => {
+                  const isMapDot = hasMap && i === clue.photos.length;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() =>
+                        carouselRef.current?.scrollTo({
+                          left: i * carouselRef.current.clientWidth,
+                          behavior: "smooth",
+                        })
+                      }
+                      aria-label={isMapDot ? "Map" : `Photo ${i + 1}`}
+                      className={`pointer-events-auto rounded-full transition ${
+                        i === photoIdx ? "bg-white" : "bg-white/50"
+                      } ${isMapDot ? "grid h-2.5 w-2.5 place-items-center text-[7px] leading-none" : "h-2 w-2"}`}
+                    >
+                      {isMapDot ? "📍" : ""}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
           <div className="flex flex-col gap-3 p-4 sm:p-5">
-            <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
+            {hasMap ? (
+              <button
+                onClick={openMap}
+                aria-label={`${propertyTitle(clue)} — view location on the map`}
+                className="group flex items-center gap-1.5 text-left text-lg font-semibold text-stone-800"
+              >
+                <span className="group-hover:underline">{propertyTitle(clue)}</span>
+                <span className="text-base text-emerald-600 transition group-hover:scale-110">📍</span>
+              </button>
+            ) : (
+              <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
+            )}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
               {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
               {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
               {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
               {clue.yearBuilt != null && <Stat label="Built" value={clue.yearBuilt} />}
-              {!done && clue.lat != null && clue.lon != null && (
-                <button
-                  onClick={() => setShowMap((v) => !v)}
-                  className="ml-auto font-medium text-emerald-700 hover:underline"
-                >
-                  📍 {showMap ? "Hide" : "Map"}
-                </button>
-              )}
             </div>
-
-            {/* Optional location peek — collapsed by default to avoid overload. */}
-            {!done && showMap && clue.lat != null && clue.lon != null && (
-              <div className="-mt-1">
-                <PropertyMap lat={clue.lat} lon={clue.lon} />
-                <p className="mt-1 text-center text-xs text-stone-400">
-                  Location is a clue — but the exact price is still up to you.
-                </p>
-              </div>
-            )}
 
             {rows.length > 0 && (
               <ul className="flex flex-col gap-1.5">
@@ -585,6 +628,34 @@ export default function Home() {
                   })()}
                 {/* Over/under slider */}
                 <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
+                  {/* Input-mode toggle — a clear segmented control so "type an
+                      exact price" is discoverable, not a tiny text link. */}
+                  <div
+                    role="tablist"
+                    aria-label="Guess input mode"
+                    className="mx-auto mb-3 grid w-full max-w-[240px] grid-cols-2 gap-1 rounded-lg bg-stone-200/80 p-1 text-sm font-semibold"
+                  >
+                    <button
+                      role="tab"
+                      aria-selected={!exactMode}
+                      onClick={() => setExactMode(false)}
+                      className={`rounded-md py-1.5 transition ${
+                        !exactMode ? "bg-white text-emerald-700 shadow-sm" : "text-stone-500 hover:text-stone-700"
+                      }`}
+                    >
+                      🎚️ Slider
+                    </button>
+                    <button
+                      role="tab"
+                      aria-selected={exactMode}
+                      onClick={() => setExactMode(true)}
+                      className={`rounded-md py-1.5 transition ${
+                        exactMode ? "bg-white text-emerald-700 shadow-sm" : "text-stone-500 hover:text-stone-700"
+                      }`}
+                    >
+                      ⌨️ Exact $
+                    </button>
+                  </div>
                   <p className="text-center text-[11px] font-medium uppercase tracking-wide text-stone-400">
                     {rows.length === 0 ? "Drag, or tap Guess to start in the middle" : "Higher or lower?"}
                   </p>
@@ -651,12 +722,6 @@ export default function Home() {
                     </span>
                     <span>{remaining} left</span>
                   </span>
-                  <button
-                    onClick={() => setExactMode((v) => !v)}
-                    className="font-medium text-emerald-700 hover:underline"
-                  >
-                    {exactMode ? "use slider" : "type exact"}
-                  </button>
                 </div>
                 {error && <p className="text-sm text-red-600">{error}</p>}
               </div>
