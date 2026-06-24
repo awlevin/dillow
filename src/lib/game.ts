@@ -42,6 +42,26 @@ export function priceCeiling(): number {
   return Math.max(PRICE_CEILING_FLOOR, niceCeil(max * 1.2));
 }
 
+// The slider's bottom bound — the mirror of priceCeiling. The pool can carry
+// listings well under the old $50k floor (down to a few thousand), which were
+// just as unreachable as the $400M outlier was above. Round DOWN to a nice
+// value below the cheapest listing, capped at $50k so a typical pool keeps a
+// sensible floor.
+const PRICE_FLOOR_CAP = 50_000;
+function niceFloor(n: number): number {
+  if (n <= 0) return 0;
+  const pow = Math.pow(10, Math.floor(Math.log10(n)));
+  const lead = n / pow;
+  const step = lead >= 5 ? 5 : lead >= 2 ? 2 : 1;
+  return step * pow;
+}
+export function priceFloor(): number {
+  const pool = ELIGIBLE.length ? ELIGIBLE : POOL;
+  const min = pool.reduce((m, p) => Math.min(m, p.price), Infinity);
+  if (!Number.isFinite(min)) return PRICE_FLOOR_CAP;
+  return Math.min(PRICE_FLOOR_CAP, niceFloor(min * 0.8));
+}
+
 export function snapshotFetchedAt(): string {
   return snapshot.fetchedAt;
 }

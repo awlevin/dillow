@@ -314,18 +314,20 @@ export default function Home() {
         const data = await res.json();
         setDate(data.date);
         setClue(data.property);
-        // The slider top is pool-wide and dynamic so it always reaches the
-        // priciest home we feature (see priceCeiling in lib/game). PRICE_MAX is
-        // only a pre-load fallback.
+        // The slider bounds are pool-wide and dynamic so they always reach the
+        // cheapest and priciest homes we feature (see priceFloor/priceCeiling in
+        // lib/game). PRICE_MIN/PRICE_MAX are only pre-load fallbacks.
+        const floor = typeof data.priceFloor === "number" ? data.priceFloor : PRICE_MIN;
         const ceiling = typeof data.priceCeiling === "number" ? data.priceCeiling : PRICE_MAX;
         const saved = localStorage.getItem(`dillow:game:${data.date}`);
         if (saved) {
           const g = JSON.parse(saved);
           setRows(g.rows ?? []);
-          setLo(g.lo ?? PRICE_MIN);
+          setLo(g.lo ?? floor);
           setHi(g.hi ?? ceiling);
           setReveal(g.reveal ?? null);
         } else {
+          setLo(floor);
           setHi(ceiling);
         }
       } catch {

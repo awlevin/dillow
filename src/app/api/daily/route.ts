@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDailyProperty, dayKey, priceCeiling } from "@/lib/game";
+import { getDailyProperty, dayKey, priceCeiling, priceFloor } from "@/lib/game";
 import { getDailyOffset, getGallery } from "@/lib/leaderboard";
 import { toClue } from "@/lib/types";
 
@@ -15,9 +15,14 @@ export async function GET() {
     // Prefer a runtime-enriched gallery (more/interior photos) when available.
     const gallery = await getGallery(property.id);
     const enriched = gallery && gallery.length > property.photos.length ? { ...property, photos: gallery } : property;
-    // priceCeiling is the slider's top bound — pool-wide, so it never reveals
-    // today's price (see priceCeiling in lib/game).
-    return NextResponse.json({ date, property: toClue(enriched), priceCeiling: priceCeiling() });
+    // priceFloor/priceCeiling are the slider's bounds — pool-wide, so they
+    // never reveal today's price (see lib/game).
+    return NextResponse.json({
+      date,
+      property: toClue(enriched),
+      priceFloor: priceFloor(),
+      priceCeiling: priceCeiling(),
+    });
   } catch (err) {
     console.error("[/api/daily]", err);
     return NextResponse.json(
