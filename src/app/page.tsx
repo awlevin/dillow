@@ -173,6 +173,27 @@ function recordStats(e: StatEntry) {
   }
 }
 
+// Animated window scroll to an absolute Y. We step it ourselves (timer + easing)
+// rather than scrollTo({behavior:"smooth"}) / scrollIntoView({behavior:"smooth"})
+// because the native smooth animation can get silently dropped; stepping the
+// position is reliable everywhere. Honors prefers-reduced-motion with a jump.
+function smoothScrollTo(targetY: number, duration = 500) {
+  const startY = window.scrollY;
+  const dist = targetY - startY;
+  if (Math.abs(dist) < 2) return;
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    window.scrollTo(0, targetY);
+    return;
+  }
+  const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  const t0 = performance.now();
+  const id = setInterval(() => {
+    const p = Math.min(1, (performance.now() - t0) / duration);
+    window.scrollTo(0, startY + dist * ease(p));
+    if (p >= 1) clearInterval(id);
+  }, 16);
+}
+
 // A short buzz on supported devices — silently ignored where unavailable.
 function buzz(pattern: number | number[]) {
   try {
@@ -260,7 +281,11 @@ export default function Home() {
   const [statsVersion, setStatsVersion] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const revealRef = useRef<HTMLDivElement>(null);
+  const prevDone = useRef(false);
+  const loopReset = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [reveal, setReveal] = useState<Reveal | null>(null);
+  const [showNextDrop, setShowNextDrop] = useState(false); // held back until the reveal settles
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -294,6 +319,12 @@ export default function Home() {
           const savedRows: Row[] = g.rows ?? [];
           setRows(savedRows);
           setReveal(g.reveal ?? null);
+          // Restoring an already-finished game shouldn't trigger the end-game
+          // auto-scroll or the delayed countdown reveal — show it right away.
+          if (g.reveal) {
+            prevDone.current = true;
+            setShowNextDrop(true);
+          }
           // Rebuild the slider range by replaying the guesses from the CURRENT
           // [floor, ceiling] instead of trusting the stored bounds. Saves made
           // under the old $25M cap pinned the range below the real price; this
@@ -317,6 +348,23 @@ export default function Home() {
   }, []);
 
   const done = reveal !== null;
+
+  // When the game finishes (this session, not on restoring an already-done game),
+  // bring the result card to the top so the "next home" countdown below it is in
+  // view, and hold that countdown back a few seconds so it doesn't compete with
+  // the result card's entrance/count-up.
+  useEffect(() => {
+    if (done && !prevDone.current) {
+      if (revealRef.current) {
+        smoothScrollTo(revealRef.current.getBoundingClientRect().top + window.scrollY - 12);
+      }
+      const t = setTimeout(() => setShowNextDrop(true), 2800);
+      prevDone.current = done;
+      return () => clearTimeout(t);
+    }
+    prevDone.current = done;
+  }, [done]);
+
   const remaining = MAX_ATTEMPTS - rows.length;
   const pivot = useMemo(() => tToPrice(t, lo, hi), [t, lo, hi]);
   const guessValue = exactMode
@@ -332,9 +380,10 @@ export default function Home() {
   // yank it back to the first photo.
   const openMap = () => {
     const el = carouselRef.current;
-    // Instant, not smooth: scroll-snap: mandatory yanks a smooth programmatic
-    // scroll back to the first slide before it lands.
-    if (el) el.scrollTo({ left: el.scrollWidth });
+    // Jump to the map slide by index (not scrollWidth — a trailing loop clone
+    // sits after it). Instant, not smooth: scroll-snap: mandatory yanks a smooth
+    // programmatic scroll back to the first slide before it lands.
+    if (el && clue) el.scrollTo({ left: clue.photos.length * el.clientWidth });
   };
 
   // Exact-mode shortcut: type "250", tap K → 250,000 (or M → 250,000,000) so
@@ -467,6 +516,17 @@ export default function Home() {
                 const el = e.currentTarget;
                 const i = Math.round(el.scrollLeft / el.clientWidth);
                 if (i !== photoIdx) setPhotoIdx(i);
+                // Loop: a trailing clone of the first photo sits after the map.
+                // When the scroll settles on it, jump back to the real first
+                // slide — so one swipe past the end wraps to the beginning.
+                if (loopReset.current) clearTimeout(loopReset.current);
+                const realSlides = clue.photos.length + (hasMap ? 1 : 0);
+                if (i >= realSlides && realSlides > 1) {
+                  loopReset.current = setTimeout(() => {
+                    el.scrollLeft = 0;
+                    setPhotoIdx(0);
+                  }, 140);
+                }
               }}
               className="no-scrollbar flex aspect-[16/10] snap-x snap-mandatory overflow-x-auto sm:aspect-[3/2]"
             >
@@ -517,6 +577,23 @@ export default function Home() {
                       ✕ Done
                     </button>
                   )}
+                </div>
+              )}
+              {/* Trailing clone of the first photo — the slide you scroll onto
+                  past the map. onScroll silently snaps back to the real first
+                  photo, so the carousel loops without a visible jump. */}
+              {clue.photos.length + (hasMap ? 1 : 0) > 1 && clue.photos.length > 0 && (
+                <div key="loop-clone" aria-hidden className="relative h-full w-full shrink-0 snap-center">
+                  <Image
+                    src={clue.photos[0]}
+                    alt=""
+                    fill
+                    sizes="(max-width: 640px) 100vw, 576px"
+                    loader={rdcpixLoader}
+                    placeholder="blur"
+                    blurDataURL={rdcpixThumb(clue.photos[0])}
+                    className="object-cover"
+                  />
                 </div>
               )}
             </div>
@@ -702,13 +779,15 @@ export default function Home() {
                 {error && <p className="text-sm text-red-600">{error}</p>}
               </div>
             ) : (
-              <RevealCard reveal={reveal!} rows={rows} shareText={shareText} date={date} />
+              <div ref={revealRef}>
+                <RevealCard reveal={reveal!} rows={rows} shareText={shareText} date={date} />
+              </div>
             )}
           </div>
         </section>
       )}
 
-      {done && <NextDrop />}
+      {done && showNextDrop && <NextDrop />}
 
       <Yesterday streak={streak} />
 
@@ -1143,7 +1222,7 @@ function NextDrop() {
   const secs = totalSec % 60;
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-amber-50 p-5 text-center shadow-sm">
+    <section className="animate-reveal relative overflow-hidden rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-amber-50 p-5 text-center shadow-sm">
       {/* drifting shimmer */}
       <div
         aria-hidden
@@ -1165,7 +1244,7 @@ function NextDrop() {
         {next ? (
           <p className="animate-reveal text-sm text-stone-600">
             Tomorrow we&apos;re house-hunting in{" "}
-            <span className="font-bold text-emerald-800">
+            <span className="inline-block whitespace-nowrap font-bold text-emerald-800">
               📍 {next.city}, {next.state}
             </span>
           </p>
