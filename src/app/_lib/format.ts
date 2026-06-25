@@ -8,14 +8,14 @@ export const usd = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 // Accuracy shown next to a "% off" label: whole numbers at/above 1%, tenths below
-// it so near-misses still separate (".1" vs ".2"). Mirrors displayPct() in
+// it so near-misses still separate ("0.1" vs "0.2"). Mirrors displayPct() in
 // lib/game.ts, which the leaderboard ranks by — keep the 1% rule in sync so the
 // board's order always matches the numbers it prints.
 export function formatPct(pctError: number): string {
   const pct = Math.abs(pctError) * 100;
   const v = pct < 1 ? Math.round(pct * 10) / 10 : Math.round(pct);
   if (v >= 1) return String(v); // whole number (incl. 0.95% rounding up to 1)
-  return v === 0 ? "0" : v.toFixed(1).replace(/^0/, ""); // 0.2 -> ".2"
+  return v === 0 ? "0" : v.toFixed(1); // 0.2 -> "0.2"
 }
 
 export const compact = (n: number) =>
