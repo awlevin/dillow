@@ -44,7 +44,7 @@ export function PropertyCarousel({
   };
 
   return (
-    <div className="relative bg-stone-100">
+    <div className="group relative bg-stone-100">
       <div
         ref={carouselRef}
         onScroll={(e) => {
@@ -147,16 +147,16 @@ export function PropertyCarousel({
           <button
             onClick={() => nudge(-1)}
             aria-label="Previous photo"
-            className="absolute left-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-stone-900/45 p-2 text-white shadow transition hover:bg-stone-900/70 sm:block"
+            className="absolute left-2 top-1/2 z-20 hidden -translate-y-1/2 scale-90 rounded-full bg-transparent p-1.5 text-white transition-all duration-200 group-hover:scale-100 group-hover:bg-stone-900/30 hover:scale-110 hover:bg-stone-900/60 sm:block"
           >
-            <ChevronLeft size={20} aria-hidden="true" />
+            <ChevronLeft size={18} aria-hidden="true" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]" />
           </button>
           <button
             onClick={() => nudge(1)}
             aria-label="Next photo"
-            className="absolute right-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-stone-900/45 p-2 text-white shadow transition hover:bg-stone-900/70 sm:block"
+            className="absolute right-2 top-1/2 z-20 hidden -translate-y-1/2 scale-90 rounded-full bg-transparent p-1.5 text-white transition-all duration-200 group-hover:scale-100 group-hover:bg-stone-900/30 hover:scale-110 hover:bg-stone-900/60 sm:block"
           >
-            <ChevronRight size={20} aria-hidden="true" />
+            <ChevronRight size={18} aria-hidden="true" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]" />
           </button>
         </>
       )}
