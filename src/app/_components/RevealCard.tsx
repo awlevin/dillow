@@ -41,6 +41,8 @@ export function RevealCard({
       const data = await res.json();
       if (res.ok && typeof data.rank === "number") {
         setJoinRank({ rank: data.rank, count: data.count });
+        // Nudge the live leaderboard to refetch so the player's new placement shows.
+        window.dispatchEvent(new Event("dillow:leaderboard-changed"));
         try {
           const raw = localStorage.getItem(`dillow:game:${date}`);
           if (raw) {
@@ -98,8 +100,8 @@ export function RevealCard({
       {leaderboard?.enabled &&
         (joinRank ? (
           <p className="rounded-lg bg-white/70 px-3 py-2 text-sm text-emerald-800">
-            🏆 You&apos;re <span className="font-bold">#{joinRank.rank}</span> of {joinRank.count} today · full
-            results drop tomorrow
+            🏆 You&apos;re <span className="font-bold">#{joinRank.rank}</span> of {joinRank.count} today · see
+            the full board below
           </p>
         ) : (
           <div className="flex flex-col gap-2 rounded-lg bg-white/70 p-3 text-left">

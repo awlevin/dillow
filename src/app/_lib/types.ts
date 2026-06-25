@@ -59,9 +59,11 @@ export type LeaderboardEntry = {
 
 export type LeaderboardBoard = {
   enabled: boolean;
-  revealed?: boolean;
+  today?: boolean;
   date?: string;
   property?: { city: string; state: string; price: number; photos: string[] };
   top?: LeaderboardEntry[];
   count?: number;
+  // The requesting player's global placement for the day, if they've joined.
+  me?: { rank: number; entry: LeaderboardEntry | null } | null;
 };

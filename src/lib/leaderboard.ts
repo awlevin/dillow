@@ -86,6 +86,20 @@ export async function dayCount(date: string): Promise<number> {
   return redis.zcard(setKey(date));
 }
 
+// Where a single player placed for `date`, plus their entry. Returns null if
+// they haven't joined the board yet (played but no name, or didn't play).
+export async function playerStanding(
+  date: string,
+  id: string,
+): Promise<{ rank: number; entry: Entry | null } | null> {
+  if (!redis) return null;
+  const revrank = await redis.zrevrank(setKey(date), id);
+  if (revrank === null) return null;
+  const raw = await redis.hget<string | Entry>(metaKey(date), id);
+  const entry = raw ? (typeof raw === "string" ? (JSON.parse(raw) as Entry) : raw) : null;
+  return { rank: revrank + 1, entry };
+}
+
 // ── Gallery cache ────────────────────────────────────────────────────────────
 // Full photo galleries fetched at runtime (admin/cron) live in Redis, since
 // Vercel's filesystem is read-only and can't update the committed snapshot.

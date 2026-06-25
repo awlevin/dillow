@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { getDailyProperty, isPastDate, dayKeyOffset, dayKey, finalScore } from "@/lib/game";
+import { getDailyProperty, isPastDate, dayKey, finalScore } from "@/lib/game";
 import {
   leaderboardEnabled,
   topEntries,
   dayCount,
+  playerStanding,
   getDailyOffset,
   getGame,
   submitEntry,
@@ -42,25 +43,29 @@ export async function POST(req: Request) {
   return NextResponse.json({ rank: r.rank, count: r.count });
 }
 
-// Next-day reveal: returns the leaderboard + answer for a PAST day only. Today's
-// board is intentionally withheld until the day rolls over (the suspense hook).
+// Live leaderboard: today's standings by default (top 5 + the caller's own
+// placement). Pass ?id= to get where that player ranks globally, even outside
+// the top 5. The answer (property + price) is only revealed for PAST days, so
+// today's board never spoils the game in progress.
 export async function GET(req: Request) {
-  const date = new URL(req.url).searchParams.get("date") ?? dayKeyOffset(-1);
-
   if (!leaderboardEnabled()) {
     return NextResponse.json({ enabled: false });
   }
-  if (!isPastDate(date)) {
-    return NextResponse.json(
-      { enabled: true, revealed: false, message: "Results are revealed the next day." },
-      { status: 200 },
-    );
-  }
+
+  const url = new URL(req.url);
+  const date = url.searchParams.get("date") ?? dayKey();
+  const id = url.searchParams.get("id");
+  const past = isPastDate(date);
 
   try {
-    const property = getDailyProperty(date, await getDailyOffset(date)); // day is over
-    const [top, count] = await Promise.all([topEntries(date, 10), dayCount(date)]);
-    return NextResponse.json({ enabled: true, revealed: true, date, property, top, count });
+    const [top, count, me] = await Promise.all([
+      topEntries(date, 5),
+      dayCount(date),
+      id ? playerStanding(date, id) : Promise.resolve(null),
+    ]);
+    // Only reveal the answer once the day is over.
+    const property = past ? getDailyProperty(date, await getDailyOffset(date)) : undefined;
+    return NextResponse.json({ enabled: true, today: !past, date, property, top, count, me });
   } catch (err) {
     console.error("[/api/leaderboard]", err);
     return NextResponse.json({ error: "Could not load leaderboard." }, { status: 502 });

@@ -12,7 +12,7 @@ import { HowToPlay } from "./HowToPlay";
 import { NextDrop } from "./NextDrop";
 import { PropertyCard } from "./PropertyCard";
 import { StatsPanel } from "./StatsPanel";
-import { Yesterday } from "./Yesterday";
+import { Leaderboard } from "./Leaderboard";
 
 export function HomeGame() {
   const [date, setDate] = useState("");
@@ -232,7 +232,7 @@ export function HomeGame() {
 
       {done && showNextDrop && <NextDrop />}
 
-      <Yesterday streak={streak} />
+      <Leaderboard streak={streak} />
       <StatsPanel version={statsVersion} />
 
       <footer className="text-center">
