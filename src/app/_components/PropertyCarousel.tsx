@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, type RefObject } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { rdcpixLoader, rdcpixThumb } from "@/lib/rdcpix";
 import type { Clue } from "../_lib/types";
 import { PhotoLightbox } from "./PhotoLightbox";
@@ -34,6 +35,13 @@ export function PropertyCarousel({
 }: PropertyCarouselProps) {
   const slideCount = clue.photos.length + (hasMap ? 1 : 0);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+
+  // Desktop-only prev/next: nudge the scroll container by one slide; the
+  // onScroll handler above keeps photoIdx and the loop wrap in sync.
+  const nudge = (dir: -1 | 1) => {
+    const el = carouselRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
+  };
 
   return (
     <div className="relative bg-stone-100">
@@ -134,6 +142,25 @@ export function PropertyCarousel({
         </div>
       )}
 
+      {slideCount > 1 && (
+        <>
+          <button
+            onClick={() => nudge(-1)}
+            aria-label="Previous photo"
+            className="absolute left-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-stone-900/45 p-2 text-white shadow transition hover:bg-stone-900/70 sm:block"
+          >
+            <ChevronLeft size={20} aria-hidden="true" />
+          </button>
+          <button
+            onClick={() => nudge(1)}
+            aria-label="Next photo"
+            className="absolute right-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full bg-stone-900/45 p-2 text-white shadow transition hover:bg-stone-900/70 sm:block"
+          >
+            <ChevronRight size={20} aria-hidden="true" />
+          </button>
+        </>
+      )}
+
       {lightboxIdx !== null && (
         <PhotoLightbox photos={clue.photos} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
       )}
@@ -170,7 +197,7 @@ function PhotoSlide({
         <button
           onClick={onOpen}
           aria-label="View photo full screen"
-          className="absolute inset-0 z-10 cursor-zoom-in"
+          className="absolute inset-0 z-10 cursor-pointer"
         />
       )}
     </div>
