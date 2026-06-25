@@ -71,7 +71,7 @@ export function NextDrop() {
 
         {next ? (
           <p className="animate-reveal text-sm text-stone-600">
-            Tomorrow we&apos;re house-hunting in{" "}
+            Next up, we&apos;re headed to{" "}
             <span className="inline-block whitespace-nowrap font-bold text-emerald-800">
               📍 {next.city}, {next.state}
             </span>
@@ -79,7 +79,7 @@ export function NextDrop() {
         ) : (
           <p className="flex items-center justify-center gap-2 text-sm text-stone-400">
             <HouseMark className="h-5 w-5" />
-            Scouting tomorrow&apos;s city…
+            Scouting the next city…
           </p>
         )}
       </div>
