@@ -4,8 +4,8 @@
 // rendered in the optional in-play peek, so it never spoils the price.
 // - Google (when NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is set): the Embed API drops a
 //   native pin at q=lat,lon.
-// - Otherwise: a keyless OpenStreetMap embed with a real (Leaflet) marker via the
-//   `marker` param, so the pin stays put as you pan and zoom out.
+// - Otherwise: a keyless OpenStreetMap embed with a real (Leaflet) marker via
+//   the `marker` param, so the pin stays put as you pan and zoom out.
 // `fill` makes the map stretch to its container (used as a carousel slide);
 // otherwise it renders the compact, rounded card used for the inline peek.
 export function PropertyMap({ lat, lon, fill }: { lat: number; lon: number; fill?: boolean }) {
@@ -17,9 +17,7 @@ export function PropertyMap({ lat, lon, fill }: { lat: number; lon: number; fill
 
   return (
     <div
-      className={
-        fill ? "h-full w-full overflow-hidden" : "overflow-hidden rounded-xl border border-stone-200"
-      }
+      className={fill ? "h-full w-full overflow-hidden" : "overflow-hidden rounded-xl border border-stone-200"}
     >
       <iframe
         title="Property location"
