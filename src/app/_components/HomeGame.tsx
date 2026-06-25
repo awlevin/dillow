@@ -32,7 +32,6 @@ export function HomeGame() {
   const revealRef = useRef<HTMLDivElement>(null);
   const prevDone = useRef(false);
   const [reveal, setReveal] = useState<Reveal | null>(null);
-  const [showNextDrop, setShowNextDrop] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +65,6 @@ export function HomeGame() {
           setReveal(g.reveal ?? null);
           if (g.reveal) {
             prevDone.current = true;
-            setShowNextDrop(true);
           }
 
           let b = { lo: floor, hi: ceiling };
@@ -90,13 +88,8 @@ export function HomeGame() {
   const done = reveal !== null;
 
   useEffect(() => {
-    if (done && !prevDone.current) {
-      if (revealRef.current) {
-        smoothScrollTo(revealRef.current.getBoundingClientRect().top + window.scrollY - 12);
-      }
-      const t = setTimeout(() => setShowNextDrop(true), 2800);
-      prevDone.current = done;
-      return () => clearTimeout(t);
+    if (done && !prevDone.current && revealRef.current) {
+      smoothScrollTo(revealRef.current.getBoundingClientRect().top + window.scrollY - 12);
     }
     prevDone.current = done;
   }, [done]);
@@ -236,10 +229,10 @@ export function HomeGame() {
 
       {done && <RecentRooms />}
 
-      {done && showNextDrop && <NextDrop />}
-
       {done && <Leaderboard streak={streak} />}
       {done && <StatsPanel version={statsVersion} />}
+
+      {done && <NextDrop />}
 
       <footer className="text-center">
         <p className="text-xs text-stone-400">Real listings from across the US via realtor.com.</p>
