@@ -67,6 +67,7 @@ export function PropertyCard({
   const openMap = () => {
     const el = carouselRef.current;
     if (el) el.scrollTo({ left: (clue.photos.length + (loop ? 1 : 0)) * el.clientWidth });
+    setMapActive(true);
   };
 
   useEffect(() => {
