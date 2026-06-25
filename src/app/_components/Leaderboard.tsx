@@ -25,7 +25,7 @@ export function Leaderboard({ streak }: { streak: number }) {
   }, []);
 
   if (!board?.enabled) return null;
-  const { top = [], count = 0, date, me } = board;
+  const { top = [], count = 0, me } = board;
 
   const myId = me?.entry?.id ?? null;
   // If the player already shows up in the top 5, don't repeat them below it.
@@ -35,7 +35,7 @@ export function Leaderboard({ streak }: { streak: number }) {
     <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">
-          Today&apos;s leaderboard{date ? ` · ${date}` : ""}
+          Today&apos;s leaderboard
         </h2>
         {streak > 0 && (
           <span className="shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-sm font-bold text-orange-600">
