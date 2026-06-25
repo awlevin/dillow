@@ -18,7 +18,7 @@ export function GameHeader({ onHelp }: { onHelp: () => void }) {
         aria-label="How to play"
         className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 text-sm font-bold text-stone-500 transition hover:bg-stone-100"
       >
-        <DillowMark className="h-5 w-5" />
+        ?
       </button>
     </header>
   );
