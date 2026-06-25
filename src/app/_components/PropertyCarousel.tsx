@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import type { RefObject } from "react";
+import { useState, type RefObject } from "react";
 import { rdcpixLoader, rdcpixThumb } from "@/lib/rdcpix";
 import type { Clue } from "../_lib/types";
+import { PhotoLightbox } from "./PhotoLightbox";
 import { PropertyMap } from "./PropertyMap";
 
 type PropertyCarouselProps = {
@@ -32,6 +33,7 @@ export function PropertyCarousel({
   setMapActive,
 }: PropertyCarouselProps) {
   const slideCount = clue.photos.length + (hasMap ? 1 : 0);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
   return (
     <div className="relative bg-stone-100">
@@ -69,7 +71,7 @@ export function PropertyCarousel({
         )}
 
         {clue.photos.map((src, i) => (
-          <PhotoSlide key={src} src={src} alt={`Photo ${i + 1}`} />
+          <PhotoSlide key={src} src={src} alt={`Photo ${i + 1}`} onOpen={() => setLightboxIdx(i)} />
         ))}
 
         {hasMap && (
@@ -131,6 +133,10 @@ export function PropertyCarousel({
           })}
         </div>
       )}
+
+      {lightboxIdx !== null && (
+        <PhotoLightbox photos={clue.photos} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
+      )}
     </div>
   );
 }
@@ -140,11 +146,13 @@ function PhotoSlide({
   alt,
   keyName,
   hidden,
+  onOpen,
 }: {
   src: string;
   alt: string;
   keyName?: string;
   hidden?: boolean;
+  onOpen?: () => void;
 }) {
   return (
     <div key={keyName} aria-hidden={hidden} className="relative h-full w-full shrink-0 snap-center">
@@ -158,6 +166,13 @@ function PhotoSlide({
         blurDataURL={rdcpixThumb(src)}
         className="object-cover"
       />
+      {onOpen && (
+        <button
+          onClick={onOpen}
+          aria-label="View photo full screen"
+          className="absolute inset-0 z-10 cursor-zoom-in"
+        />
+      )}
     </div>
   );
 }
