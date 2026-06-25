@@ -31,9 +31,27 @@ export default function OpengraphImage() {
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 28,
+            position: "relative",
           }}
         >
-          <div style={{ fontSize: 88, fontWeight: 800, color: "#059669" }}>?</div>
+          <svg width="132" height="132" viewBox="0 0 100 100">
+            <path d="M50 22 L82 50 H74 V80 H26 V50 H18 Z" fill="#059669" />
+          </svg>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 58,
+              color: "#ffffff",
+              fontFamily: "Arial, Helvetica, sans-serif",
+              fontSize: 50,
+              fontWeight: 800,
+              textAlign: "center",
+            }}
+          >
+            $
+          </div>
         </div>
         <div style={{ fontSize: 132, fontWeight: 800, letterSpacing: -5 }}>dillow</div>
         <div style={{ fontSize: 40, opacity: 0.92, marginTop: 6 }}>

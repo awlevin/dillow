@@ -14,13 +14,27 @@ export default function AppleIcon() {
           alignItems: "center",
           justifyContent: "center",
           background: "#059669",
-          color: "#ffffff",
-          fontFamily: "sans-serif",
-          fontSize: 120,
-          fontWeight: 800,
+          position: "relative",
         }}
       >
-        ?
+        <svg width="180" height="180" viewBox="0 0 100 100">
+          <path d="M50 22 L82 50 H74 V80 H26 V50 H18 Z" fill="#ffffff" />
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 81,
+            color: "#059669",
+            fontFamily: "Arial, Helvetica, sans-serif",
+            fontSize: 68,
+            fontWeight: 800,
+            textAlign: "center",
+          }}
+        >
+          $
+        </div>
       </div>
     ),
     { ...size },

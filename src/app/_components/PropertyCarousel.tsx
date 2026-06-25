@@ -58,7 +58,7 @@ export function PropertyCarousel({
             }
           }
         }}
-        className="no-scrollbar flex aspect-[16/10] snap-x snap-mandatory overflow-x-auto sm:aspect-[3/2]"
+        className="no-scrollbar flex aspect-[16/10] touch-pan-x snap-x snap-mandatory overflow-x-auto overflow-y-hidden overscroll-x-contain sm:aspect-[3/2]"
       >
         {loop && (
           hasMap ? (
