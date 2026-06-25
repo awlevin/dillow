@@ -10,6 +10,7 @@ import { setFlag } from "../_lib/flags";
 import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice, usd } from "../_lib/format";
 import type { Reveal, RoomInfo, RoomMemberView, RoomRound, Row } from "../_lib/types";
 import { PropertyCard } from "./PropertyCard";
+import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 
 type RoundUI = {
   rows: Row[];
@@ -215,8 +216,15 @@ export function RoomGame({ roomId }: { roomId: string }) {
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <main className="mx-auto w-full max-w-xl px-4 py-10 text-center text-stone-400">
-        Loading challenge room…
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 py-4 sm:gap-5 sm:py-10">
+        <PropertyCardSkeleton
+          quips={[
+            "Setting up the challenge…",
+            "Lining up 3 homes…",
+            "Polishing the leaderboard…",
+            "Saving you a seat…",
+          ]}
+        />
       </main>
     );
   }

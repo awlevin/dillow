@@ -231,14 +231,99 @@ input[type="range"]::-moz-range-thumb {
   animation: nextglow 6s ease-in-out infinite;
 }
 
+/* ── Loading UX ──────────────────────────────────────────────────────────── */
+
+/* The house concierge gently bobs while it "finds your home". */
+@keyframes housebob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7%);
+  }
+}
+.animate-housebob {
+  animation: housebob 1.9s ease-in-out infinite;
+}
+
+/* Windows light up like rooms turning on; per-window animation-delay alternates them. */
+@keyframes windowglow {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  45% {
+    opacity: 1;
+  }
+}
+.house-window {
+  animation: windowglow 1.5s ease-in-out infinite;
+}
+
+/* Each rotating loading quip fades up as it swaps in. */
+@keyframes quipfade {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-quipfade {
+  animation: quipfade 0.4s ease-out;
+}
+
+/* Skeleton shimmer sweep. */
+@keyframes shimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -150% 0;
+  }
+}
+.dillow-skeleton {
+  background: linear-gradient(100deg, #ece9e5 30%, #f7f5f3 50%, #ece9e5 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* The price thumb sweeps the track while we "calibrate" today's range. */
+@keyframes calibrate {
+  0% {
+    left: 8%;
+  }
+  50% {
+    left: 92%;
+  }
+  100% {
+    left: 8%;
+  }
+}
+.animate-calibrate {
+  animation: calibrate 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-confetti,
   .animate-pricepop,
   .animate-bandpop,
   .animate-rowin,
   .animate-tickpop,
-  .animate-nextglow {
+  .animate-nextglow,
+  .animate-housebob,
+  .animate-quipfade,
+  .dillow-skeleton,
+  .animate-calibrate {
     animation-duration: 0.01ms;
     animation-iteration-count: 1;
+  }
+  /* Keep the loader legible when motion is off: windows simply stay lit. */
+  .house-window {
+    animation: none;
+    opacity: 1;
   }
 }

@@ -181,8 +181,11 @@ function PhotoSlide({
   hidden?: boolean;
   onOpen?: () => void;
 }) {
+  // "Develop" the photo: it lands soft + desaturated, then sharpens into focus
+  // and full colour once the full-res image finishes loading.
+  const [loaded, setLoaded] = useState(false);
   return (
-    <div key={keyName} aria-hidden={hidden} className="relative h-full w-full shrink-0 snap-center">
+    <div key={keyName} aria-hidden={hidden} className="relative h-full w-full shrink-0 snap-center overflow-hidden">
       <Image
         src={src}
         alt={alt}
@@ -191,7 +194,11 @@ function PhotoSlide({
         loader={rdcpixLoader}
         placeholder="blur"
         blurDataURL={rdcpixThumb(src)}
-        className="object-cover"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={`object-cover transition-[transform,filter] duration-700 ease-out motion-reduce:transition-none ${
+          loaded ? "scale-100 blur-0 saturate-100" : "scale-[1.04] blur-[6px] saturate-[0.65]"
+        }`}
       />
       {onOpen && (
         <button

@@ -12,6 +12,7 @@ import { GameHeader } from "./GameHeader";
 import { HowToPlay } from "./HowToPlay";
 import { NextDrop } from "./NextDrop";
 import { PropertyCard } from "./PropertyCard";
+import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import { RecentRooms } from "./RecentRooms";
 import { RoomInvite } from "./RoomInvite";
 import { StatsPanel } from "./StatsPanel";
@@ -203,7 +204,7 @@ export function HomeGame() {
 
       <GameHeader onHelp={() => setShowHelp(true)} />
 
-      {loading && <p className="text-center text-stone-400">Loading today&apos;s home…</p>}
+      {loading && <PropertyCardSkeleton />}
       {error && !clue && (
         <p className="rounded-lg bg-red-50 px-4 py-3 text-center text-sm text-red-700">{error}</p>
       )}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { msUntilNextDrop } from "../_lib/game-day";
+import { HouseMark } from "./LoadingHouse";
 
 function TimeUnit({ value, label, animateKey }: { value: number; label: string; animateKey?: number }) {
   const text = String(value).padStart(2, "0");
@@ -76,7 +77,10 @@ export function NextDrop() {
             </span>
           </p>
         ) : (
-          <p className="text-sm text-stone-400">Tomorrow&apos;s city is loading…</p>
+          <p className="flex items-center justify-center gap-2 text-sm text-stone-400">
+            <HouseMark className="h-5 w-5" />
+            Scouting tomorrow&apos;s city…
+          </p>
         )}
       </div>
     </section>
