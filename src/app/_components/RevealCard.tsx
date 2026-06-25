@@ -37,7 +37,8 @@ export function RevealCard({
         </div>
       </div>
       <p className="text-sm text-stone-600">
-        {formatPct(result.pctError)}% off · {rows.map((r) => r.band).join("")}
+        {formatPct(result.pctError)}% off ·{" "}
+        <span className="tracking-[0.15em]">{rows.map((r) => r.band).join("")}</span>
       </p>
 
       {property.address && (
