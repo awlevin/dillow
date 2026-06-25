@@ -56,9 +56,22 @@ export function tToPrice(t: number, lo: number, hi: number): number {
 
 export const digitsOnly = (value: string) => value.replace(/[^0-9]/g, "");
 
-export const parsePriceInput = (value: string) => Number(digitsOnly(value)) || 0;
+// Parse a typed price into a number, tolerating commas and a single decimal
+// point (so "1.2" → 1.2, ready to be scaled by a K/M unit button).
+export const parsePriceInput = (value: string) => Number(value.replace(/[^0-9.]/g, "")) || 0;
 
+// Format a typed price for display: group the integer part with commas while
+// preserving an in-progress decimal (e.g. "1.", "1.2") so the user can type
+// "1.2" and then tap M. Only the first decimal point is kept.
 export function formatPriceInput(value: string) {
-  const digits = digitsOnly(value);
-  return digits ? Number(digits).toLocaleString() : "";
+  let cleaned = value.replace(/[^0-9.]/g, "");
+  const dot = cleaned.indexOf(".");
+  if (dot !== -1) {
+    // Drop any decimal points after the first.
+    cleaned = cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
+  }
+  if (!cleaned) return "";
+  const [intPart, decPart] = cleaned.split(".");
+  const intFmt = intPart ? Number(intPart).toLocaleString() : "0";
+  return cleaned.includes(".") ? `${intFmt}.${decPart}` : intFmt;
 }

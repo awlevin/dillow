@@ -53,7 +53,7 @@ export function GuessControls({
                 onClick={() => onExactModeChange(true)}
                 aria-label="Type an exact price"
                 title="Type an exact price"
-                className="absolute right-0 rounded-md p-1 text-stone-300 transition hover:bg-stone-200/60 hover:text-emerald-600"
+                className="absolute right-0 rounded-md p-1 text-emerald-600 transition hover:bg-stone-200/60 hover:text-emerald-700"
               >
                 <Pencil size={18} aria-hidden="true" />
               </button>
@@ -78,7 +78,7 @@ export function GuessControls({
               <span className="text-lg font-black text-emerald-800">$</span>
               <input
                 autoFocus
-                inputMode="numeric"
+                inputMode="decimal"
                 value={exact}
                 onChange={(e) => onExactChange(formatPriceInput(e.target.value))}
                 onKeyDown={(e) => e.key === "Enter" && !submitting && onSubmit()}

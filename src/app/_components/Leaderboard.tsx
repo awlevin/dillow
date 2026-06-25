@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getId } from "../_lib/client-storage";
 import { MAX_ATTEMPTS } from "../_lib/format";
 import type { LeaderboardBoard, LeaderboardEntry } from "../_lib/types";
@@ -68,7 +68,73 @@ export function Leaderboard({ streak }: { streak: number }) {
           No one&apos;s guessed yet today — play and you&apos;ll top the board.
         </p>
       )}
+
+      {!me && <JoinForm />}
     </section>
+  );
+}
+
+// Claim a spot on the board with a display name. Returning players (saved name)
+// are added automatically; everyone else gets the input. On success we fire the
+// shared refresh event so the board above re-fetches and shows the new row.
+function JoinForm() {
+  const [name, setName] = useState("");
+  const [joining, setJoining] = useState(false);
+  const autoTried = useRef(false);
+
+  const join = async (nameArg?: string) => {
+    const n = (nameArg ?? name).trim();
+    if (!n || joining) return;
+    setJoining(true);
+    localStorage.setItem("dillow:name", n);
+    try {
+      const res = await fetch("/api/leaderboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: getId(), name: n }),
+      });
+      const data = await res.json();
+      if (res.ok && typeof data.rank === "number") {
+        window.dispatchEvent(new Event("dillow:leaderboard-changed"));
+      }
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      const saved = localStorage.getItem("dillow:name") ?? "";
+      setName(saved);
+      if (saved && !autoTried.current) {
+        autoTried.current = true;
+        await join(saved);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="mt-4 border-t border-stone-100 pt-4">
+      <p className="text-sm font-medium text-stone-700">Add your name to the board</p>
+      <div className="mt-2 flex gap-2">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && join()}
+          placeholder="Your name"
+          maxLength={24}
+          className="min-w-0 flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+        />
+        <button
+          onClick={() => join()}
+          disabled={joining}
+          className="shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {joining ? "…" : "Join"}
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -107,7 +107,7 @@ export function HomeGame() {
   const applyUnit = (mult: number) => {
     const base = parsePriceInput(exact);
     if (!base) return;
-    setExact(Math.min(hi, Math.max(lo, base * mult)).toLocaleString());
+    setExact(Math.min(hi, Math.max(lo, Math.round(base * mult))).toLocaleString());
   };
 
   async function submit() {
@@ -221,7 +221,6 @@ export function HomeGame() {
           reveal={reveal}
           revealRef={revealRef}
           shareText={shareText}
-          date={date}
           onSliderChange={setT}
           onExactModeChange={setExactMode}
           onExactChange={setExact}
@@ -232,7 +231,7 @@ export function HomeGame() {
 
       {done && showNextDrop && <NextDrop />}
 
-      <Leaderboard streak={streak} />
+      {done && <Leaderboard streak={streak} />}
       <StatsPanel version={statsVersion} />
 
       <footer className="text-center">
