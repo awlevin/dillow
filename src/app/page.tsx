@@ -374,6 +374,10 @@ export default function Home() {
   // The map rides along as the final carousel slide (see below). The title line
   // and this helper both jump there and pop it open.
   const hasMap = !!(clue && clue.lat != null && clue.lon != null);
+  // Looping is on once there's more than one slide. When it is, clones bracket
+  // the real slides — a copy of the first slide trails the last, and a copy of
+  // the last slide leads the first — so a swipe off either end wraps around.
+  const loop = !!(clue && clue.photos.length > 0 && clue.photos.length + (hasMap ? 1 : 0) > 1);
   // Glide the carousel to the map slide (the last one). We only scroll — we
   // don't flip mapActive — so the tap-to-explore overlay still greets the user;
   // toggling state here would mutate the slide mid-scroll and scroll-snap would
@@ -382,9 +386,18 @@ export default function Home() {
     const el = carouselRef.current;
     // Jump to the map slide by index (not scrollWidth — a trailing loop clone
     // sits after it). Instant, not smooth: scroll-snap: mandatory yanks a smooth
-    // programmatic scroll back to the first slide before it lands.
-    if (el && clue) el.scrollTo({ left: clue.photos.length * el.clientWidth });
+    // programmatic scroll back to the first slide before it lands. The +lead
+    // skips the leading clone that sits before the real first slide when looping.
+    if (el && clue) el.scrollTo({ left: (clue.photos.length + (loop ? 1 : 0)) * el.clientWidth });
   };
+
+  // With looping on, a clone of the last slide sits before the first photo (so a
+  // backward swipe has somewhere to land before wrapping). Park the carousel one
+  // slide in, on the real first photo, once the slides are laid out.
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (el && loop) el.scrollLeft = el.clientWidth;
+  }, [loop, clue]);
 
   // Exact-mode shortcut: type "250", tap K → 250,000 (or M → 250,000,000) so
   // players don't retype trailing zeroes on every guess. Multiplies whatever is
@@ -514,22 +527,66 @@ export default function Home() {
               ref={carouselRef}
               onScroll={(e) => {
                 const el = e.currentTarget;
-                const i = Math.round(el.scrollLeft / el.clientWidth);
-                if (i !== photoIdx) setPhotoIdx(i);
-                // Loop: a trailing clone of the first photo sits after the map.
-                // When the scroll settles on it, jump back to the real first
-                // slide — so one swipe past the end wraps to the beginning.
-                if (loopReset.current) clearTimeout(loopReset.current);
+                const lead = loop ? 1 : 0;
                 const realSlides = clue.photos.length + (hasMap ? 1 : 0);
-                if (i >= realSlides && realSlides > 1) {
-                  loopReset.current = setTimeout(() => {
-                    el.scrollLeft = 0;
-                    setPhotoIdx(0);
-                  }, 140);
+                // Real slide index, with the leading clone (DOM index 0) offset out.
+                const i = Math.round(el.scrollLeft / el.clientWidth) - lead;
+                if (i >= 0 && i < realSlides && i !== photoIdx) setPhotoIdx(i);
+                // Loop: clones bracket the real slides. Settling on the trailing
+                // clone (first slide, past the end) wraps to the start; settling
+                // on the leading clone (last slide, before the start) wraps to the
+                // end. Either way we silently jump to the real twin.
+                if (loopReset.current) clearTimeout(loopReset.current);
+                if (realSlides > 1) {
+                  if (i >= realSlides) {
+                    loopReset.current = setTimeout(() => {
+                      el.scrollLeft = lead * el.clientWidth;
+                      setPhotoIdx(0);
+                    }, 140);
+                  } else if (i < 0) {
+                    loopReset.current = setTimeout(() => {
+                      el.scrollLeft = realSlides * el.clientWidth;
+                      setPhotoIdx(realSlides - 1);
+                    }, 140);
+                  }
                 }
               }}
               className="no-scrollbar flex aspect-[16/10] snap-x snap-mandatory overflow-x-auto sm:aspect-[3/2]"
             >
+              {/* Leading clone of the last slide — the slide you scroll onto when
+                  swiping backward off the first photo. onScroll silently snaps to
+                  the real last slide, so the carousel loops the other way too. */}
+              {loop &&
+                (hasMap ? (
+                  <div
+                    key="lead-clone"
+                    aria-hidden
+                    className="relative h-full w-full shrink-0 snap-center bg-stone-100"
+                  >
+                    <div className="pointer-events-none h-full w-full">
+                      <PropertyMap lat={clue.lat!} lon={clue.lon!} fill />
+                    </div>
+                    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-stone-900/35 text-white">
+                      <span className="text-4xl drop-shadow">📍</span>
+                      <span className="rounded-full bg-white/95 px-4 py-1.5 text-sm font-semibold text-stone-800 shadow">
+                        Tap to explore the map
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div key="lead-clone" aria-hidden className="relative h-full w-full shrink-0 snap-center">
+                    <Image
+                      src={clue.photos[clue.photos.length - 1]}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 100vw, 576px"
+                      loader={rdcpixLoader}
+                      placeholder="blur"
+                      blurDataURL={rdcpixThumb(clue.photos[clue.photos.length - 1])}
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
               {clue.photos.map((src, i) => (
                 <div key={src} className="relative h-full w-full shrink-0 snap-center">
                   <Image
@@ -606,7 +663,7 @@ export default function Home() {
                       key={i}
                       onClick={() =>
                         carouselRef.current?.scrollTo({
-                          left: i * carouselRef.current.clientWidth,
+                          left: (i + (loop ? 1 : 0)) * carouselRef.current.clientWidth,
                           behavior: "smooth",
                         })
                       }
