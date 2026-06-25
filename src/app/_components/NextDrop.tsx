@@ -23,9 +23,23 @@ function TimeUnit({ value, label, animateKey }: { value: number; label: string; 
   );
 }
 
+// Lead-ins for the location tease, one picked at random per reveal. Each reads
+// naturally straight into the bold "📍 {city}, {state}" that follows.
+const TEASERS = [
+  "Next up, we’re headed to",
+  "Next stop:",
+  "We’re house-hunting in",
+  "Pack your bags for",
+  "Somewhere out in",
+  "Coming up:",
+  "Set your sights on",
+];
+
 export function NextDrop() {
   const [ms, setMs] = useState<number>(() => msUntilNextDrop());
   const [next, setNext] = useState<{ city: string; state: string } | null>(null);
+  // Client-only (NextDrop mounts after the game ends), so randomizing is hydration-safe.
+  const [teaser] = useState(() => TEASERS[Math.floor(Math.random() * TEASERS.length)]);
 
   useEffect(() => {
     const tick = () => setMs(msUntilNextDrop());
@@ -71,7 +85,7 @@ export function NextDrop() {
 
         {next ? (
           <p className="animate-reveal text-sm text-stone-600">
-            Next up, we&apos;re headed to{" "}
+            {teaser}{" "}
             <span className="inline-block whitespace-nowrap font-bold text-emerald-800">
               📍 {next.city}, {next.state}
             </span>
