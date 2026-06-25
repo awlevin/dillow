@@ -26,10 +26,9 @@ export function LoadingHouse({
   size?: "sm" | "md";
 }) {
   // Start at 0 so the server-prerendered markup and the first client render match
-  // (no hydration mismatch); then pick a random entry on mount so it feels fresh.
+  // (no hydration mismatch), then cycle through the quips.
   const [i, setI] = useState(0);
   useEffect(() => {
-    setI(Math.floor(Math.random() * quips.length));
     const id = setInterval(() => setI((n) => (n + 1) % quips.length), 1700);
     return () => clearInterval(id);
   }, [quips.length]);
