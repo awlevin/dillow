@@ -232,7 +232,7 @@ export function HomeGame() {
       {done && showNextDrop && <NextDrop />}
 
       {done && <Leaderboard streak={streak} />}
-      <StatsPanel version={statsVersion} />
+      {done && <StatsPanel version={statsVersion} />}
 
       <footer className="text-center">
         <p className="text-xs text-stone-400">Real listings from across the US via realtor.com.</p>

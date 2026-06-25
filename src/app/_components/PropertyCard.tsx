@@ -58,14 +58,25 @@ export function PropertyCard({
   const [mapActive, setMapActive] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const loopResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevPhotoIdx = useRef(0);
 
   const hasMap = clue.lat != null && clue.lon != null;
   const loop = clue.photos.length > 0 && clue.photos.length + (hasMap ? 1 : 0) > 1;
+  const mapIdx = clue.photos.length;
 
-  const openMap = () => {
+  const toggleMap = () => {
     const el = carouselRef.current;
-    if (el) el.scrollTo({ left: (clue.photos.length + (loop ? 1 : 0)) * el.clientWidth });
-    setMapActive(true);
+    if (!el) return;
+    const lead = loop ? 1 : 0;
+    if (photoIdx === mapIdx) {
+      // Already on the map — go back to whichever photo we came from.
+      el.scrollTo({ left: (prevPhotoIdx.current + lead) * el.clientWidth });
+      setMapActive(false);
+    } else {
+      prevPhotoIdx.current = photoIdx;
+      el.scrollTo({ left: (mapIdx + lead) * el.clientWidth });
+      setMapActive(true);
+    }
   };
 
   useEffect(() => {
@@ -91,7 +102,7 @@ export function PropertyCard({
       <div className="flex flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
         <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
 
-        <PropertyFacts clue={clue} onOpenMap={hasMap ? openMap : undefined} />
+        <PropertyFacts clue={clue} onToggleMap={hasMap ? toggleMap : undefined} />
         <GuessHistory rows={rows} />
 
         {!done ? (
@@ -122,17 +133,17 @@ export function PropertyCard({
   );
 }
 
-function PropertyFacts({ clue, onOpenMap }: { clue: Clue; onOpenMap?: () => void }) {
+function PropertyFacts({ clue, onToggleMap }: { clue: Clue; onToggleMap?: () => void }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
       {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
       {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
       {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
       {clue.yearBuilt != null && <Stat label="Built" value={clue.yearBuilt} />}
-      {onOpenMap && (
+      {onToggleMap && (
         <button
-          onClick={onOpenMap}
-          aria-label="View location on the map"
+          onClick={onToggleMap}
+          aria-label="Toggle the map view"
           className="ml-auto text-stone-400 transition hover:text-emerald-600"
         >
           <MapIcon size={18} aria-hidden="true" />
