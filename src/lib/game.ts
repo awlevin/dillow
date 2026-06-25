@@ -169,10 +169,33 @@ export type GuessResult = {
 
 export const MAX_ATTEMPTS = 5;
 
-// Final leaderboard score from the best guess + attempts used: closeness drives
-// it, and each extra attempt shaves a few points so fewer-tries plays rank higher.
+// Cumulative points for a single CHALLENGE-ROOM round: closeness drives it, and
+// each extra attempt shaves a few points so fewer-tries plays scores higher. Used
+// only by rooms, where round points are summed into a total. The daily leaderboard
+// does NOT use this — it ranks by raw closeness (see rankScore).
 export function finalScore(bestScore: number, attemptsUsed: number): number {
   return Math.max(0, Math.round(bestScore - (attemptsUsed - 1) * 3));
+}
+
+// ── Daily leaderboard ranking ────────────────────────────────────────────────
+// The daily board ranks by the SAME accuracy it prints: the closest guess wins,
+// and ties at the shown granularity are broken by fewer attempts. No hidden curve
+// and no per-attempt point penalty — read the board top-to-bottom and the order
+// matches the "% off · tries" on every row.
+
+// Accuracy as shown on the board, in percent: whole numbers at/above 1%, tenths
+// below it so near-misses still separate (0.1% vs 0.2%). Keep this rule in lockstep
+// with formatPct() in app/_lib/format.ts, which prints the same value.
+export function displayPct(pctError: number): number {
+  const pct = Math.abs(pctError) * 100;
+  return pct < 1 ? Math.round(pct * 10) / 10 : Math.round(pct);
+}
+
+// Single sortable key for the daily sorted set (higher = better). The ×100 spacing
+// lets the shown accuracy dominate while leaving room for attempts (1–5) to break
+// exact ties — a 0.1% gap (10 points) always outweighs the most attempts can.
+export function rankScore(pctError: number, attempts: number): number {
+  return -(displayPct(pctError) * 100 + attempts);
 }
 
 export function scoreGuess(guess: number, actual: number): GuessResult {

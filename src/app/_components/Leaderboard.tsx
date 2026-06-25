@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { getId } from "../_lib/client-storage";
-import { MAX_ATTEMPTS } from "../_lib/format";
+import { formatPct, MAX_ATTEMPTS } from "../_lib/format";
 import type { LeaderboardBoard, LeaderboardEntry } from "../_lib/types";
 
 const rankBadge = (rank: number) =>
@@ -162,7 +162,7 @@ function LeaderRow({
       </span>
       {entry && (
         <span className={me ? "text-emerald-700" : "text-stone-500"}>
-          {Math.round(Math.abs(entry.pctError) * 100)}% off · {entry.attempts}/{MAX_ATTEMPTS}
+          {formatPct(entry.pctError)}% off · {entry.attempts}/{MAX_ATTEMPTS}
         </span>
       )}
     </li>

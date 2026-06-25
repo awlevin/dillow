@@ -29,7 +29,6 @@ export type Reveal = {
   result: {
     bestGuess: number;
     bestScore: number;
-    finalScore: number;
     pctError: number;
     within: boolean;
     attemptsUsed: number;

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDailyProperty, isPastDate, dayKey, finalScore } from "@/lib/game";
+import { getDailyProperty, isPastDate, dayKey, rankScore } from "@/lib/game";
 import {
   leaderboardEnabled,
   topEntries,
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Finish today's game first." }, { status: 400 });
   }
 
-  const score = finalScore(Math.max(state.bestScore, 0), state.attempts);
+  const score = rankScore(state.bestPct, state.attempts);
   const r = await submitEntry(date, {
     id,
     name,

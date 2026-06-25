@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCountUp } from "../_hooks/useCountUp";
-import { usd } from "../_lib/format";
+import { formatPct, usd } from "../_lib/format";
 import type { Reveal, Row } from "../_lib/types";
 
 export function RevealCard({
@@ -37,7 +37,7 @@ export function RevealCard({
         </div>
       </div>
       <p className="text-sm text-stone-600">
-        {Math.round(Math.abs(result.pctError) * 100)}% off · {rows.map((r) => r.band).join("")}
+        {formatPct(result.pctError)}% off · {rows.map((r) => r.band).join("")}
       </p>
 
       {property.address && (

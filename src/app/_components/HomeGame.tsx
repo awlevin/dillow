@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { narrowBounds, type Band } from "@/lib/feedback";
 import { buzz, smoothScrollTo } from "../_lib/browser-effects";
 import { getId, loadStreak, recordPlay, recordStats } from "../_lib/client-storage";
-import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice } from "../_lib/format";
+import { formatPct, MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice } from "../_lib/format";
 import type { Clue, Reveal, Row } from "../_lib/types";
 import { useFlag } from "../_lib/flags";
 import { Confetti } from "./Confetti";
@@ -184,7 +184,7 @@ export function HomeGame() {
     if (!reveal) return "";
     const grid = rows.map((r) => r.band).join("");
     const won = reveal.result.within;
-    const pct = Math.round(Math.abs(reveal.result.pctError) * 100);
+    const pct = formatPct(reveal.result.pctError);
     const tries = won ? `${rows.length}/${MAX_ATTEMPTS} 🎯` : `X/${MAX_ATTEMPTS}`;
     return `Dillow ${date} — ${tries} · ${pct}% off\n${grid}`;
   }, [reveal, rows, date]);

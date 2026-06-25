@@ -3,7 +3,7 @@ import {
   getDailyProperty,
   scoreGuess,
   feedback,
-  finalScore,
+  rankScore,
   dayKey,
   MAX_ATTEMPTS,
 } from "@/lib/game";
@@ -54,7 +54,6 @@ export async function POST(req: Request) {
         result: {
           bestGuess: guess,
           bestScore: thisScore,
-          finalScore: thisScore,
           pctError,
           within: fb.within,
           attemptsUsed: 1,
@@ -116,7 +115,6 @@ async function finalReveal(
   attemptsUsed: number,
   record: boolean,
 ) {
-  const fs = finalScore(Math.max(state.bestScore, 0), attemptsUsed);
   const lastGuess = state.guesses[state.guesses.length - 1] ?? state.bestGuess;
   const lastFb = feedback(lastGuess, property.price);
   let leaderboard: { enabled: boolean; rank?: number | null; count?: number } = {
@@ -127,7 +125,7 @@ async function finalReveal(
       id,
       name,
       guess: state.bestGuess,
-      score: fs,
+      score: rankScore(state.bestPct, attemptsUsed),
       pctError: state.bestPct,
       attempts: attemptsUsed,
     });
@@ -143,7 +141,6 @@ async function finalReveal(
     result: {
       bestGuess: state.bestGuess,
       bestScore: Math.max(state.bestScore, 0),
-      finalScore: fs,
       pctError: state.bestPct,
       within: Math.abs(state.bestPct) <= 0.05,
       attemptsUsed,
