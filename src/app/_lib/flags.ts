@@ -7,17 +7,11 @@ import { useSyncExternalStore } from "react";
 // experiments on/off from /flags. Add a flag by appending to FLAGS; gate UI with
 // the useFlag(key) hook or read isFlagEnabled(key) imperatively.
 
-export type FlagKey = "rooms" | "recentRooms";
+export type FlagKey = "recentRooms";
 
 export type FlagDef = { key: FlagKey; title: string; description: string };
 
 export const FLAGS: FlagDef[] = [
-  {
-    key: "rooms",
-    title: "Challenge Rooms",
-    description:
-      "After finishing the daily home, share a link to unlock 3 bonus rounds and compete with the friends you invite on a private leaderboard.",
-  },
   {
     key: "recentRooms",
     title: "Recent Rooms",

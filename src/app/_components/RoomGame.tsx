@@ -6,7 +6,6 @@ import { Trophy } from "lucide-react";
 import { narrowBounds, type Band } from "@/lib/feedback";
 import { buzz, smoothScrollTo } from "../_lib/browser-effects";
 import { getId, recordRoom } from "../_lib/client-storage";
-import { setFlag } from "../_lib/flags";
 import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice, usd } from "../_lib/format";
 import type { Reveal, RoomInfo, RoomMemberView, RoomRound, Row } from "../_lib/types";
 import { PropertyCard } from "./PropertyCard";
@@ -93,7 +92,6 @@ export function RoomGame({ roomId }: { roomId: string }) {
   }
 
   useEffect(() => {
-    setFlag("rooms", true); // a shared room enables the feature for its visitor too
     recordRoom(roomId, new Date().toISOString().slice(0, 10));
 
     (async () => {
