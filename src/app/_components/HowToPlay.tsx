@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { BANDS, WIN_THRESHOLD, type Band } from "@/lib/feedback";
 import { MAX_ATTEMPTS } from "../_lib/format";
+
+const WIN_PCT = Math.round(WIN_THRESHOLD * 100);
+// Cold → nailed it, derived from the live band config so this scale can never
+// drift from the real cutoffs: warm→cold bands reversed, then the win tick.
+const SCALE: Band[] = [...[...BANDS].reverse().map((b) => b.band), "✅"];
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
   const [closing, setClosing] = useState(false);
@@ -13,7 +19,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
   const examples = [
     { price: "$2,000,000", hint: "Lower ↓", band: "🟥" },
     { price: "$900,000", hint: "Higher ↑", band: "🟨" },
-    { price: "$1,150,000", hint: "Within 5%", band: "✅" },
+    { price: "$1,150,000", hint: `Within ${WIN_PCT}%`, band: "✅" },
   ];
 
   return (
@@ -61,7 +67,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
           <li className="flex gap-2">
             <span>🎯</span>
             <span>
-              Land within <b>5%</b> to win. The range narrows with every guess.
+              Land within <b>{WIN_PCT}%</b> to win. The range narrows with every guess.
             </span>
           </li>
         </ul>
@@ -82,7 +88,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="mt-4 flex items-center justify-center gap-1.5 text-xl">
-          {["🟥", "🟧", "🟨", "🟩", "✅"].map((b, i) => (
+          {SCALE.map((b, i) => (
             <span key={i} className="animate-bandpop" style={{ animationDelay: `${0.55 + i * 0.09}s` }}>
               {b}
             </span>

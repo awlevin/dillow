@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BandVisualizer } from "./BandVisualizer";
 
 type Current = {
   city: string;
@@ -130,6 +131,8 @@ export default function Admin() {
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
       )}
+
+      {authed && <BandVisualizer />}
     </main>
   );
 }

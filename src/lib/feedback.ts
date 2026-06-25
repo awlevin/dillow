@@ -1,26 +1,56 @@
 // Shared guess feedback rules. Kept separate from game.ts so client UI can
 // narrow price bounds without bundling the committed property pool.
-export const WIN_THRESHOLD = 0.05; // land within 5% to win
+export const WIN_THRESHOLD = 0.01; // land within 1% to win
 
 export type Direction = "higher" | "lower" | "match";
-export type Band = "✅" | "🟩" | "🟨" | "🟧" | "🟥";
+export type Band = "✅" | "🟩" | "🟨" | "🟧" | "🟥" | "❌";
 
 // Each warmth band caps how far the guess can be from the true price, measured
-// as |guess - actual| / actual. Ordered warm → cold; 🟥 is the catch-all and
-// carries no upper bound (being told "red" tells you nothing about how far off
-// you are). `narrowBounds` reuses these same caps to squeeze the slider range,
-// so the emoji you see and the range you get can never drift apart.
-const BANDS: { band: Exclude<Band, "✅">; maxPct: number }[] = [
-  { band: "🟩", maxPct: 0.12 },
-  { band: "🟨", maxPct: 0.25 },
-  { band: "🟧", maxPct: 0.45 },
-  { band: "🟥", maxPct: Infinity },
+// as |guess - actual| / actual. Ordered warm → cold; ❌ is the catch-all and
+// carries no upper bound (being told "way off" tells you nothing about how far
+// off you are). `narrowBounds` reuses these same caps to squeeze the slider
+// range, so the emoji you see and the range you get can never drift apart.
+export const BANDS: { band: Exclude<Band, "✅">; maxPct: number }[] = [
+  { band: "🟩", maxPct: 0.1 },       // GREEN: within 10%
+  { band: "🟨", maxPct: 0.5 },       // YELLOW: within 50%
+  { band: "🟧", maxPct: 1 },         // ORANGE: within 100%
+  { band: "🟥", maxPct: 3 },         // RED: within 300%
+  { band: "❌", maxPct: Infinity },  // WAY OFF: more than 300%
 ];
+
+// The full warmth ladder as contiguous error windows, nailed-it → cold. Each
+// row owns guesses whose % error falls in [loPct, hiPct]. Derived from the same
+// WIN_THRESHOLD + BANDS above, so it can't drift from what `feedback()` returns.
+export type BandRow = { band: Band; loPct: number; hiPct: number };
+export const BAND_LADDER: BandRow[] = (() => {
+  const rows: BandRow[] = [{ band: "✅", loPct: 0, hiPct: WIN_THRESHOLD }];
+  let lo = WIN_THRESHOLD;
+  for (const b of BANDS) {
+    rows.push({ band: b.band, loPct: lo, hiPct: b.maxPct });
+    lo = b.maxPct;
+  }
+  return rows;
+})();
+
+// For a target price, the dollar guess-window a ladder row covers on each side.
+// Over-guessing is unbounded, but an under-guess can't exceed 100% error (a $0
+// guess), so rows with loPct >= 1 are unreachable from below — `below` is null.
+export function bandWindows(
+  price: number,
+  row: BandRow,
+): { above: { lo: number; hi: number }; below: { lo: number; hi: number } | null } {
+  const above = { lo: price * (1 + row.loPct), hi: price * (1 + row.hiPct) };
+  const below =
+    row.loPct >= 1
+      ? null
+      : { lo: Math.max(0, price * (1 - row.hiPct)), hi: price * (1 - row.loPct) };
+  return { above, below };
+}
 
 // Feedback for a single guess that does NOT reveal the price: which way to move
 // and how warm you are. `higher` means the true price is above your guess.
-// Bands escalate from bad → nailed it: 🟥 red, 🟧 orange, 🟨 yellow, 🟩 green,
-// ✅ within the win threshold.
+// Bands escalate from bad → nailed it: ❌ way off, 🟥 red, 🟧 orange, 🟨 yellow,
+// 🟩 green, ✅ within the win threshold.
 export function feedback(guess: number, actual: number): {
   direction: Direction;
   band: Band;
@@ -38,7 +68,7 @@ export function feedback(guess: number, actual: number): {
 // sets the far bound: it caps the % error, which bounds how far the true price
 // can be. For an under-guess with cap b, (actual - guess)/actual <= b implies
 // actual <= guess / (1 - b); symmetrically an over-guess implies
-// actual >= guess / (1 + b). 🟥 (maxPct = Infinity) leaves the far bound alone.
+// actual >= guess / (1 + b). ❌ (maxPct = Infinity) leaves the far bound alone.
 export function narrowBounds(
   lo: number,
   hi: number,
