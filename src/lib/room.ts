@@ -25,9 +25,17 @@ export type Room = {
   id: string;
   date: string;
   createdBy: string; // player id
+  name: string; // creator's name — the room is titled "{name}'s room"
   propertyIds: string[]; // the rounds, in order
   roundCount: number;
 };
+
+// A room's display title, derived from its creator's name. Tolerates rooms
+// created before names existed (undefined name).
+export function roomTitle(name: string | undefined | null): string {
+  const n = (name ?? "").trim() || "Someone";
+  return `${n}’s room`;
+}
 
 // A per-round result on the board (null = that round isn't finished yet).
 export type RoundResult = { score: number; pct: number; attempts: number };

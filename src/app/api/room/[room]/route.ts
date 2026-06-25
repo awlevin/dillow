@@ -72,7 +72,7 @@ export async function GET(req: Request, ctx: Ctx) {
 
     return NextResponse.json({
       enabled: true,
-      room: { id: room.id, date: room.date, roundCount: room.roundCount },
+      room: { id: room.id, date: room.date, roundCount: room.roundCount, name: room.name ?? "" },
       priceFloor: priceFloor(),
       priceCeiling: priceCeiling(),
       rounds,

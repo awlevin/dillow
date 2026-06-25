@@ -32,7 +32,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
   const id = typeof body.id === "string" ? body.id : null;
+  const name = typeof body.name === "string" ? body.name.trim().slice(0, 24) : "";
   if (!id) return NextResponse.json({ error: "Missing player id." }, { status: 400 });
+  // A room is titled after its creator, so a name is required to start one.
+  if (!name) return NextResponse.json({ error: "Enter your name first." }, { status: 400 });
 
   try {
     const date = dayKey();
@@ -46,6 +49,7 @@ export async function POST(req: Request) {
         id: candidate,
         date,
         createdBy: id,
+        name,
         propertyIds: props.map((p) => p.id),
         roundCount: props.length,
       };

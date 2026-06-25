@@ -112,6 +112,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
         }
         initRounds(data);
         setInfo(data);
+        if (data.room.name) recordRoom(roomId, data.room.date, `${data.room.name}’s room`);
 
         if (savedName) {
           // Already named — register on the board, then sync.
@@ -237,7 +238,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
 
   return (
     <main ref={topRef} className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 py-4 sm:gap-5 sm:py-10">
-      <RoomHeader roomId={roomId} />
+      <RoomHeader roomId={roomId} roomName={info?.room?.name ?? ""} />
 
       {needName ? (
         <JoinGate initial={name} onJoin={joinWithName} />
@@ -300,11 +301,12 @@ function roundShareText(roundIdx: number, roundCount: number, ui: RoundUI): stri
   return `Dillow Challenge — Round ${roundIdx + 1}/${roundCount} · ${tries} · ${pct}% off\n${grid}`;
 }
 
-function RoomHeader({ roomId }: { roomId: string }) {
+function RoomHeader({ roomId, roomName }: { roomId: string; roomName: string }) {
   const [copied, setCopied] = useState(false);
+  const title = roomName ? `${roomName}’s room` : "Challenge room";
   const invite = async () => {
     const url = `${window.location.origin}/r/${roomId}`;
-    const text = `Join my Dillow challenge — 3 bonus rounds, head to head.\n${url}`;
+    const text = `Join ${title} on Dillow — 3 bonus rounds, head to head.\n${url}`;
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({ text, url });
@@ -319,10 +321,10 @@ function RoomHeader({ roomId }: { roomId: string }) {
   };
   return (
     <header className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-      <div className="flex items-center gap-2 text-amber-800">
-        <Trophy size={18} aria-hidden="true" />
-        <span className="text-sm font-bold">Challenge room</span>
-        <span className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-stone-500">{roomId}</span>
+      <div className="flex min-w-0 items-center gap-2 text-amber-800">
+        <Trophy size={18} className="shrink-0" aria-hidden="true" />
+        <span className="truncate text-sm font-bold">{title}</span>
+        <span className="shrink-0 rounded bg-white px-1.5 py-0.5 font-mono text-xs text-stone-500">{roomId}</span>
       </div>
       <button
         onClick={invite}

@@ -101,7 +101,7 @@ export type RoomMemberView = {
 export type RoomInfo = {
   enabled: boolean;
   error?: string;
-  room?: { id: string; date: string; roundCount: number };
+  room?: { id: string; date: string; roundCount: number; name: string };
   priceFloor?: number;
   priceCeiling?: number;
   rounds?: RoomRound[];

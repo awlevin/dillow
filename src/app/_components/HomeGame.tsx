@@ -12,6 +12,7 @@ import { GameHeader } from "./GameHeader";
 import { HowToPlay } from "./HowToPlay";
 import { NextDrop } from "./NextDrop";
 import { PropertyCard } from "./PropertyCard";
+import { RecentRooms } from "./RecentRooms";
 import { RoomInvite } from "./RoomInvite";
 import { StatsPanel } from "./StatsPanel";
 import { Leaderboard } from "./Leaderboard";
@@ -233,6 +234,8 @@ export function HomeGame() {
       )}
 
       {done && roomsFlag && reveal?.leaderboard?.enabled && <RoomInvite />}
+
+      {done && <RecentRooms />}
 
       {done && showNextDrop && <NextDrop />}
 
