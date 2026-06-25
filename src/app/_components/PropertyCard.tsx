@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { Map as MapIcon } from "lucide-react";
 import type { Clue, Reveal, Row } from "../_lib/types";
 import { propertyTitle } from "../_lib/format";
 import { GuessControls } from "./GuessControls";
@@ -89,20 +90,9 @@ export function PropertyCard({
       />
 
       <div className="flex flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
-        {hasMap ? (
-          <button
-            onClick={openMap}
-            aria-label={`${propertyTitle(clue)} — view location on the map`}
-            className="group flex items-center gap-1.5 text-left text-lg font-semibold text-stone-800"
-          >
-            <span className="group-hover:underline">{propertyTitle(clue)}</span>
-            <span className="text-base text-emerald-600 transition group-hover:scale-110">📍</span>
-          </button>
-        ) : (
-          <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
-        )}
+        <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
 
-        <PropertyFacts clue={clue} />
+        <PropertyFacts clue={clue} onOpenMap={hasMap ? openMap : undefined} />
         <GuessHistory rows={rows} />
 
         {!done ? (
@@ -133,13 +123,22 @@ export function PropertyCard({
   );
 }
 
-function PropertyFacts({ clue }: { clue: Clue }) {
+function PropertyFacts({ clue, onOpenMap }: { clue: Clue; onOpenMap?: () => void }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
       {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
       {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
       {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
       {clue.yearBuilt != null && <Stat label="Built" value={clue.yearBuilt} />}
+      {onOpenMap && (
+        <button
+          onClick={onOpenMap}
+          aria-label="View location on the map"
+          className="ml-auto text-stone-400 transition hover:text-emerald-600"
+        >
+          <MapIcon size={18} aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }
