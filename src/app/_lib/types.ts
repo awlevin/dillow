@@ -67,3 +67,45 @@ export type LeaderboardBoard = {
   // The requesting player's global placement for the day, if they've joined.
   me?: { rank: number; entry: LeaderboardEntry | null } | null;
 };
+
+// ── Challenge rooms ──────────────────────────────────────────────────────────
+export type RoomResult = {
+  bestGuess: number;
+  bestScore: number;
+  finalScore: number;
+  pctError: number;
+  within: boolean;
+  attemptsUsed: number;
+};
+
+// One round as the room page sees it: a clue while unfinished, a full reveal once
+// the viewer has completed it.
+export type RoomRound = {
+  index: number;
+  clue: Clue;
+  done: boolean;
+  property?: FullProperty;
+  result?: RoomResult;
+};
+
+export type RoomRoundScore = { score: number; pct: number; attempts: number };
+
+export type RoomMemberView = {
+  id: string;
+  name: string;
+  total: number;
+  roundsDone: number;
+  rounds: (RoomRoundScore | null)[];
+};
+
+export type RoomInfo = {
+  enabled: boolean;
+  error?: string;
+  room?: { id: string; date: string; roundCount: number };
+  priceFloor?: number;
+  priceCeiling?: number;
+  rounds?: RoomRound[];
+  board?: RoomMemberView[];
+  memberCount?: number;
+  me?: RoomMemberView | null;
+};

@@ -6,11 +6,13 @@ import { buzz, smoothScrollTo } from "../_lib/browser-effects";
 import { getId, loadStreak, recordPlay, recordStats } from "../_lib/client-storage";
 import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice } from "../_lib/format";
 import type { Clue, Reveal, Row } from "../_lib/types";
+import { useFlag } from "../_lib/flags";
 import { Confetti } from "./Confetti";
 import { GameHeader } from "./GameHeader";
 import { HowToPlay } from "./HowToPlay";
 import { NextDrop } from "./NextDrop";
 import { PropertyCard } from "./PropertyCard";
+import { RoomInvite } from "./RoomInvite";
 import { StatsPanel } from "./StatsPanel";
 import { Leaderboard } from "./Leaderboard";
 
@@ -34,6 +36,7 @@ export function HomeGame() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [celebrate, setCelebrate] = useState(false);
+  const roomsFlag = useFlag("rooms");
 
   useEffect(() => {
     if (!celebrate) return;
@@ -228,6 +231,8 @@ export function HomeGame() {
           onSubmit={submit}
         />
       )}
+
+      {done && roomsFlag && reveal?.leaderboard?.enabled && <RoomInvite />}
 
       {done && showNextDrop && <NextDrop />}
 

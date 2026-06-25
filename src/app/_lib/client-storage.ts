@@ -57,3 +57,27 @@ export function recordStats(e: StatEntry) {
     /* ignore */
   }
 }
+
+// ── Challenge rooms the player has created or joined ─────────────────────────
+// A small most-recent-first list so they can hop back into a room from /flags.
+export type SavedRoom = { roomId: string; date: string };
+
+export function recordRoom(roomId: string, date: string) {
+  try {
+    const raw = localStorage.getItem("dillow:rooms");
+    const arr: SavedRoom[] = raw ? JSON.parse(raw) : [];
+    const next = [{ roomId, date }, ...arr.filter((r) => r.roomId !== roomId)];
+    localStorage.setItem("dillow:rooms", JSON.stringify(next.slice(0, 20)));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadRooms(): SavedRoom[] {
+  try {
+    const raw = localStorage.getItem("dillow:rooms");
+    return raw ? (JSON.parse(raw) as SavedRoom[]) : [];
+  } catch {
+    return [];
+  }
+}

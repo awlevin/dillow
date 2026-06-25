@@ -123,6 +123,38 @@ export function getDailyProperty(key = dayKey(), offset = 0): Property {
   return pool[(hash(key) + offset) % pool.length];
 }
 
+// Look up a featured property by id (used to resolve a room's stored rounds).
+const BY_ID = new Map(POOL.map((p) => [p.id, p]));
+export function getPropertyById(id: string): Property | undefined {
+  return BY_ID.get(id);
+}
+
+// Small deterministic PRNG so a seed yields a stable shuffle (no Math.random).
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Deterministic, distinct property picks for a room's bonus rounds. Seeded by the
+// room id so every member plays the same set in the same order, with the daily
+// home excluded so the rooms feel like fresh listings.
+export function pickRoomProperties(seed: string, count: number, excludeId?: string): Property[] {
+  const pool = (ELIGIBLE.length ? ELIGIBLE : POOL).filter((p) => p.id !== excludeId);
+  if (!pool.length) throw new Error("Property pool is empty — run POST /api/refresh");
+  const rand = mulberry32(hash(seed));
+  const order = [...pool];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order.slice(0, Math.min(count, order.length));
+}
+
 // ── Scoring ──────────────────────────────────────────────────────────────────
 // Log-error so a $5M mansion and a $200k condo are judged on the same curve:
 // being "20% off" costs the same number of points regardless of price.

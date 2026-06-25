@@ -47,6 +47,12 @@ export function leaderboardEnabled(): boolean {
   return redis !== null;
 }
 
+// Shared Redis client for other storage modules (e.g. lib/room.ts) so the same
+// connection + graceful-degradation behaviour is reused everywhere.
+export function getRedis(): Redis | null {
+  return redis;
+}
+
 const setKey = (date: string) => `lb:${date}`; // sorted set: member=id, score=score
 const metaKey = (date: string) => `lbmeta:${date}`; // hash: id -> JSON(Entry)
 
