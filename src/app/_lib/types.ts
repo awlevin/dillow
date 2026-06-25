@@ -101,6 +101,7 @@ export type RoomInfo = {
   enabled: boolean;
   error?: string;
   room?: { id: string; date: string; roundCount: number; name: string };
+  isOwner?: boolean;
   priceFloor?: number;
   priceCeiling?: number;
   rounds?: RoomRound[];

@@ -13,6 +13,7 @@ import {
   buildMember,
   getRoom,
   getRoomGame,
+  renameRoom,
   roomBoard,
   roomsEnabled,
   saveRoomGame,
@@ -73,6 +74,7 @@ export async function GET(req: Request, ctx: Ctx) {
     return NextResponse.json({
       enabled: true,
       room: { id: room.id, date: room.date, roundCount: room.roundCount, name: room.name ?? "" },
+      isOwner: id != null && id === room.createdBy,
       priceFloor: priceFloor(),
       priceCeiling: priceCeiling(),
       rounds,
@@ -106,11 +108,23 @@ export async function POST(req: Request, ctx: Ctx) {
   const id = typeof body.id === "string" ? body.id : null;
   const name = typeof body.name === "string" ? body.name.trim().slice(0, 24) : "";
   if (!id) return NextResponse.json({ error: "Missing player id." }, { status: 400 });
-  const action = body.action === "join" ? "join" : "attempt";
+  const action =
+    body.action === "join" ? "join" : body.action === "rename" ? "rename" : "attempt";
 
   try {
+    // Retitle the room — only its creator may do so (from the room page).
+    if (action === "rename") {
+      if (room.createdBy !== id) {
+        return NextResponse.json({ error: "Only the room's creator can rename it." }, { status: 403 });
+      }
+      await renameRoom(roomId, name);
+      return NextResponse.json({ ok: true, name });
+    }
+
     // Register/refresh the member's board row (so they appear before finishing).
     if (action === "join") {
+      // The creator's first join also titles their room, if it's still unnamed.
+      if (room.createdBy === id && !room.name && name) await renameRoom(roomId, name);
       const game = await getRoomGame(roomId, id);
       const member = buildMember(id, name, game, room.roundCount);
       await upsertRoomMember(roomId, member);

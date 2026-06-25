@@ -69,6 +69,16 @@ export async function createRoom(room: Room): Promise<boolean> {
   return res === "OK";
 }
 
+// Retitle a room (its display title follows the creator's name). Refreshes the
+// TTL since a rename means the room is in active use. No-op if it's gone.
+export async function renameRoom(id: string, name: string): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+  const room = await getRoom(id);
+  if (!room) return;
+  await redis.set(roomKey(id), { ...room, name }, { ex: TTL });
+}
+
 export async function getRoom(id: string): Promise<Room | null> {
   const redis = getRedis();
   if (!redis) return null;

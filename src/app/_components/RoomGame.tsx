@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Trophy } from "lucide-react";
+import { Pencil, Trophy } from "lucide-react";
 import { narrowBounds, type Band } from "@/lib/feedback";
 import { buzz, smoothScrollTo } from "../_lib/browser-effects";
 import { getId, recordRoom } from "../_lib/client-storage";
@@ -167,6 +167,20 @@ export function RoomGame({ roomId }: { roomId: string }) {
     setInfo(await refresh(id));
   }
 
+  // The creator can retitle their room from the header; the title follows their name.
+  async function renameRoom(next: string) {
+    const trimmed = next.trim().slice(0, 24);
+    localStorage.setItem("dillow:name", trimmed);
+    setName(trimmed);
+    await fetch(`/api/room/${roomId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "rename", id, name: trimmed }),
+    });
+    if (info?.room) recordRoom(roomId, info.room.date, trimmed ? `${trimmed}’s room` : undefined);
+    setInfo(await refresh(id));
+  }
+
   async function submit() {
     if (!cur || !Number.isFinite(guessValue) || guessValue <= 0) {
       setSubmitError("Pick a price first.");
@@ -244,7 +258,12 @@ export function RoomGame({ roomId }: { roomId: string }) {
 
   return (
     <main ref={topRef} className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 py-4 sm:gap-5 sm:py-10">
-      <RoomHeader roomId={roomId} roomName={info?.room?.name ?? ""} />
+      <RoomHeader
+        roomId={roomId}
+        roomName={info?.room?.name ?? ""}
+        canEdit={info?.isOwner === true}
+        onRename={renameRoom}
+      />
 
       {needName ? (
         <JoinGate initial={name} onJoin={joinWithName} />
@@ -307,9 +326,23 @@ function roundShareText(roundIdx: number, roundCount: number, ui: RoundUI): stri
   return `Dillow Challenge — Round ${roundIdx + 1}/${roundCount} · ${tries} · ${pct}% off\n${grid}`;
 }
 
-function RoomHeader({ roomId, roomName }: { roomId: string; roomName: string }) {
+function RoomHeader({
+  roomId,
+  roomName,
+  canEdit,
+  onRename,
+}: {
+  roomId: string;
+  roomName: string;
+  canEdit: boolean;
+  onRename: (name: string) => Promise<void>;
+}) {
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(roomName);
+  const [saving, setSaving] = useState(false);
   const title = roomName ? `${roomName}’s room` : "Challenge room";
+
   const invite = async () => {
     const url = `${window.location.origin}/r/${roomId}`;
     const text = `Join ${title} on Dillow — 3 bonus rounds, head to head.\n${url}`;
@@ -325,19 +358,69 @@ function RoomHeader({ roomId, roomName }: { roomId: string; roomName: string }) 
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const save = async () => {
+    if (saving) return;
+    setSaving(true);
+    await onRename(draft);
+    setSaving(false);
+    setEditing(false);
+  };
+
   return (
     <header className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-      <div className="flex min-w-0 items-center gap-2 text-amber-800">
+      <div className="flex min-w-0 flex-1 items-center gap-2 text-amber-800">
         <Trophy size={18} className="shrink-0" aria-hidden="true" />
-        <span className="truncate text-sm font-bold">{title}</span>
-        <span className="shrink-0 rounded bg-white px-1.5 py-0.5 font-mono text-xs text-stone-500">{roomId}</span>
+        {editing ? (
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") save();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            placeholder="Name your room"
+            maxLength={24}
+            autoFocus
+            aria-label="Room name"
+            className="min-w-0 flex-1 rounded-md border border-amber-300 bg-white px-2 py-1 text-sm font-semibold outline-none focus:border-emerald-500"
+          />
+        ) : (
+          <>
+            <span className="truncate text-sm font-bold">{title}</span>
+            <span className="shrink-0 rounded bg-white px-1.5 py-0.5 font-mono text-xs text-stone-500">{roomId}</span>
+            {canEdit && (
+              <button
+                onClick={() => {
+                  setDraft(roomName);
+                  setEditing(true);
+                }}
+                aria-label="Rename room"
+                title="Rename room"
+                className="shrink-0 text-amber-500 transition hover:text-amber-700"
+              >
+                <Pencil size={14} aria-hidden="true" />
+              </button>
+            )}
+          </>
+        )}
       </div>
-      <button
-        onClick={invite}
-        className="shrink-0 rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
-      >
-        {copied ? "Link copied!" : "Invite"}
-      </button>
+      {editing ? (
+        <button
+          onClick={save}
+          disabled={saving}
+          className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {saving ? "…" : "Save"}
+        </button>
+      ) : (
+        <button
+          onClick={invite}
+          className="shrink-0 rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
+        >
+          {copied ? "Link copied!" : "Invite"}
+        </button>
+      )}
     </header>
   );
 }
