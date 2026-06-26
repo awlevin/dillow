@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { Map as MapIcon, Sparkles } from "lucide-react";
+import { Info, Map as MapIcon } from "lucide-react";
 import type { Clue, Reveal, Row } from "../_lib/types";
 import { propertyTitle } from "../_lib/format";
 import { AdvancedDetails } from "./AdvancedDetails";
@@ -107,13 +107,20 @@ export function PropertyCard({
       />
 
       <div className="flex flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
-        <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
+          {details && (
+            <button
+              onClick={() => setShowAdvanced(true)}
+              aria-label="Property details"
+              className="mt-0.5 shrink-0 text-stone-400 transition hover:text-stone-600"
+            >
+              <Info size={18} aria-hidden="true" />
+            </button>
+          )}
+        </div>
 
-        <PropertyFacts
-          clue={clue}
-          onToggleMap={hasMap ? toggleMap : undefined}
-          onAdvanced={details ? () => setShowAdvanced(true) : undefined}
-        />
+        <PropertyFacts clue={clue} onToggleMap={hasMap ? toggleMap : undefined} />
         <GuessHistory rows={rows} />
 
         {!done ? (
@@ -148,40 +155,22 @@ export function PropertyCard({
   );
 }
 
-function PropertyFacts({
-  clue,
-  onToggleMap,
-  onAdvanced,
-}: {
-  clue: Clue;
-  onToggleMap?: () => void;
-  onAdvanced?: () => void;
-}) {
+function PropertyFacts({ clue, onToggleMap }: { clue: Clue; onToggleMap?: () => void }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
       {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
       {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
       {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
       {clue.yearBuilt != null && <Stat label="Built" value={clue.yearBuilt} />}
-      <div className="ml-auto flex items-center gap-3">
-        {onAdvanced && (
-          <button
-            onClick={onAdvanced}
-            className="flex items-center gap-1 font-semibold text-emerald-700 transition hover:text-emerald-900"
-          >
-            <Sparkles size={15} aria-hidden="true" /> Advanced
-          </button>
-        )}
-        {onToggleMap && (
-          <button
-            onClick={onToggleMap}
-            aria-label="Toggle the map view"
-            className="text-stone-400 transition hover:text-emerald-600"
-          >
-            <MapIcon size={18} aria-hidden="true" />
-          </button>
-        )}
-      </div>
+      {onToggleMap && (
+        <button
+          onClick={onToggleMap}
+          aria-label="Toggle the map view"
+          className="ml-auto text-stone-400 transition hover:text-emerald-600"
+        >
+          <MapIcon size={18} aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }
