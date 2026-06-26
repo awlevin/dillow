@@ -233,10 +233,6 @@ export function HomeGame() {
       {done && <StatsPanel version={statsVersion} />}
 
       {done && <NextDrop />}
-
-      <footer className="text-center">
-        <p className="text-xs text-stone-400">Real listings from across the US via realtor.com.</p>
-      </footer>
     </main>
   );
 }
