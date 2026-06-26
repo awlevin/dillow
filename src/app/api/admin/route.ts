@@ -8,6 +8,7 @@ import {
   clearDailyState,
   getGallery,
   saveGallery,
+  saveDetails,
   leaderboardEnabled,
 } from "@/lib/leaderboard";
 
@@ -39,13 +40,17 @@ async function effectivePhotos(p: Property): Promise<string[]> {
   return g && g.length > p.photos.length ? g : p.photos;
 }
 
-// Fetch + cache a full gallery (1 realtor16 request). No-op if already rich or
-// quota is exhausted (fetchDetails returns null on a non-OK response).
+// Fetch + cache a full gallery AND the rich details from one realtor16 request.
+// No-op for the gallery if already rich or the quota is exhausted (fetchDetails
+// returns null on a non-OK response). Details are cached whenever present so the
+// daily route never has to spend a second request to warm them.
 async function enrich(p: Property): Promise<string[]> {
   const current = await effectivePhotos(p);
   if (current.length > 3) return current; // already rich
   const det = await fetchDetails(p.id);
-  if (det && det.photos.length > current.length) {
+  if (!det) return current;
+  if (det.details) await saveDetails(p.id, det.details);
+  if (det.photos.length > current.length) {
     await saveGallery(p.id, det.photos);
     return det.photos;
   }

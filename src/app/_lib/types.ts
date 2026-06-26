@@ -1,3 +1,5 @@
+import type { PropertyDetails } from "@/lib/property-details";
+
 export type Clue = {
   id: string;
   city: string;
@@ -10,6 +12,7 @@ export type Clue = {
   yearBuilt: number | null;
   propertyType: string | null;
   photos: string[];
+  details?: PropertyDetails | null; // scrubbed of price-revealing fields pre-reveal
 };
 
 export type Row = {
@@ -34,6 +37,7 @@ export type Reveal = {
     attemptsUsed: number;
   };
   property: FullProperty;
+  details?: PropertyDetails | null; // full set, including price-revealing fields
   leaderboard?: { enabled: boolean; rank?: number | null; count?: number };
 };
 

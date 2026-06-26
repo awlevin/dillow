@@ -136,7 +136,7 @@ export function HomeGame() {
         ));
       }
       const newReveal: Reveal | null = data.gameOver
-        ? { result: data.result, property: data.property, leaderboard: data.leaderboard }
+        ? { result: data.result, property: data.property, details: data.details, leaderboard: data.leaderboard }
         : null;
 
       const won = data.gameOver && data.result?.within;

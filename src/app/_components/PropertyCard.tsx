@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { Map as MapIcon } from "lucide-react";
+import { Map as MapIcon, Sparkles } from "lucide-react";
 import type { Clue, Reveal, Row } from "../_lib/types";
 import { propertyTitle } from "../_lib/format";
+import { AdvancedDetails } from "./AdvancedDetails";
 import { GuessControls } from "./GuessControls";
 import { GuessHistory } from "./GuessHistory";
 import { PropertyCarousel } from "./PropertyCarousel";
@@ -56,9 +57,15 @@ export function PropertyCard({
 }: PropertyCardProps) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const [mapActive, setMapActive] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const loopResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevPhotoIdx = useRef(0);
+
+  // Full details once the game's over, otherwise the price-scrubbed clue version.
+  // Either may be absent (no Redis, or a non-realtor16 provider) — the button
+  // only appears when there's something to show.
+  const details = reveal?.details ?? clue.details ?? null;
 
   const hasMap = clue.lat != null && clue.lon != null;
   const loop = clue.photos.length > 0 && clue.photos.length + (hasMap ? 1 : 0) > 1;
@@ -102,7 +109,11 @@ export function PropertyCard({
       <div className="flex flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
         <p className="text-lg font-semibold text-stone-800">{propertyTitle(clue)}</p>
 
-        <PropertyFacts clue={clue} onToggleMap={hasMap ? toggleMap : undefined} />
+        <PropertyFacts
+          clue={clue}
+          onToggleMap={hasMap ? toggleMap : undefined}
+          onAdvanced={details ? () => setShowAdvanced(true) : undefined}
+        />
         <GuessHistory rows={rows} />
 
         {!done ? (
@@ -129,26 +140,48 @@ export function PropertyCard({
           </div>
         )}
       </div>
+
+      {showAdvanced && details && (
+        <AdvancedDetails details={details} revealed={done} onClose={() => setShowAdvanced(false)} />
+      )}
     </section>
   );
 }
 
-function PropertyFacts({ clue, onToggleMap }: { clue: Clue; onToggleMap?: () => void }) {
+function PropertyFacts({
+  clue,
+  onToggleMap,
+  onAdvanced,
+}: {
+  clue: Clue;
+  onToggleMap?: () => void;
+  onAdvanced?: () => void;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
       {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
       {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
       {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
       {clue.yearBuilt != null && <Stat label="Built" value={clue.yearBuilt} />}
-      {onToggleMap && (
-        <button
-          onClick={onToggleMap}
-          aria-label="Toggle the map view"
-          className="ml-auto text-stone-400 transition hover:text-emerald-600"
-        >
-          <MapIcon size={18} aria-hidden="true" />
-        </button>
-      )}
+      <div className="ml-auto flex items-center gap-3">
+        {onAdvanced && (
+          <button
+            onClick={onAdvanced}
+            className="flex items-center gap-1 font-semibold text-emerald-700 transition hover:text-emerald-900"
+          >
+            <Sparkles size={15} aria-hidden="true" /> Advanced
+          </button>
+        )}
+        {onToggleMap && (
+          <button
+            onClick={onToggleMap}
+            aria-label="Toggle the map view"
+            className="text-stone-400 transition hover:text-emerald-600"
+          >
+            <MapIcon size={18} aria-hidden="true" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

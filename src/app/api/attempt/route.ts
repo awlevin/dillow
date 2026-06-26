@@ -14,6 +14,7 @@ import {
   getGame,
   saveGame,
   getDailyOffset,
+  getDetails,
   type GameState,
 } from "@/lib/leaderboard";
 
@@ -51,6 +52,7 @@ export async function POST(req: Request) {
         attemptsUsed: 1,
         band: fb.band,
         property,
+        details: await getDetails(property.id), // full set — the game is over
         result: {
           bestGuess: guess,
           bestScore: thisScore,
@@ -138,6 +140,7 @@ async function finalReveal(
     band: lastFb.band,
     direction: lastFb.direction,
     property,
+    details: await getDetails(property.id), // full set — the game is over
     result: {
       bestGuess: state.bestGuess,
       bestScore: Math.max(state.bestScore, 0),

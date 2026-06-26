@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import type { PropertyDetails } from "./property-details";
 
 // Leaderboard storage backed by Upstash Redis sorted sets — one set per day,
 // keyed by date. Scores go in the sorted set; display details in a companion
@@ -119,6 +120,22 @@ export async function getGallery(id: string): Promise<string[] | null> {
 export async function saveGallery(id: string, photos: string[]): Promise<void> {
   if (!redis || !photos.length) return;
   await redis.set(galleryKey(id), photos); // persist
+}
+
+// ── Rich detail cache ────────────────────────────────────────────────────────
+// The "Advanced" modal's data (description + categorized features). Like the
+// gallery, it's fetched at runtime from the provider's details endpoint and kept
+// in Redis rather than baked into the read-only snapshot.
+const detailsKey = (id: string) => `details:${id}`;
+
+export async function getDetails(id: string): Promise<PropertyDetails | null> {
+  if (!redis) return null;
+  return (await redis.get<PropertyDetails>(detailsKey(id))) ?? null;
+}
+
+export async function saveDetails(id: string, details: PropertyDetails): Promise<void> {
+  if (!redis) return;
+  await redis.set(detailsKey(id), details); // persist
 }
 
 // ── Admin: rotate the property of the day ────────────────────────────────────

@@ -1,4 +1,5 @@
 import type { Property } from "../types";
+import type { DetailSection, PropertyDetails } from "../property-details";
 
 // realtor16 (RapidAPI, by s.mahmoud97) — wraps realtor.com listings: real list
 // prices, photos, and coordinates. Requires a RapidAPI subscription to realtor16
@@ -113,7 +114,7 @@ async function fetchOne(location: string, key: string): Promise<Property[]> {
 // so callers should use it sparingly (e.g. only for upcoming featured listings).
 export async function fetchDetails(
   propertyId: string,
-): Promise<{ photos: string[]; yearBuilt: number | null } | null> {
+): Promise<{ photos: string[]; yearBuilt: number | null; details: PropertyDetails | null } | null> {
   const key = process.env.REALTOR_16_RAPID_API_KEY ?? process.env.REALTOR_16_API_KEY;
   if (!key) throw new Error("REALTOR_16_RAPID_API_KEY is not set");
 
@@ -138,7 +139,47 @@ export async function fetchDetails(
     ),
   ];
   const yb = node.description?.year_built;
-  return { photos: photos.slice(0, 8), yearBuilt: typeof yb === "number" ? yb : null };
+  // The photo node IS realtor16's `data` object, so the rich detail fields live
+  // right alongside the gallery — parse them from the same response (no extra
+  // request) so a gallery warm-up doubles as a details warm-up.
+  return {
+    photos: photos.slice(0, 8),
+    yearBuilt: typeof yb === "number" ? yb : null,
+    details: parseDetails(node as RawDetailNode),
+  };
+}
+
+// Shape of the realtor16 `data` node we read rich details from. Every numeric
+// field can come back as [] for "missing" (same quirk as the search endpoint),
+// so num() coerces anything non-numeric to null.
+type RawDetailNode = {
+  description?: { text?: unknown; lot_sqft?: unknown; stories?: unknown; garage?: unknown };
+  details?: Array<{ category?: unknown; parent_category?: unknown; text?: unknown }>;
+  price_per_sqft?: unknown;
+  list_date?: unknown;
+};
+
+function parseDetails(node: RawDetailNode): PropertyDetails {
+  const de = node.description ?? {};
+  const text = typeof de.text === "string" && de.text.trim() ? de.text.trim() : null;
+  const sections: DetailSection[] = (Array.isArray(node.details) ? node.details : [])
+    .map((s) => ({
+      parent: typeof s?.parent_category === "string" ? s.parent_category : "",
+      category: typeof s?.category === "string" ? s.category : "",
+      items: (Array.isArray(s?.text) ? s.text : []).filter(
+        (x): x is string => typeof x === "string" && x.trim().length > 0,
+      ),
+    }))
+    .filter((s) => s.category && s.items.length > 0);
+  return {
+    text,
+    lotSqft: num(de.lot_sqft),
+    stories: num(de.stories),
+    garage: num(de.garage),
+    pricePerSqft: num(node.price_per_sqft),
+    listDate: typeof node.list_date === "string" ? node.list_date.slice(0, 10) : null,
+    sections,
+  };
 }
 
 // Enrich a batch of listings with full galleries — one details request each,
