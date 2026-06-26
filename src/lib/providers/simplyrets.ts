@@ -42,13 +42,19 @@ export async function fetchProperties(limit = 50): Promise<Property[]> {
   return raw.map(normalize).filter((p): p is Property => p !== null);
 }
 
+// Coerce anything that isn't a real number to null, so a malformed feed never
+// leaves junk (e.g. an array) in a numeric field where the game expects a number.
+function num(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
 function normalize(r: RawListing): Property | null {
   const photos = (r.photos ?? []).filter(Boolean);
   // The game is unplayable without a price and at least one photo.
   if (!r.listPrice || photos.length === 0) return null;
 
   const pr = r.property ?? {};
-  const baths = (pr.bathsFull ?? 0) + (pr.bathsHalf ?? 0) * 0.5;
+  const baths = (num(pr.bathsFull) ?? 0) + (num(pr.bathsHalf) ?? 0) * 0.5;
 
   return {
     id: String(r.listingId ?? r.mlsId ?? photos[0]),
@@ -58,10 +64,10 @@ function normalize(r: RawListing): Property | null {
     address: r.address?.full,
     lat: typeof r.geo?.lat === "number" ? r.geo.lat : null,
     lon: typeof r.geo?.lng === "number" ? r.geo.lng : null,
-    beds: pr.bedrooms ?? null,
+    beds: num(pr.bedrooms),
     baths: baths || null,
-    sqft: pr.area ?? null,
-    yearBuilt: pr.yearBuilt ?? null,
+    sqft: num(pr.area),
+    yearBuilt: num(pr.yearBuilt),
     propertyType: pr.type ?? null,
     photos,
   };

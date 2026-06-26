@@ -207,6 +207,14 @@ function hiRes(url: string): string {
   return url.replace(/(\d)s\.jpg$/i, "$1od.jpg");
 }
 
+// realtor16 returns [] (not null) for a missing numeric field, the same way it
+// does for missing strings (see the city/state coercion below). Nullish
+// coalescing wouldn't catch [], so it would leak into the snapshot and render as
+// a blank "Sq Ft" — coerce anything that isn't a real number to null here.
+function num(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
 function normalize(r: RawResult): Property | null {
   const photos = [r.primary_photo?.href, ...(r.photos ?? []).map((p) => p?.href)]
     .filter((x): x is string => Boolean(x))
@@ -219,7 +227,7 @@ function normalize(r: RawResult): Property | null {
   const d = r.description ?? {};
   const addr = r.location?.address ?? {};
   const coord = addr.coordinate;
-  const baths = d.baths ?? (d.baths_consolidated ? Number(d.baths_consolidated) : null);
+  const baths = num(d.baths) ?? (d.baths_consolidated ? Number(d.baths_consolidated) : null);
 
   // realtor16 occasionally returns [] for a missing field — coerce to string.
   const city = typeof addr.city === "string" ? addr.city : null;
@@ -239,10 +247,10 @@ function normalize(r: RawResult): Property | null {
     address: addr.line,
     lat: typeof coord?.lat === "number" ? coord.lat : null,
     lon: typeof coord?.lon === "number" ? coord.lon : null,
-    beds: d.beds ?? null,
+    beds: num(d.beds),
     baths: Number.isFinite(baths) ? (baths as number) : null,
-    sqft: d.sqft ?? null,
-    yearBuilt: d.year_built ?? null,
+    sqft: num(d.sqft),
+    yearBuilt: num(d.year_built),
     propertyType: d.type ?? null,
     photos: [...new Set(photos)].slice(0, 6),
   };

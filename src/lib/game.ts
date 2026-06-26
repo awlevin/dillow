@@ -26,6 +26,32 @@ const POOL: Property[] = [...(snapshot.properties as Property[])].sort((a, b) =>
 // snapshot somehow ships with nothing eligible, so the game never hard-fails.
 const ELIGIBLE: Property[] = POOL.filter((p) => p.photos.length >= MIN_PHOTOS);
 
+// The player estimates a price from the home's facts, so a featured listing must
+// carry the gameplay-critical ones: enough photos, a price, and real square
+// footage / beds / baths. realtor16 occasionally returns [] (or omits) a numeric
+// field, which would otherwise surface as a blank "Sq Ft" on the card — this
+// guard keeps such a listing from ever becoming the home of the day. price/city
+// are already guaranteed by the provider normalizers; re-checked here so even a
+// hand-edited snapshot can't slip an incomplete listing past us. yearBuilt is a
+// secondary clue (often genuinely absent upstream), so it's intentionally NOT
+// required — the card just hides it when missing.
+function isNum(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v);
+}
+export function isPlayable(p: Property): boolean {
+  return (
+    p.photos.length >= MIN_PHOTOS &&
+    isNum(p.price) &&
+    p.price > 0 &&
+    isNum(p.sqft) &&
+    p.sqft > 0 &&
+    isNum(p.beds) &&
+    p.beds >= 0 && // a studio is 0 beds and still playable
+    isNum(p.baths) &&
+    p.baths > 0
+  );
+}
+
 export function getPool(): Property[] {
   return POOL;
 }
@@ -120,7 +146,17 @@ function hash(s: string): number {
 export function getDailyProperty(key = dayKey(), offset = 0): Property {
   const pool = ELIGIBLE.length ? ELIGIBLE : POOL;
   if (!pool.length) throw new Error("Property pool is empty — run POST /api/refresh");
-  return pool[(hash(key) + offset) % pool.length];
+  const start = (hash(key) + offset) % pool.length;
+  // Skip listings missing the facts the game is played on by deterministically
+  // advancing to the next complete one. Everyone still lands on the same home,
+  // but a thin clue (e.g. no square footage) never becomes the home of the day.
+  // Only days that *would* have picked an incomplete listing change; every other
+  // day is untouched, so settled leaderboards stay consistent.
+  for (let n = 0; n < pool.length; n++) {
+    const p = pool[(start + n) % pool.length];
+    if (isPlayable(p)) return p;
+  }
+  return pool[start]; // nothing playable in the pool — return the raw pick rather than hard-fail
 }
 
 // Look up a featured property by id (used to resolve a room's stored rounds).
@@ -144,7 +180,12 @@ function mulberry32(seed: number): () => number {
 // room id so every member plays the same set in the same order, with the daily
 // home excluded so the rooms feel like fresh listings.
 export function pickRoomProperties(seed: string, count: number, excludeId?: string): Property[] {
-  const pool = (ELIGIBLE.length ? ELIGIBLE : POOL).filter((p) => p.id !== excludeId);
+  // Rooms show the same property card as the daily game, so hold them to the
+  // same completeness bar; fall back to the photos-only pool only if that would
+  // leave nothing to pick from.
+  const base = (ELIGIBLE.length ? ELIGIBLE : POOL).filter((p) => p.id !== excludeId);
+  const playable = base.filter(isPlayable);
+  const pool = playable.length ? playable : base;
   if (!pool.length) throw new Error("Property pool is empty — run POST /api/refresh");
   const rand = mulberry32(hash(seed));
   const order = [...pool];

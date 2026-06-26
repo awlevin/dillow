@@ -2,15 +2,16 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fetchPool, enrichPool } from "@/lib/providers";
-import { MIN_PHOTOS } from "@/lib/game";
+import { MIN_PHOTOS, isPlayable } from "@/lib/game";
 
 // MANUAL refresh only. A search spends one realtor16 request and enrichment
 // spends one per listing, so this is never triggered automatically — you POST to
 // it on purpose to rebuild the committed snapshot at src/data/pool.json.
 //
-// Each listing is enriched to its full gallery and any with fewer than
-// MIN_PHOTOS photos is dropped, so the snapshot only ever contains properties
-// that satisfy the minimum-photo guarantee.
+// Each listing is enriched to its full gallery, then dropped unless it carries
+// every gameplay-critical field (>= MIN_PHOTOS photos, a price, and real
+// sqft/beds/baths — see isPlayable), so the snapshot only ever contains homes
+// that are complete enough to feature.
 //
 // Guard: in production a token is required. Set REFRESH_TOKEN and call with
 //   POST /api/refresh?token=YOUR_TOKEN
@@ -23,10 +24,12 @@ export async function POST(req: Request) {
   try {
     const raw = await fetchPool(); // search (honors PROPERTY_PROVIDER)
     const enriched = await enrichPool(raw); // full galleries
-    const pool = enriched.filter((p) => p.photos.length >= MIN_PHOTOS);
+    const pool = enriched.filter(isPlayable);
     if (!pool.length) {
       return NextResponse.json(
-        { error: `No properties with at least ${MIN_PHOTOS} photos.` },
+        {
+          error: `No properties complete enough to feature (need >= ${MIN_PHOTOS} photos plus price, sqft, beds, baths).`,
+        },
         { status: 502 },
       );
     }
