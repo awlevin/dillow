@@ -50,6 +50,7 @@ function parseItems(items: string[]): { chips: string[]; specs: { label: string;
   const chips: string[] = [];
   const specs: { label: string; value: string }[] = [];
   for (const raw of items) {
+    if (/https?:\/\/|www\./i.test(raw)) continue; // raw listing URLs read as clutter
     const sep = raw.indexOf(":");
     if (sep === -1) {
       chips.push(humanize(raw));

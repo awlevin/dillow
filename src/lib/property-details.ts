@@ -23,17 +23,23 @@ export type PropertyDetails = {
   sections: DetailSection[]; // categorized feature lists
 };
 
-// A feature line leaks the price if it quotes a dollar figure, a tax amount, or an
-// assessed / market value. Everything else (county, construction, utilities, etc.)
-// is fair game as a clue.
+// A feature line leaks the price if it quotes a dollar figure / tax / assessed
+// value, OR if it lets a player look the listing up and read the price directly —
+// a source URL, website, MLS/plan id, or permalink. Everything else (county,
+// construction, utilities, schools, etc.) is fair game as a clue.
 const LEAKY_LINE =
-  /tax amount|tax assessed|assessed value|market value|list price|price per|listing price|original list|\$[\d,]/i;
+  /tax amount|tax assessed|assessed value|market value|list price|price per|listing price|original list|\$[\d,]|https?:\/\/|www\.|\bwebsite\b|permalink|source url|\bmls\b|listing id|source plan/i;
 
-// Strip any dollar figure that might appear in prose. realtor.com descriptions
-// rarely quote the asking price, but a stray "$595,000" would hand it over.
+// Strip anything from the prose that could reveal or locate the price: a stray
+// "$595,000" or a listing URL. realtor.com descriptions rarely include either,
+// but this guarantees neither reaches the browser before the guess.
 function scrubText(t: string | null): string | null {
   if (t == null) return null;
-  const cleaned = t.replace(/\$\s?\d[\d,]*(\.\d+)?/g, "").replace(/\s{2,}/g, " ").trim();
+  const cleaned = t
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/\$\s?\d[\d,]*(\.\d+)?/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
   return cleaned || null;
 }
 
