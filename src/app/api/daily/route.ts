@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { getDailyProperty, dayKey, priceCeiling, priceFloor } from "@/lib/game";
 import { getDailyOffset, getGallery, getDetails, saveGallery, saveDetails, leaderboardEnabled } from "@/lib/leaderboard";
-import { fetchDetails } from "@/lib/providers";
+import { fetchDetails } from "@/lib/providers/realtor16";
 import { scrubDetails } from "@/lib/property-details";
 import { toClue } from "@/lib/types";
+
+// The committed snapshot is realtor16-baked, so its galleries + details come from
+// realtor16 regardless of the runtime PROPERTY_PROVIDER (same reason the admin
+// gallery warm imports realtor16 directly). Skip the warm when the key is absent
+// — e.g. a snapshot-only production — so the hot path never throws a 502; the
+// details modal simply won't appear until the key is configured.
+const REALTOR_KEY = process.env.REALTOR_16_RAPID_API_KEY ?? process.env.REALTOR_16_API_KEY;
 
 // Never cache — the property of the day can be rotated by an admin at any time.
 export const dynamic = "force-dynamic";
@@ -25,7 +32,7 @@ export async function GET() {
     // attempt this when Redis is configured, so the fetch is actually cached.
     let gallery = await getGallery(property.id);
     let details = await getDetails(property.id);
-    if (leaderboardEnabled() && (details === null || gallery === null)) {
+    if (REALTOR_KEY && leaderboardEnabled() && (details === null || gallery === null)) {
       const det = await fetchDetails(property.id);
       if (det) {
         if (det.photos.length > property.photos.length) {
