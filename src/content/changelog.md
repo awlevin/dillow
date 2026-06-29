@@ -8,9 +8,9 @@ Notes on what's changed. Newest first.
 - **See how the crowd values it.** After you guess, find out whether Dillow players think a home is overpriced or a steal — based on everyone's first guesses.
 - **See it on realtor.com or Zillow.** Once you've finished, jump straight to the real listing to browse the full details.
 - **Full-screen map.** Open the location map full-screen to explore the neighborhood — handy on mobile — and every daily home now always comes with a map.
-- **Listing details in challenge rooms.** The ⓘ listing details and bigger photo galleries now show in rooms too, not just the daily home.
 
 ### 💅 Nits
+- The ⓘ listing details and bigger photo galleries now show in challenge rooms too, not just the daily home.
 - Cleaner number formatting in the listing details.
 
 ## June 26, 2026

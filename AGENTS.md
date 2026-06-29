@@ -19,4 +19,5 @@ What belongs there:
 Format:
 - Newest day on top. One `## <Month D, YYYY>` heading per day.
 - Under each day, group items by `### 🔥 New Features`, then `### 🐛 Bug fixes`, then `### 💅 Nits` — in that order. Only include the categories that have items.
+- Reserve `🔥 New Features` for substantial, net-new capabilities. Smaller polish goes under `💅 Nits` — including extending an existing feature to another surface (e.g. "X now also shows in rooms"), display/formatting tweaks, and minor UX refinements. When torn between Features and Nits, choose Nits.
 - `-` bullets; bold a short lead-in on notable items. Keep it concise and lightly playful.

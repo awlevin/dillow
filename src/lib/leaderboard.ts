@@ -151,7 +151,7 @@ export async function saveDetails(id: string, details: PropertyDetails): Promise
 // sample accumulates across every day/room the home appears in.
 const valuationKey = (id: string) => `pstats:${id}`;
 const valuationSeenKey = (id: string) => `pstatsseen:${id}`;
-const MIN_VALUATION_SAMPLE = 5; // hold the stat back until it's not just noise
+const MIN_VALUATION_SAMPLE = 2; // need at least a couple of guesses before it's a "crowd"
 
 export async function recordFirstGuess(propertyId: string, playerId: string, guess: number): Promise<void> {
   if (!redis || !(guess > 0)) return;
