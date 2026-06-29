@@ -55,6 +55,9 @@ export function PropertyCarousel({
           const realSlides = slideCount;
           const i = Math.round(el.scrollLeft / el.clientWidth) - lead;
           if (i >= 0 && i < realSlides && i !== photoIdx) setPhotoIdx(i);
+          // Leaving the map slide implicitly "closes" it (no Done button) — the
+          // arrows/dots are the way out, and the overlay returns on the way back.
+          if (hasMap && mapActive && i !== clue.photos.length) setMapActive(false);
           if (loopResetRef.current) clearTimeout(loopResetRef.current);
           if (realSlides > 1) {
             if (i >= realSlides) {
@@ -106,21 +109,13 @@ export function PropertyCarousel({
                 )}
               </button>
             ) : (
-              <>
-                <button
-                  onClick={() => setMapActive(false)}
-                  className="absolute right-2 top-2 z-10 rounded-full bg-stone-900/70 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85"
-                >
-                  ✕ Done
-                </button>
-                <button
-                  onClick={() => setFullMap(true)}
-                  aria-label="Expand map to full screen"
-                  className="absolute bottom-2 right-2 z-10 flex items-center gap-1 rounded-full bg-stone-900/70 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85"
-                >
-                  <Maximize2 size={13} aria-hidden="true" /> Expand
-                </button>
-              </>
+              <button
+                onClick={() => setFullMap(true)}
+                aria-label="Expand map to full screen"
+                className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-stone-900/70 text-white shadow transition hover:bg-stone-900/85"
+              >
+                <Maximize2 size={15} aria-hidden="true" />
+              </button>
             )}
           </div>
         )}

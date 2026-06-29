@@ -20,7 +20,8 @@ export type PropertyDetails = {
   garage: number | null; // garage spaces
   pricePerSqft: number | null; // ⚠️ price-revealing — stripped pre-reveal
   listDate: string | null; // YYYY-MM-DD
-  listingUrl: string | null; // ⚠️ the listing page shows the price — stripped pre-reveal
+  listingUrl: string | null; // ⚠️ realtor.com listing page — stripped pre-reveal (shows the price)
+  zillowUrl: string | null; // ⚠️ Zillow address-search link (constructed) — stripped pre-reveal
   sections: DetailSection[]; // categorized feature lists
 };
 
@@ -50,7 +51,8 @@ export function scrubDetails(d: PropertyDetails): PropertyDetails {
   return {
     ...d,
     pricePerSqft: null,
-    listingUrl: null, // the listing page reveals the price — only sent post-reveal
+    listingUrl: null, // the listing pages reveal the price — only sent post-reveal
+    zillowUrl: null,
     text: scrubText(d.text),
     sections: d.sections
       .map((s) => ({ ...s, items: s.items.filter((i) => !LEAKY_LINE.test(i)) }))

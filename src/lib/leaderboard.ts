@@ -127,7 +127,9 @@ export async function saveGallery(id: string, photos: string[]): Promise<void> {
 // The "Advanced" modal's data (description + categorized features). Like the
 // gallery, it's fetched at runtime from the provider's details endpoint and kept
 // in Redis rather than baked into the read-only snapshot.
-const detailsKey = (id: string) => `details:${id}`;
+// Bump the version suffix whenever PropertyDetails gains/changes a field, so
+// already-cached entries are treated as a miss and re-warmed with the new shape.
+const detailsKey = (id: string) => `details:v2:${id}`;
 
 export async function getDetails(id: string): Promise<PropertyDetails | null> {
   if (!redis) return null;

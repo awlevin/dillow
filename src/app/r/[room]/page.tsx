@@ -16,12 +16,12 @@ export async function generateMetadata({
 
   if (!r) {
     const title = "Dillow Challenge";
-    const description = "A head-to-head Dillow challenge — 3 bonus rounds. Can you guess the prices?";
+    const description = "A Dillow lightning round — guess home prices head to head on a live leaderboard.";
     return { title, description, openGraph: { title, description }, twitter: { card: "summary_large_image", title, description } };
   }
 
   const title = roomTitle(r.name);
-  const description = `Can you beat ${r.name || "them"}? ${r.roundCount} bonus rounds in this Dillow challenge — guess the prices, head to head.`;
+  const description = `A Dillow lightning round — guess the price of ${r.roundCount} homes, head to head on a live leaderboard.`;
   return {
     title,
     description,

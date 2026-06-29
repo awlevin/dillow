@@ -29,9 +29,10 @@ function formatLot(sqft: number | null): string | null {
 // words and lowercase the little joiners so they read like prose.
 const JOINERS = new Set(["and", "or", "the", "of", "to", "on", "in", "with", "a"]);
 function humanize(token: string): string {
-  // A long decimal (lot-size acres, etc.) reads better rounded than as 0.1772957.
   const t = token.trim();
-  if (/^\d+\.\d{3,}$/.test(t)) return String(Math.round(parseFloat(t) * 100) / 100);
+  // Tidy plain numbers: drop trailing-zero decimals (2.00 → 2, 2.50 → 2.5) and
+  // round long ones (0.1772957 → 0.18). Integers pass through unchanged.
+  if (/^-?\d+(\.\d+)?$/.test(t)) return String(Math.round(parseFloat(t) * 100) / 100);
   return t
     .replace(/_/g, " ")
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2") // fooBar → foo Bar

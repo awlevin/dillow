@@ -51,16 +51,13 @@ export function RevealCard({
 
       {communityStats && <CommunityValuation stats={communityStats} actual={property.price} />}
 
-      {details?.listingUrl && (
-        <a
-          href={details.listingUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1 self-center text-xs font-medium text-emerald-700 underline-offset-2 hover:underline"
-        >
-          View the full listing
-          <ExternalLink size={12} aria-hidden="true" />
-        </a>
+      {(details?.listingUrl || details?.zillowUrl) && (
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-stone-500">
+          <span>See this home on</span>
+          {details.listingUrl && <ListingLink href={details.listingUrl} label="realtor.com" />}
+          {details.listingUrl && details.zillowUrl && <span aria-hidden="true">·</span>}
+          {details.zillowUrl && <ListingLink href={details.zillowUrl} label="Zillow" />}
+        </p>
       )}
 
       <button
@@ -75,6 +72,20 @@ export function RevealCard({
         {copied ? "Copied!" : "Share result"}
       </button>
     </div>
+  );
+}
+
+function ListingLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-0.5 font-medium text-emerald-700 underline-offset-2 hover:underline"
+    >
+      {label}
+      <ExternalLink size={11} aria-hidden="true" />
+    </a>
   );
 }
 

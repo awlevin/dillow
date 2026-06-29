@@ -158,7 +158,18 @@ type RawDetailNode = {
   price_per_sqft?: unknown;
   list_date?: unknown;
   href?: unknown;
+  permalink?: unknown;
 };
+
+// realtor16 doesn't carry Zillow/Redfin links (it wraps realtor.com), but its
+// permalink is a clean "{street}_{city}_{ST}_{zip}_M{id}" address slug. Drop the
+// trailing realtor id and hyphenate it into Zillow's address-search URL. Not a
+// verified deep link, but it resolves to the property for real US addresses.
+function zillowFromPermalink(permalink: unknown): string | null {
+  if (typeof permalink !== "string" || !permalink) return null;
+  const slug = permalink.replace(/_M[\dA-Za-z-]+$/i, "").replace(/_/g, "-").trim();
+  return slug ? `https://www.zillow.com/homes/${slug}_rb/` : null;
+}
 
 function parseDetails(node: RawDetailNode): PropertyDetails {
   const de = node.description ?? {};
@@ -180,6 +191,7 @@ function parseDetails(node: RawDetailNode): PropertyDetails {
     pricePerSqft: num(node.price_per_sqft),
     listDate: typeof node.list_date === "string" ? node.list_date.slice(0, 10) : null,
     listingUrl: typeof node.href === "string" && node.href.startsWith("http") ? node.href : null,
+    zillowUrl: zillowFromPermalink(node.permalink),
     sections,
   };
 }
