@@ -3,10 +3,11 @@
 Notes on what's changed. Newest first.
 
 ## June 29, 2026
-- **Every home gets a map.** The location is one of your best clues, so every daily home now always lands with a map pin.
-- **Peek at the real listing.** Once you've finished, a quiet "View the full listing" link in the reveal takes you to the actual home.
-- Tightened up the listing details so nothing can quietly spoil the price before you guess.
-- Friendlier "lightning round" invite copy, and a fix for the double link that snuck into shared rooms.
+- **How does the crowd value it?** After you guess, see whether Dillow players think a home is overpriced or a steal — based on everyone's first guesses.
+- **See it on realtor.com or Zillow.** Once you've finished, jump straight to the real listing to browse the full details.
+- **Every home gets a map** — and you can now open it full-screen to explore the neighborhood, which is especially handy on mobile.
+- **Listing details, everywhere.** Tap the ⓘ by a home's title for the full description and features — now in challenge rooms too, not just the daily home.
+- Friendlier "lightning round" invite copy, and a fix for the double link preview when sharing a room.
 
 ## June 26, 2026
 - **Listing details.** Tap the info icon next to a home's title to dig into the full listing — description, features, lot size, schools, and more. (Anything that'd give away the price stays hidden until you finish.)

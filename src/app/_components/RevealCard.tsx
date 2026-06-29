@@ -75,12 +75,20 @@ export function RevealCard({
   );
 }
 
+// Tag outbound clicks so the listing sites can attribute the traffic to Dillow.
+// We also keep the referrer (rel="noopener" without "noreferrer") so they see the
+// Referer header too — noopener still protects us from the opened tab.
+function withUtm(url: string): string {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}utm_source=dillow&utm_medium=referral&utm_campaign=listing`;
+}
+
 function ListingLink({ href, label }: { href: string; label: string }) {
   return (
     <a
-      href={href}
+      href={withUtm(href)}
       target="_blank"
-      rel="noopener noreferrer"
+      rel="noopener"
       className="inline-flex items-center gap-0.5 font-medium text-emerald-700 underline-offset-2 hover:underline"
     >
       {label}
