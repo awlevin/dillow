@@ -32,17 +32,22 @@ export function RoomInvite() {
       const title = name ? `${name}’s room` : "my Dillow room";
       recordRoom(roomId, new Date().toISOString().slice(0, 10), name ? `${name}’s room` : undefined);
       const url = `${window.location.origin}/r/${roomId}`;
+      const message = `Join ${title} on Dillow — a lightning round, head to head.`;
 
       // Share the invite (native sheet → clipboard fallback), then enter the room.
-      const text = `Join ${title} on Dillow — 3 bonus rounds, head to head. Can you beat me?\n${url}`;
+      // The native sheet renders the link from its own `url` field, so keep it OUT
+      // of the body text — putting it in both makes a second link preview. The
+      // clipboard fallback has no `url` field, so it appends the link itself.
       if (typeof navigator !== "undefined" && navigator.share) {
         try {
-          await navigator.share({ text, url });
+          await navigator.share({ text: message, url });
         } catch (e) {
-          if ((e as { name?: string }).name !== "AbortError") navigator.clipboard?.writeText(text);
+          if ((e as { name?: string }).name !== "AbortError") {
+            navigator.clipboard?.writeText(`${message}\n${url}`);
+          }
         }
       } else {
-        navigator.clipboard?.writeText(text);
+        navigator.clipboard?.writeText(`${message}\n${url}`);
       }
       router.push(`/r/${roomId}`);
     } catch {
@@ -61,15 +66,14 @@ export function RoomInvite() {
           Challenge your friends
         </h2>
         <p className="max-w-sm text-sm text-stone-600">
-          Share a link to unlock <span className="font-semibold">3 bonus rounds</span> today. Everyone
-          you invite plays the same homes — go head to head on your own leaderboard.
+          Play a lightning round against a friend or a group, with a live leaderboard.
         </p>
         <button
           onClick={start}
           disabled={busy}
           className="mt-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
         >
-          {busy ? "Starting…" : "Share & play 3 bonus rounds"}
+          {busy ? "Starting…" : "Start a lightning round"}
         </button>
         {error && <p className="text-sm text-red-600">{error}</p>}
       </div>

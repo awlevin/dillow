@@ -157,6 +157,7 @@ type RawDetailNode = {
   details?: Array<{ category?: unknown; parent_category?: unknown; text?: unknown }>;
   price_per_sqft?: unknown;
   list_date?: unknown;
+  href?: unknown;
 };
 
 function parseDetails(node: RawDetailNode): PropertyDetails {
@@ -178,6 +179,7 @@ function parseDetails(node: RawDetailNode): PropertyDetails {
     garage: num(de.garage),
     pricePerSqft: num(node.price_per_sqft),
     listDate: typeof node.list_date === "string" ? node.list_date.slice(0, 10) : null,
+    listingUrl: typeof node.href === "string" && node.href.startsWith("http") ? node.href : null,
     sections,
   };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { useCountUp } from "../_hooks/useCountUp";
 import { formatPct, usd } from "../_lib/format";
 import type { Reveal, Row } from "../_lib/types";
@@ -14,7 +15,7 @@ export function RevealCard({
   rows: Row[];
   shareText: string;
 }) {
-  const { result, property } = reveal;
+  const { result, property, details } = reveal;
   const [copied, setCopied] = useState(false);
   const won = result.within;
   const animatedPrice = useCountUp(property.price);
@@ -45,6 +46,18 @@ export function RevealCard({
         <p className="text-xs text-stone-500">
           {property.address}, {property.city}, {property.state}
         </p>
+      )}
+
+      {details?.listingUrl && (
+        <a
+          href={details.listingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-1 self-center text-xs font-medium text-emerald-700 underline-offset-2 hover:underline"
+        >
+          View the full listing
+          <ExternalLink size={12} aria-hidden="true" />
+        </a>
       )}
 
       <button

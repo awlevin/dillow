@@ -27,14 +27,15 @@ const POOL: Property[] = [...(snapshot.properties as Property[])].sort((a, b) =>
 const ELIGIBLE: Property[] = POOL.filter((p) => p.photos.length >= MIN_PHOTOS);
 
 // The player estimates a price from the home's facts, so a featured listing must
-// carry the gameplay-critical ones: enough photos, a price, and real square
-// footage / beds / baths. realtor16 occasionally returns [] (or omits) a numeric
-// field, which would otherwise surface as a blank "Sq Ft" on the card — this
-// guard keeps such a listing from ever becoming the home of the day. price/city
-// are already guaranteed by the provider normalizers; re-checked here so even a
-// hand-edited snapshot can't slip an incomplete listing past us. yearBuilt is a
-// secondary clue (often genuinely absent upstream), so it's intentionally NOT
-// required — the card just hides it when missing.
+// carry the gameplay-critical ones: enough photos, a price, real square footage /
+// beds / baths, and coordinates (the map is a core location clue — a home with no
+// pin to peek at is a poorer puzzle). realtor16 occasionally returns [] (or omits)
+// a numeric field, which would otherwise surface as a blank "Sq Ft" or a missing
+// map — this guard keeps such a listing from ever becoming the home of the day.
+// price/city are already guaranteed by the provider normalizers; re-checked here
+// so even a hand-edited snapshot can't slip an incomplete listing past us.
+// yearBuilt is a secondary clue (often genuinely absent upstream), so it's
+// intentionally NOT required — the card just hides it when missing.
 function isNum(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v);
 }
@@ -48,7 +49,9 @@ export function isPlayable(p: Property): boolean {
     isNum(p.beds) &&
     p.beds >= 0 && // a studio is 0 beds and still playable
     isNum(p.baths) &&
-    p.baths > 0
+    p.baths > 0 &&
+    isNum(p.lat) &&
+    isNum(p.lon)
   );
 }
 
