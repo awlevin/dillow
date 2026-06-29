@@ -1,4 +1,7 @@
 import type { PropertyDetails } from "@/lib/property-details";
+import type { CommunityStats } from "@/lib/types";
+
+export type { CommunityStats };
 
 export type Clue = {
   id: string;
@@ -38,6 +41,7 @@ export type Reveal = {
   };
   property: FullProperty;
   details?: PropertyDetails | null; // full set, including price-revealing fields
+  communityStats?: CommunityStats | null; // how the crowd's first guesses compare to the price
   leaderboard?: { enabled: boolean; rank?: number | null; count?: number };
 };
 
@@ -89,6 +93,7 @@ export type RoomRound = {
   done: boolean;
   property?: FullProperty;
   details?: PropertyDetails | null;
+  communityStats?: CommunityStats | null;
   result?: RoomResult;
 };
 

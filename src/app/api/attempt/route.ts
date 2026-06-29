@@ -15,6 +15,8 @@ import {
   saveGame,
   getDailyOffset,
   getDetails,
+  recordFirstGuess,
+  getCommunityStats,
   type GameState,
 } from "@/lib/leaderboard";
 
@@ -53,6 +55,7 @@ export async function POST(req: Request) {
         band: fb.band,
         property,
         details: await getDetails(property.id), // full set — the game is over
+        communityStats: await getCommunityStats(property.id, price),
         result: {
           bestGuess: guess,
           bestScore: thisScore,
@@ -72,6 +75,10 @@ export async function POST(req: Request) {
       guesses: [],
       done: false,
     };
+
+    // The opening guess is the blind one — record it for the home's crowd
+    // valuation (deduped per player) before the higher/lower hints kick in.
+    if (prev.attempts === 0) await recordFirstGuess(property.id, id, guess);
 
     // Already finished today — replay the final reveal without advancing state.
     if (prev.done) {
@@ -141,6 +148,7 @@ async function finalReveal(
     direction: lastFb.direction,
     property,
     details: await getDetails(property.id), // full set — the game is over
+    communityStats: await getCommunityStats(property.id, property.price),
     result: {
       bestGuess: state.bestGuess,
       bestScore: Math.max(state.bestScore, 0),

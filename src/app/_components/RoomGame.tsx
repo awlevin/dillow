@@ -82,7 +82,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
         { lo: floor, hi: ceiling },
       );
       const reveal: Reveal | null = r.done && r.property && r.result
-        ? { result: r.result, property: r.property, details: r.details }
+        ? { result: r.result, property: r.property, details: r.details, communityStats: r.communityStats }
         : (saved?.reveal ?? null);
       next[r.index] = { rows, lo, hi, t: 0.5, exactMode: false, exact: "", reveal };
     }
@@ -206,7 +206,12 @@ export function RoomGame({ roomId }: { roomId: string }) {
         saveLocal(current, newRows, null);
         buzz(12);
       } else {
-        const reveal: Reveal = { result: data.result, property: data.property, details: data.details };
+        const reveal: Reveal = {
+          result: data.result,
+          property: data.property,
+          details: data.details,
+          communityStats: data.communityStats,
+        };
         patch(current, { rows: newRows, reveal });
         saveLocal(current, newRows, reveal);
         buzz(data.result?.within ? [0, 35, 45, 90] : [0, 30, 60, 30]);

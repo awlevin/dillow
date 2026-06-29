@@ -9,7 +9,7 @@ import {
   scoreGuess,
 } from "@/lib/game";
 import { type Property } from "@/lib/types";
-import { getDetails } from "@/lib/leaderboard";
+import { getDetails, recordFirstGuess, getCommunityStats } from "@/lib/leaderboard";
 import { roundPayload } from "@/lib/property-payload";
 import {
   buildMember,
@@ -75,7 +75,14 @@ export async function GET(req: Request, ctx: Ctx) {
           index: i,
           clue,
           done,
-          ...(done ? { property, details, result: roundResult(state!) } : {}),
+          ...(done
+            ? {
+                property,
+                details,
+                communityStats: await getCommunityStats(property.id, property.price),
+                result: roundResult(state!),
+              }
+            : {}),
         };
       }),
     );
@@ -170,6 +177,9 @@ export async function POST(req: Request, ctx: Ctx) {
       done: false,
     };
 
+    // Opening guess on this round → feed the home's crowd valuation (deduped).
+    if (prev.attempts === 0) await recordFirstGuess(property.id, id, guess);
+
     // Already finished this round — replay its reveal without advancing.
     if (prev.done) {
       const board = await roomBoard(roomId);
@@ -179,6 +189,7 @@ export async function POST(req: Request, ctx: Ctx) {
         direction: feedback(prev.bestGuess, price).direction,
         property,
         details: await getDetails(property.id), // full set — the round is over
+        communityStats: await getCommunityStats(property.id, price),
         result: roundResult(prev),
         board,
       });
@@ -207,6 +218,7 @@ export async function POST(req: Request, ctx: Ctx) {
         direction: fb.direction,
         property,
         details: await getDetails(property.id), // full set — the round is over
+        communityStats: await getCommunityStats(property.id, price),
         result: roundResult(state),
         board,
         memberCount: board.length,

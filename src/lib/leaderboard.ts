@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis";
 import type { PropertyDetails } from "./property-details";
+import type { CommunityStats } from "./types";
 
 // Leaderboard storage backed by Upstash Redis sorted sets — one set per day,
 // keyed by date. Scores go in the sorted set; display details in a companion
@@ -136,6 +137,37 @@ export async function getDetails(id: string): Promise<PropertyDetails | null> {
 export async function saveDetails(id: string, details: PropertyDetails): Promise<void> {
   if (!redis) return;
   await redis.set(detailsKey(id), details); // persist
+}
+
+// ── Community valuation ──────────────────────────────────────────────────────
+// Per-property aggregate of players' FIRST (blind) guesses — the signal for
+// whether the crowd thinks a home is over- or under-priced. The first guess is
+// used on purpose: every later guess chases the higher/lower feedback toward the
+// real price, so only the opening guess reflects an honest valuation. We keep a
+// geometric mean (running count + sum of ln) so a few wild guesses can't dominate,
+// and one vote per player via a seen-set. Keyed by property id (not date), so the
+// sample accumulates across every day/room the home appears in.
+const valuationKey = (id: string) => `pstats:${id}`;
+const valuationSeenKey = (id: string) => `pstatsseen:${id}`;
+const MIN_VALUATION_SAMPLE = 5; // hold the stat back until it's not just noise
+
+export async function recordFirstGuess(propertyId: string, playerId: string, guess: number): Promise<void> {
+  if (!redis || !(guess > 0)) return;
+  const fresh = await redis.sadd(valuationSeenKey(propertyId), playerId);
+  if (fresh === 0) return; // this player's first guess is already counted
+  await redis.hincrby(valuationKey(propertyId), "n", 1);
+  await redis.hincrbyfloat(valuationKey(propertyId), "sumln", Math.log(guess));
+}
+
+export async function getCommunityStats(propertyId: string, actual: number): Promise<CommunityStats | null> {
+  if (!redis || !(actual > 0)) return null;
+  const h = await redis.hgetall<{ n: number | string; sumln: number | string }>(valuationKey(propertyId));
+  if (!h) return null;
+  const n = Number(h.n);
+  const sumln = Number(h.sumln);
+  if (!Number.isFinite(n) || n < MIN_VALUATION_SAMPLE || !Number.isFinite(sumln)) return null;
+  const typicalGuess = Math.exp(sumln / n);
+  return { n, typicalGuess, deltaPct: (typicalGuess - actual) / actual };
 }
 
 // ── Admin: rotate the property of the day ────────────────────────────────────

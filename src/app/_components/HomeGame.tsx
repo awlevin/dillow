@@ -136,7 +136,13 @@ export function HomeGame() {
         ));
       }
       const newReveal: Reveal | null = data.gameOver
-        ? { result: data.result, property: data.property, details: data.details, leaderboard: data.leaderboard }
+        ? {
+            result: data.result,
+            property: data.property,
+            details: data.details,
+            communityStats: data.communityStats,
+            leaderboard: data.leaderboard,
+          }
         : null;
 
       const won = data.gameOver && data.result?.within;
