@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
@@ -46,6 +47,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        <footer className="mt-auto py-6 text-center">
+          <Link href="/changelog" className="text-xs text-stone-400 transition hover:text-emerald-600">
+            What&apos;s new
+          </Link>
+        </footer>
         <Analytics />
       </body>
     </html>
