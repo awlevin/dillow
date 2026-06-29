@@ -32,7 +32,7 @@ const components: Components = {
   ),
   p: ({ children }) => <p className="mt-2 text-sm leading-relaxed text-stone-500">{children}</p>,
   ul: ({ children }) => (
-    <ul className="mt-3 list-disc space-y-2 pl-5 marker:text-emerald-400">{children}</ul>
+    <ul className="mt-3 list-disc space-y-2 pl-5 marker:text-stone-400">{children}</ul>
   ),
   li: ({ children }) => <li className="text-sm leading-relaxed text-stone-600">{children}</li>,
   strong: ({ children }) => <strong className="font-semibold text-stone-800">{children}</strong>,
