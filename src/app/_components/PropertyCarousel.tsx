@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useState, type RefObject } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 import { rdcpixLoader, rdcpixThumb } from "@/lib/rdcpix";
 import type { Clue } from "../_lib/types";
+import { MapModal } from "./MapModal";
 import { PhotoLightbox } from "./PhotoLightbox";
 import { PropertyMap } from "./PropertyMap";
 
@@ -35,6 +36,7 @@ export function PropertyCarousel({
 }: PropertyCarouselProps) {
   const slideCount = clue.photos.length + (hasMap ? 1 : 0);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+  const [fullMap, setFullMap] = useState(false);
 
   // Desktop-only prev/next: nudge the scroll container by one slide; the
   // onScroll handler above keeps photoIdx and the loop wrap in sync.
@@ -104,12 +106,21 @@ export function PropertyCarousel({
                 )}
               </button>
             ) : (
-              <button
-                onClick={() => setMapActive(false)}
-                className="absolute right-2 top-2 z-10 rounded-full bg-stone-900/70 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85"
-              >
-                ✕ Done
-              </button>
+              <>
+                <button
+                  onClick={() => setMapActive(false)}
+                  className="absolute right-2 top-2 z-10 rounded-full bg-stone-900/70 px-3 py-1 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85"
+                >
+                  ✕ Done
+                </button>
+                <button
+                  onClick={() => setFullMap(true)}
+                  aria-label="Expand map to full screen"
+                  className="absolute bottom-2 right-2 z-10 flex items-center gap-1 rounded-full bg-stone-900/70 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85"
+                >
+                  <Maximize2 size={13} aria-hidden="true" /> Expand
+                </button>
+              </>
             )}
           </div>
         )}
@@ -163,6 +174,10 @@ export function PropertyCarousel({
 
       {lightboxIdx !== null && (
         <PhotoLightbox photos={clue.photos} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
+      )}
+
+      {fullMap && hasMap && (
+        <MapModal lat={clue.lat!} lon={clue.lon!} onClose={() => setFullMap(false)} />
       )}
     </div>
   );

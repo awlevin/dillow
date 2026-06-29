@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { useCountUp } from "../_hooks/useCountUp";
+import { shareOrCopy } from "../_lib/browser-effects";
 import { formatPct, usd } from "../_lib/format";
 import type { Reveal, Row } from "../_lib/types";
 
@@ -62,18 +63,10 @@ export function RevealCard({
 
       <button
         onClick={async () => {
-          const text = `${shareText}\n${window.location.href}`;
-          if (typeof navigator !== "undefined" && navigator.share) {
-            try {
-              await navigator.share({ text });
-              return;
-            } catch (e) {
-              if ((e as { name?: string }).name === "AbortError") return;
-            }
+          if ((await shareOrCopy(shareText, window.location.href)) === "copied") {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
           }
-          navigator.clipboard?.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
         }}
         className="mt-1 self-center rounded-lg border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
       >

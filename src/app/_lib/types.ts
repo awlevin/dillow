@@ -88,6 +88,7 @@ export type RoomRound = {
   clue: Clue;
   done: boolean;
   property?: FullProperty;
+  details?: PropertyDetails | null;
   result?: RoomResult;
 };
 

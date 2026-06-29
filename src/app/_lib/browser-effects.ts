@@ -27,3 +27,21 @@ export function buzz(pattern: number | number[]) {
     /* not supported */
   }
 }
+
+// Share via the native sheet, falling back to copying to the clipboard. The link
+// goes ONLY in navigator.share's `url` field, never in the body text — putting it
+// in both makes some apps render two link previews. The clipboard fallback has no
+// `url` field, so it appends the link inline. One helper so every share path stays
+// consistent (and can't reintroduce the double-preview bug).
+export async function shareOrCopy(message: string, url: string): Promise<"shared" | "copied" | "dismissed"> {
+  if (typeof navigator !== "undefined" && navigator.share) {
+    try {
+      await navigator.share({ text: message, url });
+      return "shared";
+    } catch (e) {
+      if ((e as { name?: string }).name === "AbortError") return "dismissed";
+    }
+  }
+  navigator.clipboard?.writeText(`${message}\n${url}`);
+  return "copied";
+}

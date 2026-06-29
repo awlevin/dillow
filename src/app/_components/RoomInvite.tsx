@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trophy } from "lucide-react";
+import { shareOrCopy } from "../_lib/browser-effects";
 import { getId, recordRoom } from "../_lib/client-storage";
 
 // Shown after the daily game ends: one tap creates a private room of 3 bonus
@@ -33,22 +34,7 @@ export function RoomInvite() {
       recordRoom(roomId, new Date().toISOString().slice(0, 10), name ? `${name}’s room` : undefined);
       const url = `${window.location.origin}/r/${roomId}`;
       const message = `Join ${title} on Dillow — a lightning round, head to head.`;
-
-      // Share the invite (native sheet → clipboard fallback), then enter the room.
-      // The native sheet renders the link from its own `url` field, so keep it OUT
-      // of the body text — putting it in both makes a second link preview. The
-      // clipboard fallback has no `url` field, so it appends the link itself.
-      if (typeof navigator !== "undefined" && navigator.share) {
-        try {
-          await navigator.share({ text: message, url });
-        } catch (e) {
-          if ((e as { name?: string }).name !== "AbortError") {
-            navigator.clipboard?.writeText(`${message}\n${url}`);
-          }
-        }
-      } else {
-        navigator.clipboard?.writeText(`${message}\n${url}`);
-      }
+      await shareOrCopy(message, url); // native sheet → clipboard fallback
       router.push(`/r/${roomId}`);
     } catch {
       setError("Couldn't start a room. Try again.");

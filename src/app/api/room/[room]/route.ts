@@ -8,7 +8,9 @@ import {
   priceFloor,
   scoreGuess,
 } from "@/lib/game";
-import { toClue, type Property } from "@/lib/types";
+import { type Property } from "@/lib/types";
+import { getDetails } from "@/lib/leaderboard";
+import { roundPayload } from "@/lib/property-payload";
 import {
   buildMember,
   getRoom,
@@ -23,6 +25,9 @@ import {
 } from "@/lib/room";
 
 export const dynamic = "force-dynamic";
+// A cold room may warm each round's gallery + details on first load; give it
+// headroom beyond the default so those upstream fetches don't 504.
+export const maxDuration = 30;
 
 const WIN_PCT = 0.05; // "nailed it" / win threshold for the reveal (matches daily)
 
@@ -57,17 +62,23 @@ export async function GET(req: Request, ctx: Ctx) {
       roomBoard(roomId),
     ]);
 
-    const rounds = room.propertyIds.map((pid, i) => {
-      const property = getPropertyById(pid) as Property;
-      const state = game?.rounds?.[i];
-      const done = state?.done === true;
-      return {
-        index: i,
-        clue: toClue(property),
-        done,
-        ...(done ? { property, result: roundResult(state!) } : {}),
-      };
-    });
+    // roundPayload warms each round's gallery + details and scrubs the clue — the
+    // SAME builder the daily game uses, so room rounds get the richer gallery and
+    // the ⓘ details modal for free instead of silently missing them.
+    const rounds = await Promise.all(
+      room.propertyIds.map(async (pid, i) => {
+        const property = getPropertyById(pid) as Property;
+        const state = game?.rounds?.[i];
+        const done = state?.done === true;
+        const { clue, details } = await roundPayload(property);
+        return {
+          index: i,
+          clue,
+          done,
+          ...(done ? { property, details, result: roundResult(state!) } : {}),
+        };
+      }),
+    );
 
     const me = id ? (board.find((m) => m.id === id) ?? null) : null;
 
@@ -167,6 +178,7 @@ export async function POST(req: Request, ctx: Ctx) {
         band: feedback(prev.guesses[prev.guesses.length - 1] ?? prev.bestGuess, price).band,
         direction: feedback(prev.bestGuess, price).direction,
         property,
+        details: await getDetails(property.id), // full set — the round is over
         result: roundResult(prev),
         board,
       });
@@ -194,6 +206,7 @@ export async function POST(req: Request, ctx: Ctx) {
         band: fb.band,
         direction: fb.direction,
         property,
+        details: await getDetails(property.id), // full set — the round is over
         result: roundResult(state),
         board,
         memberCount: board.length,

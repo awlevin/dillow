@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Pencil, Trophy } from "lucide-react";
 import { narrowBounds, type Band } from "@/lib/feedback";
-import { buzz, smoothScrollTo } from "../_lib/browser-effects";
+import { buzz, shareOrCopy, smoothScrollTo } from "../_lib/browser-effects";
 import { getId, recordRoom } from "../_lib/client-storage";
 import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice, usd } from "../_lib/format";
 import type { Reveal, RoomInfo, RoomMemberView, RoomRound, Row } from "../_lib/types";
@@ -82,7 +82,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
         { lo: floor, hi: ceiling },
       );
       const reveal: Reveal | null = r.done && r.property && r.result
-        ? { result: r.result, property: r.property }
+        ? { result: r.result, property: r.property, details: r.details }
         : (saved?.reveal ?? null);
       next[r.index] = { rows, lo, hi, t: 0.5, exactMode: false, exact: "", reveal };
     }
@@ -206,7 +206,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
         saveLocal(current, newRows, null);
         buzz(12);
       } else {
-        const reveal: Reveal = { result: data.result, property: data.property };
+        const reveal: Reveal = { result: data.result, property: data.property, details: data.details };
         patch(current, { rows: newRows, reveal });
         saveLocal(current, newRows, reveal);
         buzz(data.result?.within ? [0, 35, 45, 90] : [0, 30, 60, 30]);
@@ -345,18 +345,11 @@ function RoomHeader({
 
   const invite = async () => {
     const url = `${window.location.origin}/r/${roomId}`;
-    const text = `Join ${title} on Dillow — 3 bonus rounds, head to head.\n${url}`;
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({ text, url });
-        return;
-      } catch (e) {
-        if ((e as { name?: string }).name === "AbortError") return;
-      }
+    const message = `Join ${title} on Dillow — a lightning round, head to head.`;
+    if ((await shareOrCopy(message, url)) === "copied") {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
     }
-    navigator.clipboard?.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
   };
 
   const save = async () => {
