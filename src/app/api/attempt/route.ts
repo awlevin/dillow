@@ -7,6 +7,7 @@ import {
   rankScore,
   dayKey,
   MAX_ATTEMPTS,
+  WIN_THRESHOLD,
 } from "@/lib/game";
 import type { Property } from "@/lib/types";
 import {
@@ -136,6 +137,10 @@ async function finalReveal(
 ) {
   const lastGuess = state.guesses[state.guesses.length - 1] ?? state.bestGuess;
   const lastFb = feedback(lastGuess, property.price);
+  // "Won" (and the celebratory reveal) means landing within the game's win
+  // threshold — the SAME 1% you have to hit to end the round early — not the
+  // looser 5% the reveal used to flag.
+  const within = Math.abs(state.bestPct) <= WIN_THRESHOLD;
   let leaderboard: { enabled: boolean; rank?: number | null; count?: number } = {
     enabled: leaderboardEnabled(),
   };
@@ -152,7 +157,7 @@ async function finalReveal(
   }
   return NextResponse.json({
     gameOver: true,
-    within: Math.abs(state.bestPct) <= 0.05,
+    within,
     attemptsUsed,
     band: lastFb.band,
     direction: lastFb.direction,
@@ -163,7 +168,7 @@ async function finalReveal(
       bestGuess: state.bestGuess,
       bestScore: Math.max(state.bestScore, 0),
       pctError: state.bestPct,
-      within: Math.abs(state.bestPct) <= 0.05,
+      within,
       attemptsUsed,
     },
     leaderboard,

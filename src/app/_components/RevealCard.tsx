@@ -7,6 +7,79 @@ import { shareOrCopy } from "../_lib/browser-effects";
 import { formatPct, usd } from "../_lib/format";
 import type { CommunityStats, Reveal, Row } from "../_lib/types";
 
+// Reveal verdict copy. A true bullseye (within the 1% win threshold) earns the
+// celebratory line; every other result gets a tier-appropriate take — closer
+// misses lean encouraging, big ones lean roasty — plus a quip for flavour.
+type Mood = { card: string; headlineColor: string; headline: string; quips: string[] };
+
+const WIN_MOOD: Mood = {
+  card: "bg-emerald-50",
+  headlineColor: "text-emerald-900",
+  headline: "", // computed inline with the attempt count
+  quips: ["Bullseye — chef's kiss.", "You've got the realtor gene.", "Ice-cold accuracy."],
+};
+
+// Ordered by the upper bound of |% error|; the first match wins.
+const MOOD_TIERS: { max: number; mood: Mood }[] = [
+  {
+    max: 0.05,
+    mood: {
+      card: "bg-amber-50",
+      headlineColor: "text-amber-900",
+      headline: "🔥 So close!",
+      quips: [
+        "A rounding error from glory.",
+        "Practically had the keys in your hand.",
+        "So close you could smell the fresh paint.",
+      ],
+    },
+  },
+  {
+    max: 0.15,
+    mood: {
+      card: "bg-amber-50",
+      headlineColor: "text-amber-900",
+      headline: "👏 Not bad!",
+      quips: [
+        "In the ballpark — realtors would be nervous.",
+        "You clearly know a thing or two.",
+        "Respectable. Not a bullseye, but respectable.",
+      ],
+    },
+  },
+  {
+    max: 0.35,
+    mood: {
+      card: "bg-stone-100",
+      headlineColor: "text-stone-700",
+      headline: "😬 Oof.",
+      quips: [
+        "Better luck on the next one.",
+        "The photos were right there…",
+        "Did you even glance at the kitchen?",
+      ],
+    },
+  },
+  {
+    max: Infinity,
+    mood: {
+      card: "bg-rose-50",
+      headlineColor: "text-rose-900",
+      headline: "💀 Yikes.",
+      quips: [
+        "Were you bidding in Monopoly money?",
+        "Off by an entire house.",
+        "The housing market would like a word.",
+        "Maybe stick to renting.",
+      ],
+    },
+  },
+];
+
+function moodFor(absPct: number): Mood {
+  return (MOOD_TIERS.find((t) => absPct <= t.max) ?? MOOD_TIERS[MOOD_TIERS.length - 1]).mood;
+}
+
 export function RevealCard({
   reveal,
   rows,
@@ -18,14 +91,20 @@ export function RevealCard({
 }) {
   const { result, property, details, communityStats } = reveal;
   const [copied, setCopied] = useState(false);
-  const won = result.within;
+  const won = result.within; // landed within the 1% win threshold
+  const mood = won ? WIN_MOOD : moodFor(Math.abs(result.pctError));
+  const headline = won ? `🎯 Nailed it in ${result.attemptsUsed}!` : mood.headline;
+  // Deterministic so it's stable across re-renders (and as the card is reused for
+  // the next home) yet varies from home to home — a "shuffle" without the state.
+  const quip = mood.quips[Math.abs(Math.round(result.pctError * 1000) + result.attemptsUsed) % mood.quips.length];
   const animatedPrice = useCountUp(property.price);
 
   return (
-    <div className="animate-reveal mt-1 flex flex-col gap-3 rounded-xl bg-emerald-50 p-4 text-center">
-      <p className="text-xl font-bold text-emerald-900">
-        {won ? `🎯 Nailed it in ${result.attemptsUsed}!` : "Out of guesses"}
-      </p>
+    <div className={`animate-reveal mt-1 flex flex-col gap-3 rounded-xl p-4 text-center ${mood.card}`}>
+      <div>
+        <p className={`text-xl font-bold ${mood.headlineColor}`}>{headline}</p>
+        <p className="mt-0.5 text-sm text-stone-500">{quip}</p>
+      </div>
       <div className="flex items-end justify-center gap-6">
         <div>
           <p className="text-xs uppercase tracking-wide text-stone-400">Your closest</p>

@@ -47,7 +47,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
-        <footer className="mt-auto py-6 text-center">
+        {/* On small screens the footer follows the content so "What's new" sits
+            just under the game card (above the fold on short phones); on larger
+            screens mt-auto pins it to the bottom as a tidy sticky footer. */}
+        <footer className="py-3 text-center sm:mt-auto sm:py-6">
           <Link href="/changelog" className="text-xs text-stone-400 transition hover:text-emerald-600">
             What&apos;s new
           </Link>

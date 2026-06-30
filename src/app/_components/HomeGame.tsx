@@ -351,7 +351,7 @@ function DailyRecap({
       </h2>
       <p className="mt-2 text-sm text-emerald-800">
         You nailed <span className="font-bold">{wins}</span> of {playedCount}{" "}
-        {playedCount === 1 ? "home" : "homes"} within 5%
+        {playedCount === 1 ? "home" : "homes"} within 1%
         {streak > 0 && (
           <>
             {" "}

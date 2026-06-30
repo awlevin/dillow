@@ -7,6 +7,7 @@ import {
   priceCeiling,
   priceFloor,
   scoreGuess,
+  WIN_THRESHOLD,
 } from "@/lib/game";
 import { type Property } from "@/lib/types";
 import { getDetails, recordFirstGuess, getCommunityStats } from "@/lib/leaderboard";
@@ -29,7 +30,7 @@ export const dynamic = "force-dynamic";
 // headroom beyond the default so those upstream fetches don't 504.
 export const maxDuration = 30;
 
-const WIN_PCT = 0.05; // "nailed it" / win threshold for the reveal (matches daily)
+const WIN_PCT = WIN_THRESHOLD; // "nailed it" / win threshold for the reveal (matches daily — 1%)
 
 type Ctx = { params: Promise<{ room: string }> };
 

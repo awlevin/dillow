@@ -11,6 +11,7 @@ Notes on what's changed. Newest first.
 ### 💅 Nits
 - **Fuller photo galleries.** Homes now show their whole photo set — up to dozens of shots instead of a handful — so you've got more to study before you guess.
 - **Jump back into a room.** A quiet "Your rooms" link on the home page reopens any challenge room you've recently played — tap to expand the list.
+- **Verdicts that mean it.** Only a guess within 1% earns the 🎯 "Nailed it" now — every other result gets an honest read on how you did, from "so close" to a friendly roast.
 
 ## June 29, 2026
 

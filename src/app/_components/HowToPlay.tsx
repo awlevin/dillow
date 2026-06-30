@@ -50,8 +50,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
           <li className="flex gap-2">
             <span>🏘️</span>
             <span>
-              Play <b>three homes</b> each day: the home of the day, a big-spender splurge, and one
-              near you.
+              Play <b>three homes</b> each day or compete against friends.
             </span>
           </li>
           <li className="flex gap-2">
@@ -60,9 +59,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
           </li>
           <li className="flex gap-2">
             <span>🎚️</span>
-            <span>
-              Drag the slider to set a price — or just tap <b>Guess</b> to start from the middle.
-            </span>
+            <span>Guess the price on each home.</span>
           </li>
           <li className="flex gap-2">
             <span>↕️</span>
