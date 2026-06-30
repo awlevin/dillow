@@ -27,16 +27,24 @@ export type GameState = {
   done: boolean;
 };
 
-const gameKey = (date: string, id: string) => `game:${date}:${id}`;
+// One in-progress game per (day, property, player). Keyed by property as well as
+// date so the day's three homes — and any future day a home reappears on — each
+// track their own attempts independently.
+const gameKey = (date: string, propertyId: string, id: string) => `game:${date}:${propertyId}:${id}`;
 
-export async function getGame(date: string, id: string): Promise<GameState | null> {
+export async function getGame(date: string, propertyId: string, id: string): Promise<GameState | null> {
   if (!redis) return null;
-  return (await redis.get<GameState>(gameKey(date, id))) ?? null;
+  return (await redis.get<GameState>(gameKey(date, propertyId, id))) ?? null;
 }
 
-export async function saveGame(date: string, id: string, state: GameState): Promise<void> {
+export async function saveGame(
+  date: string,
+  propertyId: string,
+  id: string,
+  state: GameState,
+): Promise<void> {
   if (!redis) return;
-  await redis.set(gameKey(date, id), state, { ex: 60 * 60 * 24 * 3 }); // 3-day TTL
+  await redis.set(gameKey(date, propertyId, id), state, { ex: 60 * 60 * 24 * 3 }); // 3-day TTL
 }
 
 // Accept either naming scheme the Vercel/Upstash integration may inject.
@@ -55,55 +63,85 @@ export function getRedis(): Redis | null {
   return redis;
 }
 
-const setKey = (date: string) => `lb:${date}`; // sorted set: member=id, score=score
-const metaKey = (date: string) => `lbmeta:${date}`; // hash: id -> JSON(Entry)
+// ── Per-property leaderboards ────────────────────────────────────────────────
+// The board lives on the PROPERTY, not the day: everyone who has ever guessed a
+// given home competes on one all-time board. A date-scoped board is written
+// alongside the all-time one on every submit, so a per-day-per-property
+// leaderboard can be switched on later with zero backfill — the data is already
+// there, just not yet read. `scope` is "all" for the all-time board or a YYYY-MM-DD
+// date for that day's board on the same property.
+type BoardScope = "all" | string;
+const propSetKey = (propertyId: string, scope: BoardScope) =>
+  scope === "all" ? `plb:${propertyId}` : `plb:${propertyId}:${scope}`;
+const propMetaKey = (propertyId: string, scope: BoardScope) =>
+  scope === "all" ? `plbmeta:${propertyId}` : `plbmeta:${propertyId}:${scope}`;
 
-// Record a player's result for `date`. First submission per id wins (NX), so a
-// one-shot daily game can't be re-stuffed. Returns their rank + the day's count.
-export async function submitEntry(
-  date: string,
-  entry: Entry,
-): Promise<{ rank: number | null; count: number; alreadyPlayed: boolean }> {
-  if (!redis) throw new Error("Leaderboard not configured");
-
-  const added = await redis.zadd(setKey(date), { nx: true }, { member: entry.id, score: entry.score });
-  const alreadyPlayed = added === 0;
-  if (!alreadyPlayed) {
-    await redis.hset(metaKey(date), { [entry.id]: JSON.stringify(entry) });
-  }
-  const count = await redis.zcard(setKey(date));
-  // Rank by score descending (zrevrank is 0-based).
-  const revrank = await redis.zrevrank(setKey(date), entry.id);
-  return { rank: revrank === null ? null : revrank + 1, count, alreadyPlayed };
-}
-
-// Top `limit` entries for a date, highest score first.
-export async function topEntries(date: string, limit = 10): Promise<Entry[]> {
-  if (!redis) return [];
-  const ids = await redis.zrange<string[]>(setKey(date), 0, limit - 1, { rev: true });
-  if (!ids.length) return [];
-  const raw = await redis.hmget<Record<string, string>>(metaKey(date), ...ids);
+function parseEntries(ids: string[], raw: Record<string, string> | null): Entry[] {
   return ids
     .map((id) => raw?.[id])
     .filter((v): v is string => Boolean(v))
     .map((v) => (typeof v === "string" ? (JSON.parse(v) as Entry) : (v as Entry)));
 }
 
-export async function dayCount(date: string): Promise<number> {
-  if (!redis) return 0;
-  return redis.zcard(setKey(date));
+// Record a player's result on a property's board. Best score WINS (GT): replaying
+// a home that comes around again only moves you up, never down, and the same call
+// can't drag your standing back. Writes the all-time board and the day's board in
+// lockstep. Returns the player's all-time rank + the board's all-time size.
+export async function submitPropertyEntry(
+  propertyId: string,
+  date: string,
+  entry: Entry,
+): Promise<{ rank: number | null; count: number }> {
+  if (!redis) throw new Error("Leaderboard not configured");
+
+  for (const scope of ["all", date] as BoardScope[]) {
+    // GT + CH → only updates an existing member when the new score is higher, and
+    // returns how many members changed (a brand-new member counts as changed), so
+    // the display hash is refreshed exactly when the ranking actually moved.
+    const changed = await redis.zadd(
+      propSetKey(propertyId, scope),
+      { gt: true, ch: true },
+      { member: entry.id, score: entry.score },
+    );
+    if (changed) {
+      await redis.hset(propMetaKey(propertyId, scope), { [entry.id]: JSON.stringify(entry) });
+    }
+  }
+
+  const allSet = propSetKey(propertyId, "all");
+  const [count, revrank] = await Promise.all([redis.zcard(allSet), redis.zrevrank(allSet, entry.id)]);
+  return { rank: revrank === null ? null : revrank + 1, count };
 }
 
-// Where a single player placed for `date`, plus their entry. Returns null if
-// they haven't joined the board yet (played but no name, or didn't play).
-export async function playerStanding(
-  date: string,
+// Top `limit` entries for a property, best score first (all-time by default).
+export async function topPropertyEntries(
+  propertyId: string,
+  limit = 10,
+  scope: BoardScope = "all",
+): Promise<Entry[]> {
+  if (!redis) return [];
+  const ids = await redis.zrange<string[]>(propSetKey(propertyId, scope), 0, limit - 1, { rev: true });
+  if (!ids.length) return [];
+  const raw = await redis.hmget<Record<string, string>>(propMetaKey(propertyId, scope), ...ids);
+  return parseEntries(ids, raw);
+}
+
+export async function propertyBoardCount(propertyId: string, scope: BoardScope = "all"): Promise<number> {
+  if (!redis) return 0;
+  return redis.zcard(propSetKey(propertyId, scope));
+}
+
+// Where a single player ranks on a property's board, plus their entry. Returns
+// null if they haven't joined the board yet (played but no name).
+export async function propertyStanding(
+  propertyId: string,
   id: string,
+  scope: BoardScope = "all",
 ): Promise<{ rank: number; entry: Entry | null } | null> {
   if (!redis) return null;
-  const revrank = await redis.zrevrank(setKey(date), id);
+  const revrank = await redis.zrevrank(propSetKey(propertyId, scope), id);
   if (revrank === null) return null;
-  const raw = await redis.hget<string | Entry>(metaKey(date), id);
+  const raw = await redis.hget<string | Entry>(propMetaKey(propertyId, scope), id);
   const entry = raw ? (typeof raw === "string" ? (JSON.parse(raw) as Entry) : raw) : null;
   return { rank: revrank + 1, entry };
 }
@@ -186,14 +224,15 @@ export async function bumpDailyOffset(date: string): Promise<number> {
   return redis.incr(offsetKey(date));
 }
 
-// Wipe today's leaderboard + every player's in-progress game so everyone starts
-// fresh on the newly-rotated property.
+// Wipe every player's in-progress game for `date` so everyone starts fresh on the
+// newly-rotated home of the day. Per-property leaderboards are all-time and live
+// on the home itself, so they're deliberately left intact.
 export async function clearDailyState(date: string): Promise<number> {
   if (!redis) return 0;
-  const keys: string[] = [setKey(date), metaKey(date)];
+  const keys: string[] = [];
   let cursor = 0;
   do {
-    const [next, batch] = await redis.scan(cursor, { match: `${gameKey(date, "")}*`, count: 200 });
+    const [next, batch] = await redis.scan(cursor, { match: `game:${date}:*`, count: 200 });
     cursor = Number(next);
     keys.push(...batch);
   } while (cursor !== 0);

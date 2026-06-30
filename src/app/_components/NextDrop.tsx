@@ -73,7 +73,7 @@ export function NextDrop() {
         className="animate-nextglow pointer-events-none absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_-10%,theme(colors.emerald.200/0.5),transparent)]"
       />
       <div className="relative flex flex-col items-center gap-3">
-        <h2 className="text-base font-extrabold tracking-tight text-emerald-900">🏡 Next home drops in</h2>
+        <h2 className="text-base font-extrabold tracking-tight text-emerald-900">🏡 Next homes drop in</h2>
 
         <div className="flex items-end justify-center gap-2 sm:gap-3">
           <TimeUnit value={hours} label="hrs" />

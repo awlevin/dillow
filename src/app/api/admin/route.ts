@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dayKey, getDailyProperty } from "@/lib/game";
+import { dayKey, getDailyProperty, getPremiumProperty } from "@/lib/game";
 import type { Property } from "@/lib/types";
 import { fetchDetails } from "@/lib/providers/realtor16";
 import {
@@ -81,8 +81,13 @@ export async function POST(req: Request) {
     }
 
     if (body.action === "enrich") {
-      const property = getDailyProperty(date, await getDailyOffset(date));
+      const offset = await getDailyOffset(date);
+      const property = getDailyProperty(date, offset);
       const photos = await enrich(property);
+      // Also pre-warm the day's "big spender" home (global, like the standard one)
+      // so its gallery + details are hot before anyone reaches it. Best-effort.
+      const premium = getPremiumProperty(date, new Set([property.id]));
+      if (premium) await enrich(premium).catch(() => {});
       return NextResponse.json({ ok: true, current: summary(property, photos) });
     }
 

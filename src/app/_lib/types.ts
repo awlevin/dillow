@@ -46,13 +46,28 @@ export type Reveal = {
 };
 
 // Per-game history for long-term stats (accuracy by price band, win rate, etc.).
+// One entry per home played (keyed by date + propertyId), so all three of a day's
+// homes contribute.
 export type StatEntry = {
   date: string;
+  propertyId: string;
   price: number;
   pct: number; // abs % error of best guess
   attempts: number;
   won: boolean;
   state: string;
+};
+
+// ── The daily slate: three homes a day ───────────────────────────────────────
+export type SlotKind = "standard" | "premium" | "local" | "wildcard";
+
+// One of the day's homes as /api/daily serves it: a price-scrubbed clue plus the
+// id used to score guesses and look up its all-time leaderboard.
+export type DailyHome = {
+  slot: number;
+  kind: SlotKind;
+  propertyId: string;
+  clue: Clue;
 };
 
 export type LeaderboardEntry = {
@@ -64,14 +79,16 @@ export type LeaderboardEntry = {
   attempts: number;
 };
 
-export type LeaderboardBoard = {
+// A single home's all-time leaderboard. `locked` while the caller hasn't finished
+// this home yet (only the headcount is returned, so other players' guesses can't
+// leak the price mid-game).
+export type PropertyBoard = {
   enabled: boolean;
-  today?: boolean;
-  date?: string;
-  property?: { city: string; state: string; price: number; photos: string[] };
+  propertyId?: string;
+  locked?: boolean;
   top?: LeaderboardEntry[];
   count?: number;
-  // The requesting player's global placement for the day, if they've joined.
+  // The requesting player's placement on this home's board, if they've joined.
   me?: { rank: number; entry: LeaderboardEntry | null } | null;
 };
 

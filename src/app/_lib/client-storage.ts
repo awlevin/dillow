@@ -50,7 +50,9 @@ export function recordStats(e: StatEntry) {
   try {
     const raw = localStorage.getItem("dillow:stats");
     const arr: StatEntry[] = raw ? JSON.parse(raw) : [];
-    if (arr.some((x) => x.date === e.date)) return; // one record per day
+    // One record per home played (date + property), so all three of a day's homes
+    // count toward the stats while a re-finish of the same home doesn't double up.
+    if (arr.some((x) => x.date === e.date && x.propertyId === e.propertyId)) return;
     arr.push(e);
     localStorage.setItem("dillow:stats", JSON.stringify(arr.slice(-400)));
   } catch {

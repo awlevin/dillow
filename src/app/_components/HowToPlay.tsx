@@ -44,12 +44,19 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         </button>
 
         <h2 className="text-2xl font-black text-emerald-900">How to play</h2>
-        <p className="mt-1 text-stone-500">Guess the home&apos;s price in {MAX_ATTEMPTS} tries.</p>
+        <p className="mt-1 text-stone-500">Three homes a day. Guess each price in {MAX_ATTEMPTS} tries.</p>
 
         <ul className="mt-4 flex flex-col gap-2.5 text-sm text-stone-700">
           <li className="flex gap-2">
+            <span>🏘️</span>
+            <span>
+              Play <b>three homes</b> each day: the home of the day, a big-spender splurge, and one
+              near you.
+            </span>
+          </li>
+          <li className="flex gap-2">
             <span>📸</span>
-            <span>Study the photos, location, and stats of today&apos;s real home.</span>
+            <span>Study the photos, location, and stats of each real home.</span>
           </li>
           <li className="flex gap-2">
             <span>🎚️</span>

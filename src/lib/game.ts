@@ -168,6 +168,168 @@ export function getPropertyById(id: string): Property | undefined {
   return BY_ID.get(id);
 }
 
+// ── The daily slate: three homes a day ───────────────────────────────────────
+// Every player gets three homes to guess each day:
+//   • standard — the deterministic "home of the day" (getDailyProperty), shared
+//     by everyone and rotatable by an admin.
+//   • premium  — a deliberately high-end home from the priciest slice of the
+//     pool, for a "big spender" round.
+//   • local    — a home near the player, inferred from their (coarse, IP-level)
+//     location; falls back to a deterministic "wildcard" home when we can't
+//     place them (e.g. no geo signal in local dev).
+// The three are always distinct. premium/wildcard are pure functions of the day,
+// so they're identical for everyone; local depends only on the request's coarse
+// coordinates, so it's stable for a player across a session.
+export type SlotKind = "standard" | "premium" | "local" | "wildcard";
+
+export type SlateSlot = {
+  slot: number;
+  kind: SlotKind;
+  property: Property;
+};
+
+function basePool(): Property[] {
+  return ELIGIBLE.length ? ELIGIBLE : POOL;
+}
+
+// Deterministically pick a playable property from `pool`, seeded by `key`, while
+// skipping any id another slot already claimed. Mirrors getDailyProperty's
+// skip-forward so everyone seeded the same way lands on the same home.
+function pickFrom(pool: Property[], key: string, exclude: Set<string>): Property | null {
+  if (!pool.length) return null;
+  const start = hash(key) % pool.length;
+  // Pass 0 respects `exclude`; pass 1 ignores it as a last resort, so a tiny
+  // sub-pool (e.g. a single premium home) still yields a pick rather than null.
+  for (let pass = 0; pass < 2; pass++) {
+    for (let n = 0; n < pool.length; n++) {
+      const p = pool[(start + n) % pool.length];
+      if (isPlayable(p) && (pass === 1 || !exclude.has(p.id))) return p;
+    }
+  }
+  return null;
+}
+
+// The priciest slice of the pool — the candidates for the "big spender" slot.
+// Top fraction by price with an absolute floor so the slot is always genuinely
+// high-end, yet the set stays large enough to rotate for weeks without repeating.
+const PREMIUM_TOP_FRACTION = 0.08;
+const PREMIUM_MIN_PRICE = 2_000_000;
+const PREMIUM_POOL: Property[] = (() => {
+  const playable = basePool().filter(isPlayable);
+  const byPrice = [...playable].sort((a, b) => b.price - a.price);
+  const n = Math.max(8, Math.ceil(byPrice.length * PREMIUM_TOP_FRACTION));
+  const top = byPrice.slice(0, n);
+  const pricey = top.filter((p) => p.price >= PREMIUM_MIN_PRICE);
+  return pricey.length ? pricey : top;
+})();
+
+export function getPremiumProperty(key = dayKey(), exclude: Set<string> = new Set()): Property | null {
+  return pickFrom(PREMIUM_POOL, `${key}:premium`, exclude);
+}
+
+export function getWildcardProperty(key = dayKey(), exclude: Set<string> = new Set()): Property | null {
+  return pickFrom(basePool(), `${key}:wildcard`, exclude);
+}
+
+// City centroids, averaged from the pool's playable homes — the lookup table that
+// turns a player's coordinates into "their" city. Built once at module load.
+type CityCentroid = { city: string; state: string; lat: number; lon: number };
+const CITY_CENTROIDS: CityCentroid[] = (() => {
+  const groups = new Map<string, { city: string; state: string; lat: number; lon: number; n: number }>();
+  for (const p of basePool()) {
+    if (!isPlayable(p) || p.lat == null || p.lon == null) continue;
+    const k = `${p.city}|${p.state}`;
+    const g = groups.get(k) ?? { city: p.city, state: p.state, lat: 0, lon: 0, n: 0 };
+    g.lat += p.lat;
+    g.lon += p.lon;
+    g.n += 1;
+    groups.set(k, g);
+  }
+  return [...groups.values()].map((g) => ({ city: g.city, state: g.state, lat: g.lat / g.n, lon: g.lon / g.n }));
+})();
+
+// Squared equirectangular distance — monotonic in true distance over the spans we
+// compare (US metros), so it ranks nearest-city correctly without a haversine.
+function cityDistSq(lat: number, lon: number, c: CityCentroid): number {
+  const k = Math.cos((lat * Math.PI) / 180);
+  const dLat = lat - c.lat;
+  const dLon = (lon - c.lon) * k;
+  return dLat * dLat + dLon * dLon;
+}
+
+export function nearestCity(lat: number, lon: number): CityCentroid | null {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  let best: CityCentroid | null = null;
+  let bestD = Infinity;
+  for (const c of CITY_CENTROIDS) {
+    const d = cityDistSq(lat, lon, c);
+    if (d < bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  return best;
+}
+
+// How far the nearest city may be before "near you" stops being honest. ~7° of
+// arc (≈480 mi) keeps players across the continental US tied to a real metro,
+// while an overseas visitor — whose nearest pool city is an ocean away — drops
+// through to a wildcard instead of a bogus "near you".
+const MAX_LOCAL_DIST_SQ = 7 * 7;
+
+// A playable home near (lat, lon): the nearest city's deterministic pick, walking
+// out to the next-nearest cities if that city has nothing distinct left to offer,
+// so the local slot resolves to a real, distinct home — unless the player is too
+// far from any city to call it local, in which case it returns null (→ wildcard).
+export function getLocalProperty(
+  key: string,
+  lat: number,
+  lon: number,
+  exclude: Set<string> = new Set(),
+): Property | null {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !CITY_CENTROIDS.length) return null;
+  const byDistance = [...CITY_CENTROIDS].sort((a, b) => cityDistSq(lat, lon, a) - cityDistSq(lat, lon, b));
+  if (cityDistSq(lat, lon, byDistance[0]) > MAX_LOCAL_DIST_SQ) return null; // nobody nearby
+  for (const c of byDistance) {
+    const inCity = basePool().filter((p) => p.city === c.city && p.state === c.state);
+    const pick = pickFrom(inCity, `${key}:local`, exclude);
+    if (pick) return pick;
+  }
+  return null;
+}
+
+// Assemble a player's three homes for the day. `coords` come from the request's
+// coarse IP geolocation; absent or unplaceable, the local slot becomes a wildcard.
+export function getDailySlate(opts: {
+  key?: string;
+  offset?: number;
+  coords?: { lat: number; lon: number } | null;
+}): SlateSlot[] {
+  const key = opts.key ?? dayKey();
+  const exclude = new Set<string>();
+  const slots: SlateSlot[] = [];
+
+  const standard = getDailyProperty(key, opts.offset ?? 0);
+  slots.push({ slot: 0, kind: "standard", property: standard });
+  exclude.add(standard.id);
+
+  const premium = getPremiumProperty(key, exclude);
+  const slot1 = premium ?? getWildcardProperty(key, exclude);
+  if (slot1) {
+    slots.push({ slot: 1, kind: premium ? "premium" : "wildcard", property: slot1 });
+    exclude.add(slot1.id);
+  }
+
+  const local = opts.coords ? getLocalProperty(key, opts.coords.lat, opts.coords.lon, exclude) : null;
+  const slot2 = local ?? getWildcardProperty(key, exclude);
+  if (slot2) {
+    slots.push({ slot: 2, kind: local ? "local" : "wildcard", property: slot2 });
+    exclude.add(slot2.id);
+  }
+
+  return slots;
+}
+
 // Small deterministic PRNG so a seed yields a stable shuffle (no Math.random).
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;

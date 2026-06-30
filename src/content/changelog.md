@@ -2,6 +2,12 @@
 
 Notes on what's changed. Newest first.
 
+## June 30, 2026
+
+### 🔥 New Features
+- **Three homes a day.** Instead of one, you now get three: the home of the day, a big-spender splurge from the top of the market, and one near you (we pick the closest city automatically — no permission prompt). Play through all three, then see your daily wrap-up.
+- **A leaderboard for every home.** Each home keeps its own all-time board of the closest guesses ever made on it — so you're now racing everyone who's ever played that exact home, not just today's crowd. Land near the top and you'll stick around.
+
 ## June 29, 2026
 
 ### 🔥 New Features

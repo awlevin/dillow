@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  getDailyProperty,
+  getPropertyById,
+  isPlayable,
   scoreGuess,
   feedback,
   rankScore,
@@ -10,21 +11,22 @@ import {
 import type { Property } from "@/lib/types";
 import {
   leaderboardEnabled,
-  submitEntry,
+  submitPropertyEntry,
   getGame,
   saveGame,
-  getDailyOffset,
   getDetails,
   recordFirstGuess,
   getCommunityStats,
   type GameState,
 } from "@/lib/leaderboard";
 
-// One guess in the daily game. Returns hidden-price feedback (aim higher/lower +
-// a proximity band) until the player wins (within 5%) or uses all 5 attempts —
-// then it reveals the property and records the result on today's leaderboard.
+// One guess on one of the day's homes. Returns hidden-price feedback (aim
+// higher/lower + a proximity band) until the player wins (within 5%) or uses all
+// 5 attempts — then it reveals the home and records the result on THAT home's
+// all-time leaderboard. The home is identified by `propertyId` (one of the three
+// the player was served by /api/daily), so the same endpoint scores any of them.
 export async function POST(req: Request) {
-  let body: { guess?: unknown; id?: unknown; name?: unknown };
+  let body: { guess?: unknown; id?: unknown; name?: unknown; propertyId?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -38,9 +40,17 @@ export async function POST(req: Request) {
   const id = typeof body.id === "string" ? body.id : null;
   const name = typeof body.name === "string" ? body.name.trim().slice(0, 24) : "";
 
+  // The home is whichever of today's served homes the client is guessing on. We
+  // re-resolve it from the pool (never trusting a client-supplied price) and
+  // require it to be a real, playable listing.
+  const propertyId = typeof body.propertyId === "string" ? body.propertyId : null;
+  const property = propertyId ? getPropertyById(propertyId) : undefined;
+  if (!property || !isPlayable(property)) {
+    return NextResponse.json({ error: "Unknown home." }, { status: 400 });
+  }
+
   try {
     const date = dayKey();
-    const property = getDailyProperty(date, await getDailyOffset(date));
     const price = property.price;
     const fb = feedback(guess, price);
     const thisScore = scoreGuess(guess, price).score;
@@ -67,7 +77,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const prev: GameState = (await getGame(date, id)) ?? {
+    const prev: GameState = (await getGame(date, property.id, id)) ?? {
       attempts: 0,
       bestScore: -1,
       bestGuess: guess,
@@ -80,7 +90,7 @@ export async function POST(req: Request) {
     // valuation (deduped per player) before the higher/lower hints kick in.
     if (prev.attempts === 0) await recordFirstGuess(property.id, id, guess);
 
-    // Already finished today — replay the final reveal without advancing state.
+    // Already finished this home today — replay the final reveal without advancing.
     if (prev.done) {
       return finalReveal(date, id, name, property, prev, prev.attempts, false);
     }
@@ -95,7 +105,7 @@ export async function POST(req: Request) {
       guesses: [...prev.guesses, guess],
       done: fb.within || attempts >= MAX_ATTEMPTS,
     };
-    await saveGame(date, id, state);
+    await saveGame(date, property.id, id, state);
 
     if (state.done) {
       return finalReveal(date, id, name, property, state, attempts, true);
@@ -130,7 +140,7 @@ async function finalReveal(
     enabled: leaderboardEnabled(),
   };
   if (record && name) {
-    const r = await submitEntry(date, {
+    const r = await submitPropertyEntry(property.id, date, {
       id,
       name,
       guess: state.bestGuess,

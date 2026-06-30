@@ -122,10 +122,11 @@ export default function Admin() {
             {busy ? "…" : "🖼️ Load more photos for this property"}
           </button>
           <p className="text-xs text-stone-400">
-            Rotating swaps today&apos;s home for everyone (and auto-loads its full photo gallery),
-            resetting today&apos;s leaderboard + in-progress games. &ldquo;Load more photos&rdquo;
-            fetches the full gallery for the current property without rotating. Each costs one
-            realtor16 request.
+            Rotating swaps today&apos;s standard home for everyone (and auto-loads its full photo
+            gallery), resetting today&apos;s in-progress games. The all-time per-home leaderboards
+            stay. &ldquo;Load more photos&rdquo; fetches the full gallery for the current home (and
+            pre-warms the day&apos;s big-spender home) without rotating. Each costs one realtor16
+            request.
           </p>
           {msg && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{msg}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}

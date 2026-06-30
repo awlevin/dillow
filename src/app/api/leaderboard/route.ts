@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
-import { getDailyProperty, isPastDate, dayKey, rankScore } from "@/lib/game";
+import { dayKey, getPropertyById, rankScore } from "@/lib/game";
 import {
   leaderboardEnabled,
-  topEntries,
-  dayCount,
-  playerStanding,
-  getDailyOffset,
+  topPropertyEntries,
+  propertyBoardCount,
+  propertyStanding,
   getGame,
-  submitEntry,
+  submitPropertyEntry,
 } from "@/lib/leaderboard";
 
-// Join today's leaderboard AFTER finishing the game, by name. Uses the player's
-// stored game state (best guess, attempts) — they don't enter a name to play.
+// Join a home's all-time leaderboard AFTER finishing it, by name. Uses the
+// player's stored game state for that home (best guess, attempts) — they don't
+// enter a name to play. Idempotent and best-score-wins, so re-joining is safe.
 export async function POST(req: Request) {
   if (!leaderboardEnabled()) return NextResponse.json({ enabled: false });
 
-  let body: { id?: unknown; name?: unknown };
+  let body: { id?: unknown; name?: unknown; propertyId?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -23,49 +23,60 @@ export async function POST(req: Request) {
   }
   const id = typeof body.id === "string" ? body.id : null;
   const name = typeof body.name === "string" ? body.name.trim().slice(0, 24) : "";
-  if (!id || !name) return NextResponse.json({ error: "Name required" }, { status: 400 });
-
-  const date = dayKey();
-  const state = await getGame(date, id);
-  if (!state || !state.done) {
-    return NextResponse.json({ error: "Finish today's game first." }, { status: 400 });
+  const propertyId = typeof body.propertyId === "string" ? body.propertyId : null;
+  if (!id || !name || !propertyId) {
+    return NextResponse.json({ error: "Name required" }, { status: 400 });
   }
 
-  const score = rankScore(state.bestPct, state.attempts);
-  const r = await submitEntry(date, {
+  const date = dayKey();
+  const state = await getGame(date, propertyId, id);
+  if (!state || !state.done) {
+    return NextResponse.json({ error: "Finish this home first." }, { status: 400 });
+  }
+
+  const r = await submitPropertyEntry(propertyId, date, {
     id,
     name,
     guess: state.bestGuess,
-    score,
+    score: rankScore(state.bestPct, state.attempts),
     pctError: state.bestPct,
     attempts: state.attempts,
   });
   return NextResponse.json({ rank: r.rank, count: r.count });
 }
 
-// Live leaderboard: today's standings by default (top 5 + the caller's own
-// placement). Pass ?id= to get where that player ranks globally, even outside
-// the top 5. The answer (property + price) is only revealed for PAST days, so
-// today's board never spoils the game in progress.
+// A home's all-time leaderboard: top 5 + the caller's own placement. The board is
+// only handed out once the caller has finished THIS home today (other players'
+// guesses would otherwise leak the price), so a request for a home still in
+// progress comes back locked, with just the headcount.
 export async function GET(req: Request) {
   if (!leaderboardEnabled()) {
     return NextResponse.json({ enabled: false });
   }
 
   const url = new URL(req.url);
-  const date = url.searchParams.get("date") ?? dayKey();
+  const propertyId = url.searchParams.get("propertyId");
   const id = url.searchParams.get("id");
-  const past = isPastDate(date);
+  if (!propertyId || !getPropertyById(propertyId)) {
+    return NextResponse.json({ error: "Unknown home." }, { status: 400 });
+  }
 
   try {
-    const [top, count, me] = await Promise.all([
-      topEntries(date, 5),
-      dayCount(date),
-      id ? playerStanding(date, id) : Promise.resolve(null),
+    const date = dayKey();
+    const myGame = id ? await getGame(date, propertyId, id) : null;
+    const unlocked = myGame?.done === true;
+
+    const count = await propertyBoardCount(propertyId);
+    if (!unlocked) {
+      // Don't reveal others' guesses while the caller is still playing this home.
+      return NextResponse.json({ enabled: true, propertyId, locked: true, count });
+    }
+
+    const [top, me] = await Promise.all([
+      topPropertyEntries(propertyId, 5),
+      id ? propertyStanding(propertyId, id) : Promise.resolve(null),
     ]);
-    // Only reveal the answer once the day is over.
-    const property = past ? getDailyProperty(date, await getDailyOffset(date)) : undefined;
-    return NextResponse.json({ enabled: true, today: !past, date, property, top, count, me });
+    return NextResponse.json({ enabled: true, propertyId, locked: false, top, count, me });
   } catch (err) {
     console.error("[/api/leaderboard]", err);
     return NextResponse.json({ error: "Could not load leaderboard." }, { status: 502 });
