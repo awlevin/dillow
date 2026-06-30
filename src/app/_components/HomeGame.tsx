@@ -256,7 +256,7 @@ export function HomeGame() {
         <p className="rounded-lg bg-red-50 px-4 py-3 text-center text-sm text-red-700">{error}</p>
       )}
 
-      {total > 0 && <SlateNav homes={homes} current={current} ui={ui} onGo={goTo} />}
+      {total > 0 && <SlateNav current={current} total={total} />}
 
       {!onRecap && home && cur && (
         <>
@@ -312,54 +312,13 @@ export function HomeGame() {
   );
 }
 
-// The day's three homes as a compact navigator: a chip per home with its label,
-// a done check, and the current one highlighted. Tap to revisit any home.
-function SlateNav({
-  homes,
-  current,
-  ui,
-  onGo,
-}: {
-  homes: DailyHome[];
-  current: number;
-  ui: Record<number, HomeUI>;
-  onGo: (index: number) => void;
-}) {
-  const total = homes.length;
-  const onRecap = current >= total;
+// A minimal progress indicator for the day's three homes. (Hidden on the recap.)
+function SlateNav({ current, total }: { current: number; total: number }) {
+  if (current >= total) return null;
   return (
-    <nav className="flex flex-col gap-2">
-      <div className="grid grid-cols-3 gap-2">
-        {homes.map((h, i) => {
-          const meta = homeMeta(h.kind);
-          const finished = ui[i]?.reveal != null;
-          const active = i === current;
-          return (
-            <button
-              key={h.propertyId + i}
-              onClick={() => onGo(i)}
-              aria-current={active ? "step" : undefined}
-              className={`flex flex-col items-center gap-0.5 rounded-xl border px-2 py-2 text-center transition ${
-                active
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm"
-                  : "border-stone-200 bg-white text-stone-500 hover:border-stone-300"
-              }`}
-            >
-              <span className="text-lg leading-none">{meta.emoji}</span>
-              <span className="text-[11px] font-semibold leading-tight">{meta.label}</span>
-              <span className={`text-[10px] font-medium ${finished ? "text-emerald-500" : "text-stone-400"}`}>
-                {finished ? "✓ done" : active ? "now" : `home ${i + 1}`}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      {!onRecap && homes[current] && (
-        <p className="text-center text-xs text-stone-500">
-          Home {current + 1} of {total} · {homeMeta(homes[current].kind).blurb}
-        </p>
-      )}
-    </nav>
+    <p className="text-center text-sm font-semibold text-stone-500">
+      Home {current + 1} of {total}
+    </p>
   );
 }
 
