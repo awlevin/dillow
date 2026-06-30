@@ -64,7 +64,7 @@ export function PropertyLeaderboard({ propertyId }: { propertyId: string }) {
   return (
     <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
       <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">
-        All-time best guesses on this home
+        Leaderboard
       </h2>
 
       {top.length > 0 ? (
