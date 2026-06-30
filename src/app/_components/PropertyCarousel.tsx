@@ -9,6 +9,9 @@ import { MapModal } from "./MapModal";
 import { PhotoLightbox } from "./PhotoLightbox";
 import { PropertyMap } from "./PropertyMap";
 
+// Above this many photos, the per-slide dots give way to a compact counter.
+const MAX_DOTS = 8;
+
 type PropertyCarouselProps = {
   clue: Clue;
   done: boolean;
@@ -123,30 +126,38 @@ export function PropertyCarousel({
         {loop && <PhotoSlide src={clue.photos[0]} alt="" keyName="loop-clone" hidden />}
       </div>
 
-      {slideCount > 1 && (
-        <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-          {Array.from({ length: slideCount }).map((_, i) => {
-            const isMapDot = hasMap && i === clue.photos.length;
-            return (
-              <button
-                key={i}
-                onClick={() =>
-                  carouselRef.current?.scrollTo({
-                    left: (i + (loop ? 1 : 0)) * carouselRef.current.clientWidth,
-                    behavior: "smooth",
-                  })
-                }
-                aria-label={isMapDot ? "Map" : `Photo ${i + 1}`}
-                className={`pointer-events-auto rounded-full transition ${
-                  i === photoIdx ? "bg-white" : "bg-white/50"
-                } ${isMapDot ? "grid h-2.5 w-2.5 place-items-center text-[7px] leading-none" : "h-2 w-2"}`}
-              >
-                {isMapDot ? "📍" : ""}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* A dot per slide reads well for a handful of photos, but a rich gallery
+          would cram dozens of dots across the frame — past a threshold, switch to
+          a compact "n / total" counter (with a 📍 when the map slide is in view). */}
+      {slideCount > 1 &&
+        (clue.photos.length > MAX_DOTS ? (
+          <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-stone-900/55 px-2.5 py-0.5 text-xs font-medium tabular-nums text-white">
+            {hasMap && photoIdx === clue.photos.length ? "📍 Map" : `${photoIdx + 1} / ${clue.photos.length}`}
+          </div>
+        ) : (
+          <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+            {Array.from({ length: slideCount }).map((_, i) => {
+              const isMapDot = hasMap && i === clue.photos.length;
+              return (
+                <button
+                  key={i}
+                  onClick={() =>
+                    carouselRef.current?.scrollTo({
+                      left: (i + (loop ? 1 : 0)) * carouselRef.current.clientWidth,
+                      behavior: "smooth",
+                    })
+                  }
+                  aria-label={isMapDot ? "Map" : `Photo ${i + 1}`}
+                  className={`pointer-events-auto rounded-full transition ${
+                    i === photoIdx ? "bg-white" : "bg-white/50"
+                  } ${isMapDot ? "grid h-2.5 w-2.5 place-items-center text-[7px] leading-none" : "h-2 w-2"}`}
+                >
+                  {isMapDot ? "📍" : ""}
+                </button>
+              );
+            })}
+          </div>
+        ))}
 
       {slideCount > 1 && (
         <>

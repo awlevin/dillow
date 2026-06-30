@@ -12,6 +12,13 @@ import type { DetailSection, PropertyDetails } from "../property-details";
 //   REALTOR16_LIMIT           listings per location (default 50)
 const HOST = "realtor16.p.rapidapi.com";
 
+// The runtime gallery (warmed once per home, cached in Redis) keeps effectively
+// the whole listing's photo set — a richer "study the home" carousel. The
+// committed snapshot stays lean (a cold-start fallback); runtime warming supplies
+// the rest. Bounded so a pathological 100-photo mansion can't blow up the payload.
+const MAX_GALLERY_PHOTOS = 40;
+const SNAPSHOT_PHOTOS = 8;
+
 // A geographically + price diverse spread of US metros for nationwide variety.
 const DEFAULT_LOCATIONS = [
   "New York, NY",
@@ -143,7 +150,7 @@ export async function fetchDetails(
   // right alongside the gallery — parse them from the same response (no extra
   // request) so a gallery warm-up doubles as a details warm-up.
   return {
-    photos: photos.slice(0, 8),
+    photos: photos.slice(0, MAX_GALLERY_PHOTOS),
     yearBuilt: typeof yb === "number" ? yb : null,
     details: parseDetails(node as RawDetailNode),
   };
@@ -207,11 +214,17 @@ export async function enrichPool(props: Property[], concurrency = 2): Promise<Pr
     while (next < out.length) {
       const idx = next++;
       const p = out[idx];
-      if (p.photos.length >= 8) continue; // already a full gallery
+      if (p.photos.length >= SNAPSHOT_PHOTOS) continue; // snapshot gallery already full
       try {
         const det = await fetchDetails(p.id);
         if (det && det.photos.length > p.photos.length) {
-          out[idx] = { ...p, photos: det.photos, yearBuilt: det.yearBuilt ?? p.yearBuilt };
+          // Keep the committed snapshot lean; the runtime gallery (Redis) carries
+          // the full set for the homes that actually get played.
+          out[idx] = {
+            ...p,
+            photos: det.photos.slice(0, SNAPSHOT_PHOTOS),
+            yearBuilt: det.yearBuilt ?? p.yearBuilt,
+          };
         }
       } catch (err) {
         console.warn(`[realtor16] enrich ${p.id} failed:`, err);
