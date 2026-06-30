@@ -15,6 +15,7 @@ import { PropertyCard } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import { PropertyLeaderboard } from "./PropertyLeaderboard";
 import { RecentRooms } from "./RecentRooms";
+import { RecentRoomsMenu } from "./RecentRoomsMenu";
 import { RoomInvite } from "./RoomInvite";
 import { StatsPanel } from "./StatsPanel";
 
@@ -308,6 +309,8 @@ export function HomeGame() {
           <NextDrop />
         </>
       )}
+
+      {!loading && <RecentRoomsMenu />}
     </main>
   );
 }

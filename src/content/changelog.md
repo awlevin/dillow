@@ -10,6 +10,7 @@ Notes on what's changed. Newest first.
 
 ### 💅 Nits
 - **Fuller photo galleries.** Homes now show their whole photo set — up to dozens of shots instead of a handful — so you've got more to study before you guess.
+- **Jump back into a room.** A quiet "Your rooms" link on the home page reopens any challenge room you've recently played — tap to expand the list.
 
 ## June 29, 2026
 
