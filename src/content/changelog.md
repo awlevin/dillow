@@ -2,6 +2,26 @@
 
 Notes on what's changed. Newest first.
 
+## July 1, 2026
+
+### 🔥 New Features
+- **Clues unlock as you guess.** The listing's secrets now come out one guess at a time: home facts (lot size, stories, garage) after your first, the listing description after your second, and the full feature list after your third. The ⓘ details modal shows what's still locked.
+- **Photo gallery view.** Tap the grid button on the photos (or in the full-screen viewer) to see every shot at once and jump straight to the one you want — no more swiping through 30 photos.
+- **Pinch to zoom.** In the full-screen photo viewer you can now pinch (or double-tap) to zoom in and pan around — inspect that countertop up close.
+- **You vs. the crowd vs. the price.** The community verdict is now a scale showing exactly where your guess, the crowd's typical guess, and the asking price all landed.
+- **Report a home.** Spot fake renovation renders or busted data? There's now a "Report a problem with this home" link on the reveal and in the listing details.
+- **Recent homes.** A quiet "Recent homes" link at the bottom of the page lists the homes you've played — with the price, how close you got, and a jump to the real listing.
+
+### 🐛 Bug fixes
+- **The narrowing range now explains itself.** When your warmth pins the range tighter than your raw guesses (a 🟩 at $994K means the price is within 10% of it), the slider now tags the bound and tells you why — no more "the range doesn't match my guesses" confusion.
+
+### 💅 Nits
+- **Fine-tune the slider on your phone.** While dragging, slide your finger up or down away from the slider for finer control — like scrubbing a video.
+- **Confetti in rooms too.** Nail a challenge-room home within 1% and you'll get the same celebration as the daily game.
+- **"Your rooms" is now "Friends"**, and each room shows how many people have played today.
+- Full-screen photos ditch the 30-dot row for a clean progress bar, and the photo counter stays out of the way on mobile while you browse.
+- Modals no longer overflow the screen on iOS.
+
 ## June 30, 2026
 
 ### 🔥 New Features

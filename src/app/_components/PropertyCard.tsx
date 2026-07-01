@@ -5,6 +5,7 @@ import { Info, Map as MapIcon } from "lucide-react";
 import type { Clue, Reveal, Row } from "../_lib/types";
 import { propertyTitle } from "../_lib/format";
 import { AdvancedDetails } from "./AdvancedDetails";
+import { ClueUnlocks } from "./ClueUnlocks";
 import { GuessControls } from "./GuessControls";
 import { GuessHistory } from "./GuessHistory";
 import { PropertyCarousel } from "./PropertyCarousel";
@@ -123,6 +124,10 @@ export function PropertyCard({
         <PropertyFacts clue={clue} onToggleMap={hasMap ? toggleMap : undefined} />
         <GuessHistory rows={rows} />
 
+        {!done && details && (
+          <ClueUnlocks details={details} guessCount={rows.length} onOpen={() => setShowAdvanced(true)} />
+        )}
+
         {!done ? (
           <GuessControls
             rows={rows}
@@ -149,7 +154,13 @@ export function PropertyCard({
       </div>
 
       {showAdvanced && details && (
-        <AdvancedDetails details={details} propertyId={clue.id} revealed={done} onClose={() => setShowAdvanced(false)} />
+        <AdvancedDetails
+          details={details}
+          propertyId={clue.id}
+          revealed={done}
+          unlockedTiers={done ? Infinity : rows.length}
+          onClose={() => setShowAdvanced(false)}
+        />
       )}
     </section>
   );

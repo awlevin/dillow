@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Pencil, Trophy } from "lucide-react";
 import { narrowBounds, type Band } from "@/lib/feedback";
 import { buzz, shareOrCopy, smoothScrollTo } from "../_lib/browser-effects";
-import { getId, recordRoom } from "../_lib/client-storage";
-import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice, usd } from "../_lib/format";
+import { getId, recordRecentHome, recordRoom } from "../_lib/client-storage";
+import { isoDay } from "../_lib/game-day";
+import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, propertyTitle, tToPrice, usd } from "../_lib/format";
 import type { Reveal, RoomInfo, RoomMemberView, RoomRound, Row } from "../_lib/types";
+import { Confetti } from "./Confetti";
 import { PropertyCard } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 
@@ -36,10 +38,17 @@ export function RoomGame({ roomId }: { roomId: string }) {
   const [current, setCurrent] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
 
   const inited = useRef(false);
   const topRef = useRef<HTMLDivElement>(null);
   const revealRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!celebrate) return;
+    const id = setTimeout(() => setCelebrate(false), 4500);
+    return () => clearTimeout(id);
+  }, [celebrate]);
 
   const lsKey = `dillow:room:${roomId}`;
   const loadLocal = (): Record<number, { rows: Row[]; reveal: Reveal | null }> => {
@@ -215,6 +224,20 @@ export function RoomGame({ roomId }: { roomId: string }) {
         patch(current, { rows: newRows, reveal });
         saveLocal(current, newRows, reveal);
         buzz(data.result?.within ? [0, 35, 45, 90] : [0, 30, 60, 30]);
+        if (data.result?.within) setCelebrate(true);
+
+        recordRecentHome({
+          date: info?.room?.date ?? isoDay(new Date()),
+          propertyId: data.property.id,
+          title: data.property.address
+            ? `${data.property.address}, ${data.property.city}, ${data.property.state}`
+            : propertyTitle(data.property),
+          price: data.property.price,
+          pct: Math.abs(data.result.pctError),
+          won: data.result.within,
+          url: data.details?.listingUrl ?? undefined,
+        });
+
         setInfo(await refresh(id));
       }
     } catch {
@@ -263,6 +286,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
 
   return (
     <main ref={topRef} className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 py-4 sm:gap-5 sm:py-10">
+      {celebrate && <Confetti />}
       <RoomHeader
         roomId={roomId}
         roomName={info?.room?.name ?? ""}

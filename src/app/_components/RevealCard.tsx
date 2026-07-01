@@ -6,6 +6,7 @@ import { useCountUp } from "../_hooks/useCountUp";
 import { shareOrCopy } from "../_lib/browser-effects";
 import { compact, formatPct, usd } from "../_lib/format";
 import type { CommunityStats, Reveal, Row } from "../_lib/types";
+import { ReportProperty } from "./ReportProperty";
 
 // Reveal verdict copy. A true bullseye (within the 1% win threshold) earns the
 // celebratory line; every other result gets a tier-appropriate take — closer
@@ -152,6 +153,9 @@ export function RevealCard({
       >
         {copied ? "Copied!" : "Share result"}
       </button>
+
+      {/* Quiet, below Share — the reveal is where a bogus listing is most obvious. */}
+      <ReportProperty propertyId={property.id} className="mt-1 justify-center" />
     </div>
   );
 }

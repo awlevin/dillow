@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { narrowBounds, type Band } from "@/lib/feedback";
 import { buzz, smoothScrollTo } from "../_lib/browser-effects";
-import { getId, loadStreak, recordPlay, recordStats } from "../_lib/client-storage";
-import { formatPct, MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, tToPrice } from "../_lib/format";
+import { getId, loadStreak, recordPlay, recordRecentHome, recordStats } from "../_lib/client-storage";
+import { formatPct, MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, propertyTitle, tToPrice } from "../_lib/format";
 import { homeMeta } from "../_lib/slate";
 import type { DailyHome, Reveal, Row } from "../_lib/types";
 import { Confetti } from "./Confetti";
@@ -14,6 +14,7 @@ import { NextDrop } from "./NextDrop";
 import { PropertyCard } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import { PropertyLeaderboard } from "./PropertyLeaderboard";
+import { RecentHomes } from "./RecentHomes";
 import { RecentRooms } from "./RecentRooms";
 import { RecentRoomsMenu } from "./RecentRoomsMenu";
 import { RoomInvite } from "./RoomInvite";
@@ -210,6 +211,17 @@ export function HomeGame() {
         won: data.result.within,
         state: data.property.state,
       });
+      recordRecentHome({
+        date,
+        propertyId: home.propertyId,
+        title: data.property.address
+          ? `${data.property.address}, ${data.property.city}, ${data.property.state}`
+          : propertyTitle(home.clue),
+        price: data.property.price,
+        pct: Math.abs(data.result.pctError),
+        won: data.result.within,
+        url: data.details?.listingUrl ?? undefined,
+      });
       setStatsVersion((v) => v + 1);
 
       // Finishing the last home completes the day → bump the streak (once/day).
@@ -311,6 +323,7 @@ export function HomeGame() {
       )}
 
       {!loading && <RecentRoomsMenu />}
+      {!loading && <RecentHomes />}
     </main>
   );
 }

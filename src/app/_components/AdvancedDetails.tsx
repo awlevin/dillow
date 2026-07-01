@@ -11,7 +11,7 @@ const MONTHS = [
 ];
 
 // "2026-05-20" → "May 2026" without constructing a Date (avoids any TZ surprises).
-function formatListed(iso: string | null): string | null {
+export function formatListed(iso: string | null): string | null {
   if (!iso) return null;
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!m) return null;
@@ -19,10 +19,39 @@ function formatListed(iso: string | null): string | null {
   return month ? `${month} ${m[1]}` : null;
 }
 
-function formatLot(sqft: number | null): string | null {
+export function formatLot(sqft: number | null): string | null {
   if (sqft == null) return null;
   if (sqft >= 21780) return `${(sqft / 43560).toFixed(2)} acre lot`; // ≥ ½ acre reads better in acres
   return `${sqft.toLocaleString()} sq ft lot`;
+}
+
+// The Tier-1 "home facts" — lot, stories, garage, listed date — shared by the
+// modal's chip row and the unlock strip's teaser so the copy never drifts. These
+// are price-safe (unlike pricePerSqft, which the server only sends post-reveal).
+export function homeFacts(details: PropertyDetails): string[] {
+  const listed = formatListed(details.listDate);
+  return [
+    formatLot(details.lotSqft),
+    details.stories != null ? `${details.stories} ${details.stories === 1 ? "story" : "stories"}` : null,
+    details.garage != null ? `${details.garage}-car garage` : null,
+    listed && `Listed ${listed}`,
+  ].filter((f): f is string => Boolean(f));
+}
+
+const ORDINALS = ["1st", "2nd", "3rd", "4th", "5th"];
+
+// A stone-toned placeholder for content that a later guess will unlock, shown in
+// the exact spot the real content will appear. `tier` is 1-based and matches the
+// guess that unlocks it (Tier 2 → "after your 2nd guess").
+function LockedRow({ label, tier }: { label: string; tier: number }) {
+  return (
+    <div className="mt-4 flex items-center gap-2 rounded-lg bg-stone-100 px-3 py-2.5 text-sm text-stone-400">
+      <span aria-hidden="true">🔒</span>
+      <span>
+        {label} — unlocks after your {ORDINALS[tier - 1] ?? `${tier}th`} guess
+      </span>
+    </div>
+  );
 }
 
 // realtor16's feature strings are raw enum-ish tokens — "BedroomOnMainLevel",
@@ -109,11 +138,15 @@ export function AdvancedDetails({
   details,
   propertyId,
   revealed,
+  unlockedTiers,
   onClose,
 }: {
   details: PropertyDetails;
   propertyId: string;
   revealed: boolean;
+  // How many clue tiers are unlocked so far (rows.length while live; Infinity once
+  // revealed). Tier 1 = home facts, 2 = description, 3 = feature sections.
+  unlockedTiers: number;
   onClose: () => void;
 }) {
   const [closing, setClosing] = useState(false);
@@ -130,11 +163,12 @@ export function AdvancedDetails({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Home facts (Tier 1) stay hidden until the first guess; pricePerSqft is
+  // price-revealing and only ever arrives post-reveal.
+  const hf = homeFacts(details);
+  const factsUnlocked = unlockedTiers >= 1;
   const facts = [
-    formatLot(details.lotSqft),
-    details.stories != null ? `${details.stories} ${details.stories === 1 ? "story" : "stories"}` : null,
-    details.garage != null ? `${details.garage}-car garage` : null,
-    formatListed(details.listDate) && `Listed ${formatListed(details.listDate)}`,
+    ...(factsUnlocked ? hf : []),
     details.pricePerSqft != null ? `${usd(details.pricePerSqft)}/sq ft` : null,
   ].filter((f): f is string => Boolean(f));
 
@@ -183,23 +217,28 @@ export function AdvancedDetails({
             ))}
           </div>
         )}
+        {!factsUnlocked && hf.length > 0 && <LockedRow label="Home facts" tier={1} />}
 
-        {details.text && (
-          <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-stone-600">
-            {details.text}
-          </p>
-        )}
+        {unlockedTiers >= 2
+          ? details.text && (
+              <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-stone-600">
+                {details.text}
+              </p>
+            )
+          : details.text && <LockedRow label="Listing description" tier={2} />}
 
-        {[...groups].map(([parent, sections]) => (
-          <div key={parent} className="mt-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-stone-400">{parent}</p>
-            <div className="mt-2 flex flex-col gap-2.5">
-              {sections.map((s) => (
-                <FeatureSection key={s.category} category={s.category} items={s.items} />
-              ))}
-            </div>
-          </div>
-        ))}
+        {unlockedTiers >= 3
+          ? [...groups].map(([parent, sections]) => (
+              <div key={parent} className="mt-5">
+                <p className="text-xs font-bold uppercase tracking-wide text-stone-400">{parent}</p>
+                <div className="mt-2 flex flex-col gap-2.5">
+                  {sections.map((s) => (
+                    <FeatureSection key={s.category} category={s.category} items={s.items} />
+                  ))}
+                </div>
+              </div>
+            ))
+          : details.sections.length > 0 && <LockedRow label="Full feature list" tier={3} />}
 
         {!revealed && (
           <p className="mt-5 text-center text-xs text-stone-400">

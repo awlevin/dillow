@@ -26,6 +26,7 @@ export function RecentRooms() {
   // failed or slow fetch just leaves that row without a count; the list never
   // blocks or reflows while they load.
   useEffect(() => {
+    if (!enabled) return; // flag off → the list never renders, so don't spend the fetches
     let cancelled = false;
     for (const r of shown) {
       fetch(`/api/room/${r.roomId}?summary=1`)
@@ -40,7 +41,7 @@ export function RecentRooms() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rooms]);
+  }, [rooms, enabled]);
 
   if (!enabled || rooms.length === 0) return null;
 
