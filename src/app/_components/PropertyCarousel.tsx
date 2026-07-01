@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type RefObject } from "react";
-import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { ChevronLeft, ChevronRight, LayoutGrid, Maximize2 } from "lucide-react";
 import { rdcpixLoader, rdcpixThumb } from "@/lib/rdcpix";
 import type { Clue } from "../_lib/types";
 import { MapModal } from "./MapModal";
+import { PhotoGrid } from "./PhotoGrid";
 import { PhotoLightbox } from "./PhotoLightbox";
 import { PropertyMap } from "./PropertyMap";
 
@@ -40,6 +41,33 @@ export function PropertyCarousel({
   const slideCount = clue.photos.length + (hasMap ? 1 : 0);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [fullMap, setFullMap] = useState(false);
+  const [gridOpen, setGridOpen] = useState(false);
+
+  // The "n / total" counter clutters the photo on touch, so on small screens it's
+  // transient: reveal on each slide change, then fade ~1.2s after the last one. On
+  // sm+ it stays put (CSS `sm:opacity-100`); this state only governs mobile.
+  const [counterVisible, setCounterVisible] = useState(false);
+  const counterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealCounter = () => {
+    setCounterVisible(true);
+    if (counterTimer.current) clearTimeout(counterTimer.current);
+    counterTimer.current = setTimeout(() => setCounterVisible(false), 1200);
+  };
+  useEffect(
+    () => () => {
+      if (counterTimer.current) clearTimeout(counterTimer.current);
+    },
+    [],
+  );
+
+  // Jump the carousel to a photo picked from the gallery (respecting the loop clone
+  // offset that shifts every real slide one place to the right).
+  const jumpToPhoto = (i: number) => {
+    const el = carouselRef.current;
+    if (el) el.scrollTo({ left: (i + (loop ? 1 : 0)) * el.clientWidth });
+    setPhotoIdx(i);
+    setGridOpen(false);
+  };
 
   // Desktop-only prev/next: nudge the scroll container by one slide; the
   // onScroll handler above keeps photoIdx and the loop wrap in sync.
@@ -57,7 +85,10 @@ export function PropertyCarousel({
           const lead = loop ? 1 : 0;
           const realSlides = slideCount;
           const i = Math.round(el.scrollLeft / el.clientWidth) - lead;
-          if (i >= 0 && i < realSlides && i !== photoIdx) setPhotoIdx(i);
+          if (i >= 0 && i < realSlides && i !== photoIdx) {
+            setPhotoIdx(i);
+            revealCounter();
+          }
           // Leaving the map slide implicitly "closes" it (no Done button) — the
           // arrows/dots are the way out, and the overlay returns on the way back.
           if (hasMap && mapActive && i !== clue.photos.length) setMapActive(false);
@@ -131,7 +162,11 @@ export function PropertyCarousel({
           a compact "n / total" counter (with a 📍 when the map slide is in view). */}
       {slideCount > 1 &&
         (clue.photos.length > MAX_DOTS ? (
-          <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-stone-900/55 px-2.5 py-0.5 text-xs font-medium tabular-nums text-white">
+          <div
+            className={`pointer-events-none absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-stone-900/55 px-2.5 py-0.5 text-xs font-medium tabular-nums text-white transition-opacity duration-500 sm:opacity-100 ${
+              counterVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
             {hasMap && photoIdx === clue.photos.length ? "📍 Map" : `${photoIdx + 1} / ${clue.photos.length}`}
           </div>
         ) : (
@@ -176,6 +211,22 @@ export function PropertyCarousel({
             <ChevronRight size={18} aria-hidden="true" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]" />
           </button>
         </>
+      )}
+
+      {/* Gallery shortcut — hidden on the map slide so it doesn't sit atop the
+          expand-map control that shares the bottom-right corner. */}
+      {clue.photos.length > 1 && !(hasMap && photoIdx === clue.photos.length) && (
+        <button
+          onClick={() => setGridOpen(true)}
+          aria-label="View all photos in a gallery"
+          className="absolute bottom-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-stone-900/55 text-white shadow transition hover:bg-stone-900/75"
+        >
+          <LayoutGrid size={15} aria-hidden="true" />
+        </button>
+      )}
+
+      {gridOpen && (
+        <PhotoGrid photos={clue.photos} onSelect={jumpToPhoto} onClose={() => setGridOpen(false)} />
       )}
 
       {lightboxIdx !== null && (

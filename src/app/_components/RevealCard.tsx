@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { useCountUp } from "../_hooks/useCountUp";
 import { shareOrCopy } from "../_lib/browser-effects";
-import { formatPct, usd } from "../_lib/format";
+import { compact, formatPct, usd } from "../_lib/format";
 import type { CommunityStats, Reveal, Row } from "../_lib/types";
 
 // Reveal verdict copy. A true bullseye (within the 1% win threshold) earns the
@@ -128,7 +128,9 @@ export function RevealCard({
         </p>
       )}
 
-      {communityStats && <CommunityValuation stats={communityStats} actual={property.price} />}
+      {communityStats && (
+        <CommunityValuation stats={communityStats} actual={property.price} you={result.bestGuess} />
+      )}
 
       {(details?.listingUrl || details?.zillowUrl) && (
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-stone-500">
@@ -176,10 +178,20 @@ function ListingLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-// How the crowd's blind first guesses compare to the asking price: guessing below
-// it reads as "overpriced", above it as "a steal". A ±5% dead-band counts as the
-// crowd agreeing with the price.
-function CommunityValuation({ stats, actual }: { stats: CommunityStats; actual: number }) {
+// A price scale comparing three markers against the asking price: the asking
+// price is the fixed anchor (centre tick), the crowd's typical first guess sits
+// above the rail, the player's best guess below it. Guessing below the asking
+// price reads as "overpriced", above it as "a steal"; a ±5% dead-band counts as
+// the crowd agreeing with the price.
+function CommunityValuation({
+  stats,
+  actual,
+  you,
+}: {
+  stats: CommunityStats;
+  actual: number;
+  you: number;
+}) {
   const pct = Math.round(Math.abs(stats.deltaPct) * 100);
   const overpriced = stats.deltaPct < -0.05;
   const underpriced = stats.deltaPct > 0.05;
@@ -193,28 +205,56 @@ function CommunityValuation({ stats, actual }: { stats: CommunityStats; actual: 
       ? `Dillow players' first guesses came in ${pct}% ${overpriced ? "below" : "above"} the ${usd(actual)} asking price.`
       : `Dillow players' first guesses landed right around the ${usd(actual)} asking price.`;
 
-  // Marker offset from the centre (asking price), clamped so a huge miss doesn't
-  // fly off the end. Left of centre = guessed lower = overpriced.
-  const offset = Math.max(-1, Math.min(1, stats.deltaPct / 0.4));
-  const left = 50 + offset * 50;
-  const dot = overpriced ? "bg-amber-500" : underpriced ? "bg-emerald-500" : "bg-stone-400";
+  // Price → position on the rail. Log scale centred on the asking price so a guess
+  // and its reciprocal sit symmetrically; ±1 octave (½×–2×) fills the rail and
+  // anything past that clamps toward the ends (with a margin for edge labels)
+  // instead of flying off.
+  const posFor = (price: number) => 50 + Math.max(-1, Math.min(1, Math.log2(price / actual))) * 42;
+  const crowdLeft = posFor(stats.typicalGuess);
+  const youLeft = posFor(you);
 
   return (
     <div className="rounded-lg bg-white/70 p-3">
       <p className="text-sm font-semibold text-stone-800">{headline}</p>
       <p className="mt-1 text-xs leading-relaxed text-stone-500">{detail}</p>
-      <div className="relative mt-3 h-1.5 rounded-full bg-stone-200">
-        <span className="absolute left-1/2 top-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 bg-stone-300" />
-        <span
-          className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white ${dot}`}
-          style={{ left: `${left}%` }}
-        />
+
+      <div className="mt-3">
+        {/* Crowd marker + label, above the rail (amber) */}
+        <div className="relative h-6">
+          <div
+            className="absolute bottom-0 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: `${crowdLeft}%` }}
+          >
+            <span className="whitespace-nowrap text-[10px] font-semibold text-amber-600">
+              Crowd {compact(stats.typicalGuess)}
+            </span>
+            <span className="mt-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white" />
+          </div>
+        </div>
+
+        {/* The rail, with the asking price as a prominent centre tick (the anchor) */}
+        <div className="relative h-1.5 rounded-full bg-stone-200">
+          <span className="absolute left-1/2 top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-stone-800" />
+        </div>
+
+        {/* You marker + label, below the rail (emerald) */}
+        <div className="relative h-6">
+          <div
+            className="absolute top-0 flex -translate-x-1/2 flex-col items-center"
+            style={{ left: `${youLeft}%` }}
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-600 ring-2 ring-white" />
+            <span className="mt-0.5 whitespace-nowrap text-[10px] font-semibold text-emerald-700">
+              You {compact(you)}
+            </span>
+          </div>
+        </div>
+
+        {/* Asking anchor label, centred under the tick */}
+        <p className="text-center text-[11px] font-semibold text-stone-800">Asking {compact(actual)}</p>
       </div>
-      <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wide text-stone-400">
-        <span>Overpriced</span>
-        <span>Steal</span>
-      </div>
-      <p className="mt-1.5 text-[11px] text-stone-400">
+
+      <p className="mt-2 text-[11px] text-stone-400">
         based on {stats.n} {stats.n === 1 ? "guess" : "guesses"}
       </p>
     </div>

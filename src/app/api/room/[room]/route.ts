@@ -55,7 +55,27 @@ export async function GET(req: Request, ctx: Ctx) {
   const room = await getRoom(roomId);
   if (!room) return NextResponse.json({ error: "Room not found." }, { status: 404 });
 
-  const id = new URL(req.url).searchParams.get("id");
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+
+  // Lightweight summary for the list surfaces (Friends / Recent homes menus):
+  // just the headcount and how many have actually played today. Deliberately
+  // skips roundPayload, which warms every round's gallery + details and is slow
+  // and expensive — the summary needs only getRoom (above) + roomBoard.
+  if (url.searchParams.get("summary") === "1") {
+    try {
+      const board = await roomBoard(roomId);
+      return NextResponse.json({
+        enabled: true,
+        room: { id: room.id, date: room.date, roundCount: room.roundCount, name: room.name ?? "" },
+        memberCount: board.length,
+        playedCount: board.filter((m) => m.roundsDone > 0).length,
+      });
+    } catch (err) {
+      console.error("[/api/room/[room]] GET summary", err);
+      return NextResponse.json({ error: "Could not load the room." }, { status: 502 });
+    }
+  }
 
   try {
     const [game, board] = await Promise.all([

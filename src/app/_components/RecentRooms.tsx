@@ -11,6 +11,8 @@ import { loadRooms, type SavedRoom } from "../_lib/client-storage";
 export function RecentRooms() {
   const enabled = useFlag("recentRooms");
   const [rooms, setRooms] = useState<SavedRoom[]>([]);
+  // roomId -> how many members have played today; fills in as fetches land.
+  const [played, setPlayed] = useState<Record<string, number>>({});
 
   useEffect(() => {
     (async () => {
@@ -18,13 +20,35 @@ export function RecentRooms() {
     })();
   }, []);
 
+  const shown = rooms.slice(0, 8);
+
+  // Fetch the "N played today" counts on mount, best-effort and in parallel — a
+  // failed or slow fetch just leaves that row without a count; the list never
+  // blocks or reflows while they load.
+  useEffect(() => {
+    let cancelled = false;
+    for (const r of shown) {
+      fetch(`/api/room/${r.roomId}?summary=1`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (cancelled || !data || typeof data.playedCount !== "number") return;
+          setPlayed((p) => ({ ...p, [r.roomId]: data.playedCount }));
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rooms]);
+
   if (!enabled || rooms.length === 0) return null;
 
   return (
     <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">Recent rooms</h2>
+      <h2 className="text-sm font-bold uppercase tracking-wide text-stone-500">Friends</h2>
       <ul className="mt-3 flex flex-col gap-1.5">
-        {rooms.slice(0, 8).map((r) => (
+        {shown.map((r) => (
           <li key={r.roomId}>
             <Link
               href={`/r/${r.roomId}`}
@@ -35,6 +59,9 @@ export function RecentRooms() {
                 <span className="truncate font-semibold text-stone-700">
                   {r.title ?? `Room ${r.roomId}`}
                 </span>
+                {played[r.roomId] != null && (
+                  <span className="shrink-0 text-xs text-stone-400">· {played[r.roomId]} played</span>
+                )}
               </span>
               <span className="shrink-0 font-mono text-xs text-stone-400">{r.date}</span>
             </Link>

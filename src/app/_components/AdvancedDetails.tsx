@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { PropertyDetails } from "@/lib/property-details";
 import { usd } from "../_lib/format";
+import { ReportProperty } from "./ReportProperty";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -106,10 +107,12 @@ function FeatureSection({ category, items }: { category: string; items: string[]
 
 export function AdvancedDetails({
   details,
+  propertyId,
   revealed,
   onClose,
 }: {
   details: PropertyDetails;
+  propertyId: string;
   revealed: boolean;
   onClose: () => void;
 }) {
@@ -150,7 +153,7 @@ export function AdvancedDetails({
       onClick={dismiss}
     >
       <div
-        className={`relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ${
+        className={`relative max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-xl ${
           closing ? "animate-modalpopout" : "animate-modalpop"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -203,6 +206,8 @@ export function AdvancedDetails({
             Price-related details stay hidden until you finish.
           </p>
         )}
+
+        <ReportProperty propertyId={propertyId} className="mt-5 justify-center" />
       </div>
     </div>
   );

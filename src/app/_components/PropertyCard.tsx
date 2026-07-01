@@ -125,7 +125,7 @@ export function PropertyCard({
 
         {!done ? (
           <GuessControls
-            rowCount={rows.length}
+            rows={rows}
             remaining={remaining}
             guessValue={guessValue}
             lo={lo}
@@ -149,7 +149,7 @@ export function PropertyCard({
       </div>
 
       {showAdvanced && details && (
-        <AdvancedDetails details={details} revealed={done} onClose={() => setShowAdvanced(false)} />
+        <AdvancedDetails details={details} propertyId={clue.id} revealed={done} onClose={() => setShowAdvanced(false)} />
       )}
     </section>
   );

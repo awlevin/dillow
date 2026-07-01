@@ -87,3 +87,36 @@ export function loadRooms(): SavedRoom[] {
     return [];
   }
 }
+
+// ── Homes the player has played ──────────────────────────────────────────────
+// A most-recent-first list of finished homes so they can revisit the listings.
+export type SavedHome = {
+  date: string;
+  propertyId: string;
+  title: string; // e.g. "123 Sample St, Phoenix, AZ" or "House in Phoenix, AZ"
+  price: number;
+  pct: number; // abs % error of best guess, as a fraction (0.05 = 5% off)
+  won: boolean;
+  url?: string; // the realtor listing URL, when known
+};
+
+// Most-recent-first, deduped by date+propertyId (a re-finish keeps the newest).
+export function recordRecentHome(h: SavedHome) {
+  try {
+    const raw = localStorage.getItem("dillow:homes");
+    const arr: SavedHome[] = raw ? JSON.parse(raw) : [];
+    const next = [h, ...arr.filter((x) => !(x.date === h.date && x.propertyId === h.propertyId))];
+    localStorage.setItem("dillow:homes", JSON.stringify(next.slice(0, 30)));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadRecentHomes(): SavedHome[] {
+  try {
+    const raw = localStorage.getItem("dillow:homes");
+    return raw ? (JSON.parse(raw) as SavedHome[]) : [];
+  } catch {
+    return [];
+  }
+}

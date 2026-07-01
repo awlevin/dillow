@@ -5,6 +5,8 @@ import { BANDS, WIN_THRESHOLD, type Band } from "@/lib/feedback";
 import { MAX_ATTEMPTS } from "../_lib/format";
 
 const WIN_PCT = Math.round(WIN_THRESHOLD * 100);
+// A 🟩 guess means the price is within this % of it — same cap the range uses.
+const GREEN_PCT = Math.round((BANDS.find((b) => b.band === "🟩")?.maxPct ?? 0.1) * 100);
 // Cold → nailed it, derived from the live band config so this scale can never
 // drift from the real cutoffs: warm→cold bands reversed, then the win tick.
 const SCALE: Band[] = [...[...BANDS].reverse().map((b) => b.band), "✅"];
@@ -30,7 +32,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
       onClick={dismiss}
     >
       <div
-        className={`relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ${
+        className={`relative max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-xl ${
           closing ? "animate-modalpopout" : "animate-modalpop"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -72,6 +74,13 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
             <span>🎯</span>
             <span>
               Land within <b>{WIN_PCT}%</b> to win. The range narrows with every guess.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span>🧲</span>
+            <span>
+              The range uses your warmth too — a 🟩 guess means the price is within{" "}
+              <b>{GREEN_PCT}%</b> of it, so the range can tighten past your guesses.
             </span>
           </li>
         </ul>
