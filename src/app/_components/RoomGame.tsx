@@ -282,7 +282,6 @@ export function RoomGame({ roomId }: { roomId: string }) {
   const rounds = info?.rounds ?? [];
   const board = info?.board ?? [];
   const myRank = board.findIndex((m) => m.id === id);
-  const shareText = cur?.reveal ? roundShareText(current, roundCount, cur) : "";
 
   return (
     <main ref={topRef} className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 py-4 sm:gap-5 sm:py-10">
@@ -314,7 +313,6 @@ export function RoomGame({ roomId }: { roomId: string }) {
             error={submitError}
             reveal={cur.reveal}
             revealRef={revealRef}
-            shareText={shareText}
             onSliderChange={(v) => patch(current, { t: v })}
             onExactModeChange={(v) => patch(current, { exactMode: v })}
             onExactChange={(v) => patch(current, { exact: v })}
@@ -344,15 +342,6 @@ export function RoomGame({ roomId }: { roomId: string }) {
       </footer>
     </main>
   );
-}
-
-function roundShareText(roundIdx: number, roundCount: number, ui: RoundUI): string {
-  if (!ui.reveal) return "";
-  const grid = ui.rows.map((r) => r.band).join("");
-  const won = ui.reveal.result.within;
-  const pct = Math.round(Math.abs(ui.reveal.result.pctError) * 100);
-  const tries = won ? `${ui.rows.length}/${MAX_ATTEMPTS} 🎯` : `X/${MAX_ATTEMPTS}`;
-  return `Dillow Challenge — Round ${roundIdx + 1}/${roundCount} · ${tries} · ${pct}% off\n${grid}`;
 }
 
 function RoomHeader({

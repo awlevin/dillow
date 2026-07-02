@@ -60,13 +60,20 @@ export function PropertyCarousel({
     [],
   );
 
-  // Jump the carousel to a photo picked from the gallery (respecting the loop clone
-  // offset that shifts every real slide one place to the right).
-  const jumpToPhoto = (i: number) => {
-    const el = carouselRef.current;
-    if (el) el.scrollTo({ left: (i + (loop ? 1 : 0)) * el.clientWidth });
-    setPhotoIdx(i);
+  // Picking a photo from the gallery opens it full-screen (the lightbox), rather
+  // than quietly scrolling the small inline carousel behind the closing grid.
+  const openFromGrid = (i: number) => {
     setGridOpen(false);
+    setLightboxIdx(i);
+  };
+
+  // Exit the inline map back to the photos — the mobile counterpart to the map
+  // toggle, giving the map slide a clear way out (no Done button before this).
+  const exitMap = () => {
+    const el = carouselRef.current;
+    if (el) el.scrollTo({ left: (loop ? 1 : 0) * el.clientWidth, behavior: "smooth" });
+    setMapActive(false);
+    setPhotoIdx(0);
   };
 
   // Desktop-only prev/next: nudge the scroll container by one slide; the
@@ -143,13 +150,22 @@ export function PropertyCarousel({
                 )}
               </button>
             ) : (
-              <button
-                onClick={() => setFullMap(true)}
-                aria-label="Expand map to full screen"
-                className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-stone-900/70 text-white shadow transition hover:bg-stone-900/85"
-              >
-                <Maximize2 size={15} aria-hidden="true" />
-              </button>
+              <>
+                {/* Mobile-only way out of the map (desktop uses the arrows). */}
+                <button
+                  onClick={exitMap}
+                  className="absolute left-2 top-2 z-20 rounded-full bg-stone-900/70 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85 sm:hidden"
+                >
+                  Done
+                </button>
+                <button
+                  onClick={() => setFullMap(true)}
+                  aria-label="Expand map to full screen"
+                  className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-stone-900/70 text-white shadow transition hover:bg-stone-900/85"
+                >
+                  <Maximize2 size={15} aria-hidden="true" />
+                </button>
+              </>
             )}
           </div>
         )}
@@ -226,7 +242,7 @@ export function PropertyCarousel({
       )}
 
       {gridOpen && (
-        <PhotoGrid photos={clue.photos} onSelect={jumpToPhoto} onClose={() => setGridOpen(false)} />
+        <PhotoGrid photos={clue.photos} onSelect={openFromGrid} onClose={() => setGridOpen(false)} />
       )}
 
       {lightboxIdx !== null && (

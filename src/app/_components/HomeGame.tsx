@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { narrowBounds, type Band } from "@/lib/feedback";
-import { buzz, smoothScrollTo } from "../_lib/browser-effects";
+import { buzz, shareOrCopy, smoothScrollTo } from "../_lib/browser-effects";
 import { getId, loadStreak, recordPlay, recordRecentHome, recordStats } from "../_lib/client-storage";
 import { formatPct, MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, propertyTitle, tToPrice } from "../_lib/format";
 import { homeMeta } from "../_lib/slate";
@@ -210,6 +210,7 @@ export function HomeGame() {
         attempts: data.result.attemptsUsed,
         won: data.result.within,
         state: data.property.state,
+        city: data.property.city,
       });
       recordRecentHome({
         date,
@@ -240,15 +241,6 @@ export function HomeGame() {
     prevDone.current = ui[index]?.reveal != null;
     if (topRef.current) smoothScrollTo(topRef.current.getBoundingClientRect().top + window.scrollY - 12);
   }
-
-  const shareText = useMemo(() => {
-    if (!home || !cur?.reveal) return "";
-    const grid = cur.rows.map((r) => r.band).join("");
-    const won = cur.reveal.result.within;
-    const pct = formatPct(cur.reveal.result.pctError);
-    const tries = won ? `${cur.rows.length}/${MAX_ATTEMPTS} 🎯` : `X/${MAX_ATTEMPTS}`;
-    return `Dillow ${date} — ${homeMeta(home.kind).label} · ${tries} · ${pct}% off\n${grid}`;
-  }, [home, cur, date]);
 
   return (
     <main ref={topRef} className="mx-auto flex w-full max-w-xl flex-col gap-3 px-4 py-4 sm:gap-5 sm:py-10">
@@ -288,7 +280,6 @@ export function HomeGame() {
             error={submitError}
             reveal={cur.reveal}
             revealRef={revealRef}
-            shareText={shareText}
             onSliderChange={(v) => patch(current, { t: v })}
             onExactModeChange={(v) => patch(current, { exactMode: v })}
             onExactChange={(v) => patch(current, { exact: v })}
@@ -314,7 +305,7 @@ export function HomeGame() {
 
       {onRecap && (
         <>
-          <DailyRecap homes={homes} ui={ui} streak={streak} onReplay={goTo} allDone={allDone} />
+          <DailyRecap homes={homes} ui={ui} streak={streak} date={date} onReplay={goTo} allDone={allDone} />
           {allDone && lbEnabled && <RoomInvite />}
           <RecentRooms />
           <StatsPanel version={statsVersion} />
@@ -343,18 +334,35 @@ function DailyRecap({
   homes,
   ui,
   streak,
+  date,
   onReplay,
   allDone,
 }: {
   homes: DailyHome[];
   ui: Record<number, HomeUI>;
   streak: number;
+  date: string;
   onReplay: (index: number) => void;
   allDone: boolean;
 }) {
+  const [copied, setCopied] = useState(false);
   const reveals = homes.map((_, i) => ui[i]?.reveal).filter((r): r is Reveal => r != null);
   const playedCount = reveals.length;
   const wins = reveals.filter((r) => r.result.within).length;
+
+  // A spoiler-free day summary: one line per home (kind emoji + how close), with a
+  // header carrying the date, win count, and streak. No prices, so it's shareable.
+  const shareText = () => {
+    const lines = homes
+      .map((h, i) => {
+        const r = ui[i]?.reveal;
+        if (!r) return null;
+        return `${homeMeta(h.kind).emoji} ${r.result.within ? "🎯 " : ""}${formatPct(r.result.pctError)}% off`;
+      })
+      .filter(Boolean);
+    const streakBit = streak > 0 ? ` · 🔥 ${streak}` : "";
+    return [`Dillow ${date} — ${wins}/${playedCount} within 1%${streakBit}`, ...lines].join("\n");
+  };
 
   return (
     <section className="animate-reveal rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm">
@@ -405,6 +413,18 @@ function DailyRecap({
           );
         })}
       </div>
+
+      <button
+        onClick={async () => {
+          if ((await shareOrCopy(shareText(), window.location.href)) === "copied") {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          }
+        }}
+        className="mx-auto mt-5 block rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.98]"
+      >
+        {copied ? "Copied!" : "Share results"}
+      </button>
     </section>
   );
 }

@@ -56,6 +56,7 @@ export type StatEntry = {
   attempts: number;
   won: boolean;
   state: string;
+  city?: string; // added later — older saved entries won't have it
 };
 
 // ── The daily slate: three homes a day ───────────────────────────────────────

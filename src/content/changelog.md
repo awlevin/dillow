@@ -14,8 +14,12 @@ Notes on what's changed. Newest first.
 
 ### 💅 Nits
 - **Fine-tune the slider on your phone.** While dragging, slide your finger up or down away from the slider for finer control — like scrubbing a video.
+- **Share your whole day at once.** The end-of-day recap now has a "Share results" button that sums up all three homes in one spoiler-free message.
+- **How close was that guess?** Tap the ⓘ next to any past guess to see exactly how close it landed.
+- **Your stats, by city.** The stats panel now toggles between accuracy by price and accuracy by city, so you can see where you've got the local touch.
 - **Confetti in rooms too.** Nail a challenge-room home within 1% and you'll get the same celebration as the daily game.
 - **"Your rooms" is now "Friends"**, and each room shows how many people have played today.
+- Tap any gallery photo to open it full-screen, and the mobile map now has a clear "Done" button to step back to the photos.
 - Full-screen photos ditch the 30-dot row for a clean progress bar, and the photo counter stays out of the way on mobile while you browse.
 - Modals no longer overflow the screen on iOS.
 

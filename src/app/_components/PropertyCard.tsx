@@ -26,7 +26,6 @@ type PropertyCardProps = {
   error: string | null;
   reveal: Reveal | null;
   revealRef: RefObject<HTMLDivElement | null>;
-  shareText: string;
   onSliderChange: (value: number) => void;
   onExactModeChange: (enabled: boolean) => void;
   onExactChange: (value: string) => void;
@@ -49,7 +48,6 @@ export function PropertyCard({
   error,
   reveal,
   revealRef,
-  shareText,
   onSliderChange,
   onExactModeChange,
   onExactChange,
@@ -148,7 +146,7 @@ export function PropertyCard({
           />
         ) : (
           <div ref={revealRef}>
-            <RevealCard reveal={reveal!} rows={rows} shareText={shareText} />
+            <RevealCard reveal={reveal!} rows={rows} />
           </div>
         )}
       </div>

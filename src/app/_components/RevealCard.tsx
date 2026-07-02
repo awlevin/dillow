@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { useCountUp } from "../_hooks/useCountUp";
-import { shareOrCopy } from "../_lib/browser-effects";
 import { compact, formatPct, usd } from "../_lib/format";
 import type { CommunityStats, Reveal, Row } from "../_lib/types";
 import { ReportProperty } from "./ReportProperty";
@@ -84,14 +82,11 @@ function moodFor(absPct: number): Mood {
 export function RevealCard({
   reveal,
   rows,
-  shareText,
 }: {
   reveal: Reveal;
   rows: Row[];
-  shareText: string;
 }) {
   const { result, property, details, communityStats } = reveal;
-  const [copied, setCopied] = useState(false);
   const won = result.within; // landed within the 1% win threshold
   const mood = won ? WIN_MOOD : moodFor(Math.abs(result.pctError));
   const headline = won ? `🎯 Nailed it in ${result.attemptsUsed}!` : mood.headline;
@@ -142,19 +137,7 @@ export function RevealCard({
         </p>
       )}
 
-      <button
-        onClick={async () => {
-          if ((await shareOrCopy(shareText, window.location.href)) === "copied") {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          }
-        }}
-        className="mt-1 self-center rounded-lg border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
-      >
-        {copied ? "Copied!" : "Share result"}
-      </button>
-
-      {/* Quiet, below Share — the reveal is where a bogus listing is most obvious. */}
+      {/* Quiet — the reveal is where a bogus listing is most obvious. */}
       <ReportProperty propertyId={property.id} className="mt-1 justify-center" />
     </div>
   );
@@ -257,10 +240,6 @@ function CommunityValuation({
         {/* Asking anchor label, centred under the tick */}
         <p className="text-center text-[11px] font-semibold text-stone-800">Asking {compact(actual)}</p>
       </div>
-
-      <p className="mt-2 text-[11px] text-stone-400">
-        based on {stats.n} {stats.n === 1 ? "guess" : "guesses"}
-      </p>
     </div>
   );
 }
