@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Pencil } from "lucide-react";
-import { BANDS, narrowBounds, type Band } from "@/lib/feedback";
 import type { Row } from "../_lib/types";
 import { compact, formatPriceInput, MAX_ATTEMPTS, usd } from "../_lib/format";
 
@@ -30,38 +29,6 @@ const FINE_SCRUB_RANGE = 150;
 const sensitivityFor = (dy: number) => 1 - 0.9 * Math.min(Math.abs(dy) / FINE_SCRUB_RANGE, 1);
 const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
-type BoundSource = { guess: number; band: Band; pct: number };
-
-// Re-derive which guess pinned each current bound, keeping a source only when a
-// band's %-cap — not the raw guess value — set it (that's the case that reads as
-// "the range doesn't match my guess"). narrowBounds only ever tightens, so the
-// last guess to move a side is the one that set it; we replay from wide sentinels
-// and trust a source only if it actually reached the current (prop) bound — if
-// the initial floor/ceiling is tighter, no guess explains that side.
-function boundSources(rows: Row[], lo: number, hi: number): { lo: BoundSource | null; hi: BoundSource | null } {
-  const near = (a: number, b: number) => Math.abs(a - b) <= Math.max(1, Math.abs(a) * 1e-6);
-  let curLo = 0;
-  let curHi = Infinity;
-  let loSrc: BoundSource | null = null;
-  let hiSrc: BoundSource | null = null;
-  for (const r of rows) {
-    const band = r.band as Band;
-    const cap = BANDS.find((b) => b.band === band);
-    const next = narrowBounds(curLo, curHi, r.guess, r.direction, band);
-    // A raw guess pinning a bound reads fine on its own — only tag band caps.
-    if (next.lo > curLo) loSrc = cap && !near(next.lo, r.guess) ? { guess: r.guess, band, pct: cap.maxPct } : null;
-    if (next.hi < curHi) hiSrc = cap && !near(next.hi, r.guess) ? { guess: r.guess, band, pct: cap.maxPct } : null;
-    curLo = next.lo;
-    curHi = next.hi;
-  }
-  return {
-    lo: loSrc && near(curLo, lo) ? loSrc : null,
-    hi: hiSrc && near(curHi, hi) ? hiSrc : null,
-  };
-}
-
-const pctLabel = (pct: number) => `${Math.round(pct * 100)}%`;
-
 export function GuessControls({
   rows,
   remaining,
@@ -80,7 +47,6 @@ export function GuessControls({
   onSubmit,
 }: GuessControlsProps) {
   const rowCount = rows.length;
-  const src = boundSources(rows, lo, hi);
 
   // Fine-scrub drag state. The native range input stays for layout, styling,
   // keyboard, and desktop mouse/pen (all unchanged 1:1); on touch we take over.
@@ -173,31 +139,9 @@ export function GuessControls({
               )}
             </div>
             <div className="flex justify-between text-xs text-stone-400">
-              <span>
-                {src.lo && <span aria-hidden="true">{src.lo.band} </span>}
-                {compact(lo)}
-              </span>
-              <span>
-                {src.hi && <span aria-hidden="true">{src.hi.band} </span>}
-                {compact(hi)}
-              </span>
+              <span>{compact(lo)}</span>
+              <span>{compact(hi)}</span>
             </div>
-            {(src.lo || src.hi) && (
-              <div className="mt-1 space-y-0.5">
-                {src.lo && (
-                  <p className="text-[11px] leading-snug text-stone-400">
-                    {src.lo.band} at {compact(src.lo.guess)} means the price is within {pctLabel(src.lo.pct)} of it —
-                    that&apos;s why the range starts at {compact(lo)}.
-                  </p>
-                )}
-                {src.hi && (
-                  <p className="text-[11px] leading-snug text-stone-400">
-                    {src.hi.band} at {compact(src.hi.guess)} means the price is within {pctLabel(src.hi.pct)} of it —
-                    that&apos;s why the range tops out at {compact(hi)}.
-                  </p>
-                )}
-              </div>
-            )}
           </>
         ) : (
           <>

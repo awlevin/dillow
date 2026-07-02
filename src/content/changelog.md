@@ -12,9 +12,6 @@ Notes on what's changed. Newest first.
 - **Report a home.** Spot fake renovation renders or busted data? There's now a "Report a problem with this home" link on the reveal and in the listing details.
 - **Recent homes.** A quiet "Recent homes" link at the bottom of the page lists the homes you've played — with the price, how close you got, and a jump to the real listing.
 
-### 🐛 Bug fixes
-- **The narrowing range now explains itself.** When your warmth pins the range tighter than your raw guesses (a 🟩 at $994K means the price is within 10% of it), the slider now tags the bound and tells you why — no more "the range doesn't match my guesses" confusion.
-
 ### 💅 Nits
 - **Fine-tune the slider on your phone.** While dragging, slide your finger up or down away from the slider for finer control — like scrubbing a video.
 - **Confetti in rooms too.** Nail a challenge-room home within 1% and you'll get the same celebration as the daily game.
