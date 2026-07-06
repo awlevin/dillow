@@ -52,7 +52,6 @@ export function GuessControls({
   // keyboard, and desktop mouse/pen (all unchanged 1:1); on touch we take over.
   const inputRef = useRef<HTMLInputElement>(null);
   const drag = useRef<{ lastX: number; startY: number; t: number; width: number } | null>(null);
-  const [sensitivity, setSensitivity] = useState<number | null>(null);
   const hintShown = useRef(false);
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showHint, setShowHint] = useState(false);
@@ -84,7 +83,6 @@ export function GuessControls({
     if (e.pointerType !== "touch") return; // mouse & pen keep the native slider
     e.currentTarget.setPointerCapture?.(e.pointerId);
     drag.current = { lastX: e.clientX, startY: e.clientY, t, width: e.currentTarget.getBoundingClientRect().width };
-    setSensitivity(1);
     if (!hintShown.current) {
       hintShown.current = true;
       setShowHint(true);
@@ -101,22 +99,15 @@ export function GuessControls({
     d.lastX = e.clientX;
     // Integrate deltas (not total offset) so easing changes never snap the value.
     d.t = clamp01(d.t + (dx * s) / (d.width || 1));
-    setSensitivity(s);
     onSliderChange(d.t);
   };
 
   const onPointerEnd = () => {
     if (!drag.current) return;
     drag.current = null;
-    setSensitivity(null);
   };
 
-  const scrubChip =
-    sensitivity != null && sensitivity < 0.9
-      ? `fine-tuning ×${sensitivity.toFixed(2)}`
-      : showHint
-        ? "slide up for fine control"
-        : null;
+  const scrubChip = showHint ? "slide up for fine control" : null;
 
   return (
     <div className="mt-1 flex flex-col gap-2 sm:gap-3">
