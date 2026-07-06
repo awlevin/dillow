@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Flag } from "lucide-react";
 import { getId } from "../_lib/client-storage";
+import { Modal } from "./Modal";
 
 // The four report reasons the API accepts, kept in lockstep with /api/report.
 const REASONS = [
@@ -32,70 +33,35 @@ export function ReportProperty({ propertyId, className = "" }: { propertyId: str
 }
 
 function ReportModal({ propertyId, onClose }: { propertyId: string; onClose: () => void }) {
-  const [closing, setClosing] = useState(false);
   const [reason, setReason] = useState<Reason>(REASONS[0]);
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const dismiss = () => {
-    if (closing) return;
-    setClosing(true);
-    setTimeout(onClose, 320); // let the exit animation finish before unmounting
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const submit = async () => {
-    if (sending) return;
-    setSending(true);
-    setError(false);
-    try {
-      const res = await fetch("/api/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ propertyId, reason, note: note.trim(), id: getId() }),
-      });
-      if (!res.ok) throw new Error("failed");
-      setSent(true);
-      setTimeout(dismiss, 1200); // brief "thanks" then auto-close
-    } catch {
-      setError(true);
-      setSending(false);
-    }
-  };
-
   return (
-    <div
-      className={`fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center ${
-        closing ? "animate-modalfadeout" : "animate-modalfade"
-      }`}
-      onClick={dismiss}
-    >
-      <div
-        className={`relative max-h-[85dvh] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-xl ${
-          closing ? "animate-modalpopout" : "animate-modalpop"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Report this home"
-      >
-        <button
-          onClick={dismiss}
-          aria-label="Close"
-          className="absolute right-4 top-4 text-xl text-stone-400 transition hover:text-stone-700"
-        >
-          ✕
-        </button>
+    <Modal onClose={onClose} label="Report this home" maxWidth="sm" zClassName="z-[70]">
+      {(dismiss) => {
+        const submit = async () => {
+          if (sending) return;
+          setSending(true);
+          setError(false);
+          try {
+            const res = await fetch("/api/report", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ propertyId, reason, note: note.trim(), id: getId() }),
+            });
+            if (!res.ok) throw new Error("failed");
+            setSent(true);
+            setTimeout(dismiss, 1200); // brief "thanks" then auto-close
+          } catch {
+            setError(true);
+            setSending(false);
+          }
+        };
 
-        {sent ? (
+        return sent ? (
           <p className="py-4 text-center text-sm text-stone-600">Thanks — we&apos;ll take a look 🙏</p>
         ) : (
           <>
@@ -149,8 +115,8 @@ function ReportModal({ propertyId, onClose }: { propertyId: string; onClose: () 
               </button>
             </div>
           </>
-        )}
-      </div>
-    </div>
+        );
+      }}
+    </Modal>
   );
 }

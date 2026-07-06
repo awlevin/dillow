@@ -14,9 +14,7 @@ import { NextDrop } from "./NextDrop";
 import { PropertyCard } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import { PropertyLeaderboard } from "./PropertyLeaderboard";
-import { RecentHomes } from "./RecentHomes";
 import { RecentRooms } from "./RecentRooms";
-import { RecentRoomsMenu } from "./RecentRoomsMenu";
 import { RoomInvite } from "./RoomInvite";
 import { StatsPanel } from "./StatsPanel";
 
@@ -215,13 +213,12 @@ export function HomeGame() {
       recordRecentHome({
         date,
         propertyId: home.propertyId,
-        title: data.property.address
-          ? `${data.property.address}, ${data.property.city}, ${data.property.state}`
-          : propertyTitle(home.clue),
+        title: propertyTitle(home.clue),
         price: data.property.price,
         pct: Math.abs(data.result.pctError),
         won: data.result.within,
         url: data.details?.listingUrl ?? undefined,
+        zillowUrl: data.details?.zillowUrl ?? undefined,
       });
       setStatsVersion((v) => v + 1);
 
@@ -312,9 +309,6 @@ export function HomeGame() {
           <NextDrop />
         </>
       )}
-
-      {!loading && <RecentRoomsMenu />}
-      {!loading && <RecentHomes />}
     </main>
   );
 }

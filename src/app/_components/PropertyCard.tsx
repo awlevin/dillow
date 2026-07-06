@@ -119,7 +119,7 @@ export function PropertyCard({
           )}
         </div>
 
-        <PropertyFacts clue={clue} onToggleMap={hasMap ? toggleMap : undefined} />
+        <PropertyFacts clue={clue} onToggleMap={hasMap ? toggleMap : undefined} mapActive={mapActive} />
         <GuessHistory rows={rows} />
 
         {!done && details && (
@@ -164,7 +164,15 @@ export function PropertyCard({
   );
 }
 
-function PropertyFacts({ clue, onToggleMap }: { clue: Clue; onToggleMap?: () => void }) {
+function PropertyFacts({
+  clue,
+  onToggleMap,
+  mapActive = false,
+}: {
+  clue: Clue;
+  onToggleMap?: () => void;
+  mapActive?: boolean;
+}) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
       {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
@@ -174,8 +182,11 @@ function PropertyFacts({ clue, onToggleMap }: { clue: Clue; onToggleMap?: () => 
       {onToggleMap && (
         <button
           onClick={onToggleMap}
-          aria-label="Toggle the map view"
-          className="ml-auto text-stone-400 transition hover:text-emerald-600"
+          aria-label={mapActive ? "Hide the map view" : "Show the map view"}
+          aria-pressed={mapActive}
+          className={`ml-auto transition ${
+            mapActive ? "text-emerald-600" : "text-stone-400 hover:text-emerald-600"
+          }`}
         >
           <MapIcon size={18} aria-hidden="true" />
         </button>

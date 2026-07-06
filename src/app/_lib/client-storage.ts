@@ -93,11 +93,12 @@ export function loadRooms(): SavedRoom[] {
 export type SavedHome = {
   date: string;
   propertyId: string;
-  title: string; // e.g. "123 Sample St, Phoenix, AZ" or "House in Phoenix, AZ"
+  title: string; // "[type] in [city, state]", e.g. "House in Phoenix, AZ"
   price: number;
   pct: number; // abs % error of best guess, as a fraction (0.05 = 5% off)
   won: boolean;
-  url?: string; // the realtor listing URL, when known
+  url?: string; // the realtor.com listing URL, when known
+  zillowUrl?: string; // the Zillow listing URL, when known
 };
 
 // Most-recent-first, deduped by date+propertyId (a re-finish keeps the newest).

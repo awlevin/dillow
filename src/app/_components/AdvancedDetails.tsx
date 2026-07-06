@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { PropertyDetails } from "@/lib/property-details";
 import { usd } from "../_lib/format";
+import { Modal } from "./Modal";
 import { ReportProperty } from "./ReportProperty";
 
 const MONTHS = [
@@ -25,17 +25,14 @@ export function formatLot(sqft: number | null): string | null {
   return `${sqft.toLocaleString()} sq ft lot`;
 }
 
-// The Tier-1 "home facts" — lot, stories, garage, listed date — shared by the
-// modal's chip row and the unlock strip's teaser so the copy never drifts. These
-// are price-safe (unlike pricePerSqft, which the server only sends post-reveal).
+// The Tier-1 "home facts" — lot size and listed date — shared by the modal's chip
+// row and the unlock strip's teaser so the copy never drifts. These are price-safe
+// (unlike pricePerSqft, which the server only sends post-reveal).
 export function homeFacts(details: PropertyDetails): string[] {
   const listed = formatListed(details.listDate);
-  return [
-    formatLot(details.lotSqft),
-    details.stories != null ? `${details.stories} ${details.stories === 1 ? "story" : "stories"}` : null,
-    details.garage != null ? `${details.garage}-car garage` : null,
-    listed && `Listed ${listed}`,
-  ].filter((f): f is string => Boolean(f));
+  // Stories and garage-car count are intentionally omitted: the first photo is an
+  // exterior that almost always shows them, so they add nothing as a paid clue.
+  return [formatLot(details.lotSqft), listed && `Listed ${listed}`].filter((f): f is string => Boolean(f));
 }
 
 const ORDINALS = ["1st", "2nd", "3rd", "4th", "5th"];
@@ -149,20 +146,6 @@ export function AdvancedDetails({
   unlockedTiers: number;
   onClose: () => void;
 }) {
-  const [closing, setClosing] = useState(false);
-  const dismiss = () => {
-    if (closing) return;
-    setClosing(true);
-    setTimeout(onClose, 320); // let the exit animation finish before unmounting
-  };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Home facts (Tier 1) stay hidden until the first guess; pricePerSqft is
   // price-revealing and only ever arrives post-reveal.
   const hf = homeFacts(details);
@@ -180,30 +163,10 @@ export function AdvancedDetails({
   }
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center ${
-        closing ? "animate-modalfadeout" : "animate-modalfade"
-      }`}
-      onClick={dismiss}
-    >
-      <div
-        className={`relative max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-xl ${
-          closing ? "animate-modalpopout" : "animate-modalpop"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Property details"
-      >
-        <button
-          onClick={dismiss}
-          aria-label="Close"
-          className="absolute right-4 top-4 text-xl text-stone-400 transition hover:text-stone-700"
-        >
-          ✕
-        </button>
-
-        <h2 className="text-2xl font-black text-emerald-900">Property details</h2>
+    <Modal onClose={onClose} label="Property details" maxWidth="lg">
+      {() => (
+        <>
+          <h2 className="text-2xl font-black text-emerald-900">Property details</h2>
 
         {facts.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -246,8 +209,9 @@ export function AdvancedDetails({
           </p>
         )}
 
-        <ReportProperty propertyId={propertyId} className="mt-5 justify-center" />
-      </div>
-    </div>
+          <ReportProperty propertyId={propertyId} className="mt-5 justify-center" />
+        </>
+      )}
+    </Modal>
   );
 }

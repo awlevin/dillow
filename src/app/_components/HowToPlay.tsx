@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { BANDS, WIN_THRESHOLD, type Band } from "@/lib/feedback";
 import { MAX_ATTEMPTS } from "../_lib/format";
+import { Modal } from "./Modal";
 
 const WIN_PCT = Math.round(WIN_THRESHOLD * 100);
 // Cold → nailed it, derived from the live band config so this scale can never
@@ -10,12 +10,6 @@ const WIN_PCT = Math.round(WIN_THRESHOLD * 100);
 const SCALE: Band[] = [...[...BANDS].reverse().map((b) => b.band), "✅"];
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
-  const [closing, setClosing] = useState(false);
-  const dismiss = () => {
-    if (closing) return;
-    setClosing(true);
-    setTimeout(onClose, 320); // let the exit animation finish before unmounting
-  };
   const examples = [
     { price: "$2,000,000", hint: "Lower ↓", band: "🟥" },
     { price: "$900,000", hint: "Higher ↑", band: "🟨" },
@@ -23,27 +17,10 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center ${
-        closing ? "animate-modalfadeout" : "animate-modalfade"
-      }`}
-      onClick={dismiss}
-    >
-      <div
-        className={`relative max-h-[85dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-2xl bg-white p-6 shadow-xl ${
-          closing ? "animate-modalpopout" : "animate-modalpop"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={dismiss}
-          aria-label="Close"
-          className="absolute right-4 top-4 text-xl text-stone-400 transition hover:text-stone-700"
-        >
-          ✕
-        </button>
-
-        <h2 className="text-2xl font-black text-emerald-900">How to play</h2>
+    <Modal onClose={onClose} label="How to play" maxWidth="md">
+      {(dismiss) => (
+        <>
+          <h2 className="text-2xl font-black text-emerald-900">How to play</h2>
         <p className="mt-1 text-stone-500">Three homes a day. Guess each price in {MAX_ATTEMPTS} tries.</p>
 
         <ul className="mt-4 flex flex-col gap-2.5 text-sm text-stone-700">
@@ -100,13 +77,14 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
         </div>
         <p className="mt-1 text-center text-xs text-stone-400">cold → nailed it</p>
 
-        <button
-          onClick={dismiss}
-          className="mt-5 w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
-        >
-          Got it
-        </button>
-      </div>
-    </div>
+          <button
+            onClick={dismiss}
+            className="mt-5 w-full rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
+          >
+            Got it
+          </button>
+        </>
+      )}
+    </Modal>
   );
 }

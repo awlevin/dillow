@@ -229,13 +229,12 @@ export function RoomGame({ roomId }: { roomId: string }) {
         recordRecentHome({
           date: info?.room?.date ?? isoDay(new Date()),
           propertyId: data.property.id,
-          title: data.property.address
-            ? `${data.property.address}, ${data.property.city}, ${data.property.state}`
-            : propertyTitle(data.property),
+          title: propertyTitle(data.property),
           price: data.property.price,
           pct: Math.abs(data.result.pctError),
           won: data.result.within,
           url: data.details?.listingUrl ?? undefined,
+          zillowUrl: data.details?.zillowUrl ?? undefined,
         });
 
         setInfo(await refresh(id));

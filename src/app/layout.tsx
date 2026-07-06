@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { PageFooter } from "./_components/PageFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,14 +47,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
-        {/* On small screens the footer follows the content so "What's new" sits
-            just under the game card (above the fold on short phones); on larger
-            screens mt-auto pins it to the bottom as a tidy sticky footer. */}
-        <footer className="py-3 text-center sm:mt-auto sm:py-6">
-          <Link href="/changelog" className="text-xs text-stone-400 transition hover:text-emerald-600">
-            What&apos;s new
-          </Link>
-        </footer>
+        {/* One quiet footer strip for the whole site: Friends / Recent homes (shown
+            only once you have history) and the changelog, on a single baseline. On
+            tall screens sm:mt-auto pins it to the bottom. */}
+        <PageFooter />
         <Analytics />
       </body>
     </html>
