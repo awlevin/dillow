@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import { useCountUp } from "../_hooks/useCountUp";
 import { compact, formatPct, usd } from "../_lib/format";
 import type { CommunityStats, Reveal, Row } from "../_lib/types";
@@ -200,13 +201,32 @@ function CommunityValuation({
   const crowdLeft = posFor(stats.typicalGuess);
   const youLeft = posFor(you);
 
-  return (
-    <div className="rounded-lg bg-white/70 p-3">
-      <p className="text-sm font-semibold text-stone-800">{headline}</p>
-      <p className="mt-1 text-xs leading-relaxed text-stone-500">{detail}</p>
+  const [open, setOpen] = useState(false);
 
-      <div className="mt-3">
-        {/* Crowd marker + label, above the rail (amber) */}
+  // The verdict headline is the delightful hook, so it always shows; the detail
+  // sentence and the you-vs-crowd rail live behind a tap so they don't crowd the
+  // reveal.
+  return (
+    <div className="rounded-lg bg-white/70">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left transition hover:bg-white/60"
+      >
+        <span className="text-sm font-semibold text-stone-800">{headline}</span>
+        <ChevronDown
+          size={16}
+          aria-hidden="true"
+          className={`shrink-0 text-stone-400 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="animate-reveal px-3 pb-3">
+          <p className="text-xs leading-relaxed text-stone-500">{detail}</p>
+
+          <div className="mt-3">
+            {/* Crowd marker + label, above the rail (amber) */}
         <div className="relative h-6">
           <div
             className="absolute bottom-0 flex -translate-x-1/2 flex-col items-center"
@@ -237,9 +257,11 @@ function CommunityValuation({
           </div>
         </div>
 
-        {/* Asking anchor label, centred under the tick */}
-        <p className="text-center text-[11px] font-semibold text-stone-800">Asking {compact(actual)}</p>
-      </div>
+            {/* Asking anchor label, centred under the tick */}
+            <p className="text-center text-[11px] font-semibold text-stone-800">Asking {compact(actual)}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

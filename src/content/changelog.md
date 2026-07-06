@@ -10,6 +10,7 @@ Notes on what's changed. Newest first.
 
 ### 💅 Nits
 - **Recent homes open a quick recap.** Tapping a home you've played now lands on an in-app card with the price and links out to realtor.com and Zillow, instead of jumping straight to a listing.
+- **The crowd's take tucks away.** On the results screen, "the crowd thinks it's a steal" now shows as a one-liner you can tap to see the full you-vs-crowd-vs-asking breakdown — less clutter, same payoff.
 - **Tidier footer.** Friends, Recent homes, and What's new now sit together on one line.
 
 ## July 1, 2026
