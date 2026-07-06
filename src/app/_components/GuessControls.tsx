@@ -50,6 +50,7 @@ export function GuessControls({
 
   // Fine-scrub drag state. The native range input stays for layout, styling,
   // keyboard, and desktop mouse/pen (all unchanged 1:1); on touch we take over.
+  const inputRef = useRef<HTMLInputElement>(null);
   const drag = useRef<{ lastX: number; startY: number; t: number; width: number } | null>(null);
   const [sensitivity, setSensitivity] = useState<number | null>(null);
   const hintShown = useRef(false);
@@ -59,9 +60,28 @@ export function GuessControls({
     if (hintTimer.current) clearTimeout(hintTimer.current);
   }, []);
 
+  // On touch we drive the value ourselves via the pointer handlers below. The
+  // native range input, though, ALSO chases the finger on a real touch and fires
+  // onChange — so the two fight and the thumb flickers (worst near the fresh
+  // center, where our sensitivity-eased value barely moves off 0.5). React 19
+  // registers touchstart/touchmove as *passive* at the root, so a preventDefault
+  // from a synthetic onPointerDown/onTouchStart is a no-op. Attach our own
+  // non-passive listeners so the native control never touches the value; our
+  // scrub logic is the sole driver on touch.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const stop = (e: TouchEvent) => e.preventDefault();
+    el.addEventListener("touchstart", stop, { passive: false });
+    el.addEventListener("touchmove", stop, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", stop);
+      el.removeEventListener("touchmove", stop);
+    };
+  }, []);
+
   const onPointerDown = (e: ReactPointerEvent<HTMLInputElement>) => {
     if (e.pointerType !== "touch") return; // mouse & pen keep the native slider
-    e.preventDefault(); // stop the native thumb from also jumping to the touch
     e.currentTarget.setPointerCapture?.(e.pointerId);
     drag.current = { lastX: e.clientX, startY: e.clientY, t, width: e.currentTarget.getBoundingClientRect().width };
     setSensitivity(1);
@@ -120,6 +140,7 @@ export function GuessControls({
             </div>
             <div className="relative mt-2 sm:mt-3">
               <input
+                ref={inputRef}
                 type="range"
                 min={0}
                 max={1000}

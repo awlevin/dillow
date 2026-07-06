@@ -2,6 +2,11 @@
 
 Notes on what's changed. Newest first.
 
+## July 6, 2026
+
+### 🐛 Bug fixes
+- **The slider drags smoothly again on phones.** It was snapping back toward the middle while you dragged — that's fixed, so your guess follows your finger.
+
 ## July 1, 2026
 
 ### 🔥 New Features
