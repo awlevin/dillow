@@ -128,7 +128,14 @@ export async function fetchDetails(
   const url = new URL(`https://${HOST}/property/details`);
   url.searchParams.set("property_id", propertyId);
   const res = await rapidFetch(url, key, { cache: "no-store" });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    // A 403 here is almost always "You are not subscribed to this API" — the
+    // RapidAPI subscription lapsed. Shout, or it just looks like thin listings.
+    if (res.status === 403) {
+      console.error("[realtor16] 403 on details — RapidAPI subscription lapsed? Enrichment is OFF.");
+    }
+    return null;
+  }
 
   // RapidAPI occasionally returns a 200 with an empty/non-JSON body (proxy
   // hiccup, rate-limit interstitial); treat that as "no details" rather than
