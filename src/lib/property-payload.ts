@@ -10,6 +10,7 @@ import {
   leaderboardEnabled,
   wasWarmTried,
   markWarmTried,
+  WARM_BACKOFF_FAILED,
 } from "./leaderboard";
 import { fetchDetails } from "./providers/realtor16";
 
@@ -30,12 +31,19 @@ async function warm(property: Property): Promise<{ gallery: string[] | null; det
     (details === null || gallery === null) &&
     !(await wasWarmTried(property.id))
   ) {
-    // Mark BEFORE fetching: if the fetch fails or yields nothing cacheable, the
-    // next request must not spend another upstream call — un-enrichable listings
-    // used to re-fetch on every single page load, which is what made cold rooms
-    // crawl. Retried after a day (see WARM_RETRY_SECONDS).
-    await markWarmTried(property.id);
-    const det = await fetchDetails(property.id);
+    // Mark BEFORE fetching so concurrent requests can't stampede the provider —
+    // un-enrichable listings used to re-fetch on every single page load, which
+    // is what made cold rooms crawl. Start with the short (failure) back-off;
+    // it's upgraded to the day-long one below once the provider actually
+    // answers, so a network blip retries soon instead of sticking for 24h.
+    await markWarmTried(property.id, WARM_BACKOFF_FAILED);
+    let det: Awaited<ReturnType<typeof fetchDetails>> | undefined;
+    try {
+      det = await fetchDetails(property.id);
+    } catch {
+      det = undefined; // transient failure — the short back-off stands
+    }
+    if (det !== undefined) await markWarmTried(property.id);
     if (det) {
       if (det.photos.length) {
         // Cache even a not-richer gallery so the next read is a hit; consumers

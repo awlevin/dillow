@@ -169,16 +169,21 @@ export async function saveGallery(id: string, photos: string[]): Promise<void> {
 // a listing re-spends an upstream request — and a room full of them re-fetches
 // on EVERY visit. Mark that we tried, and don't try again for a day.
 const warmTriedKey = (id: string) => `warmtried:${id}`;
-const WARM_RETRY_SECONDS = 60 * 60 * 24;
+// A fetch the provider ANSWERED (even with nothing richer) backs off for a day;
+// a fetch that never got an answer (network blip, timeout) retries much sooner,
+// so a transient failure can't leave a home stuck with its thin snapshot
+// gallery until tomorrow.
+export const WARM_BACKOFF_ANSWERED = 60 * 60 * 24;
+export const WARM_BACKOFF_FAILED = 60 * 10;
 
 export async function wasWarmTried(id: string): Promise<boolean> {
   if (!redis) return false;
   return (await redis.get(warmTriedKey(id))) !== null;
 }
 
-export async function markWarmTried(id: string): Promise<void> {
+export async function markWarmTried(id: string, ttlSeconds = WARM_BACKOFF_ANSWERED): Promise<void> {
   if (!redis) return;
-  await redis.set(warmTriedKey(id), 1, { ex: WARM_RETRY_SECONDS });
+  await redis.set(warmTriedKey(id), 1, { ex: ttlSeconds });
 }
 
 // ── Rich detail cache ────────────────────────────────────────────────────────
