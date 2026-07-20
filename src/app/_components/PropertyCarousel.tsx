@@ -137,19 +137,21 @@ export function PropertyCarousel({
           </div>
         ))}
 
+      {/* Prev/next arrows. On touch they sit on a quiet scrim (there's no hover
+          to reveal them); on sm+ they stay invisible until the frame is hovered. */}
       {slideCount > 1 && (
         <>
           <button
             onClick={() => nudge(-1)}
             aria-label="Previous photo"
-            className="absolute left-2 top-1/2 z-20 hidden -translate-y-1/2 scale-90 rounded-full bg-transparent p-1.5 text-white transition-all duration-200 group-hover:scale-100 group-hover:bg-stone-900/30 hover:scale-110 hover:bg-stone-900/60 sm:block"
+            className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-stone-900/25 p-1.5 text-white transition-all duration-200 hover:scale-110 hover:bg-stone-900/60 sm:scale-90 sm:bg-transparent sm:group-hover:scale-100 sm:group-hover:bg-stone-900/30"
           >
             <ChevronLeft size={18} aria-hidden="true" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]" />
           </button>
           <button
             onClick={() => nudge(1)}
             aria-label="Next photo"
-            className="absolute right-2 top-1/2 z-20 hidden -translate-y-1/2 scale-90 rounded-full bg-transparent p-1.5 text-white transition-all duration-200 group-hover:scale-100 group-hover:bg-stone-900/30 hover:scale-110 hover:bg-stone-900/60 sm:block"
+            className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-stone-900/25 p-1.5 text-white transition-all duration-200 hover:scale-110 hover:bg-stone-900/60 sm:scale-90 sm:bg-transparent sm:group-hover:scale-100 sm:group-hover:bg-stone-900/30"
           >
             <ChevronRight size={18} aria-hidden="true" className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]" />
           </button>
