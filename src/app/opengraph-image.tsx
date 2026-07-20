@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { MARK } from "./_lib/mark";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -31,27 +32,25 @@ export default function OpengraphImage() {
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 28,
-            position: "relative",
           }}
         >
           <svg width="132" height="132" viewBox="0 0 100 100">
-            <path d="M50 22 L82 50 H74 V80 H26 V50 H18 Z" fill="#059669" />
+            <path d={MARK.house} fill="#059669" />
+            <path
+              d={MARK.dollarS}
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth={MARK.dollarStroke}
+              strokeLinecap="round"
+            />
+            <path
+              d={MARK.dollarBar}
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth={MARK.dollarStroke}
+              strokeLinecap="round"
+            />
           </svg>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 58,
-              color: "#ffffff",
-              fontFamily: "Arial, Helvetica, sans-serif",
-              fontSize: 50,
-              fontWeight: 800,
-              textAlign: "center",
-            }}
-          >
-            $
-          </div>
         </div>
         <div style={{ fontSize: 132, fontWeight: 800, letterSpacing: -5 }}>dillow</div>
         <div style={{ fontSize: 40, opacity: 0.92, marginTop: 6 }}>
