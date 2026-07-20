@@ -25,6 +25,7 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
 
   async function call(action: "verify" | "rotate" | "enrich" | "limit", extra: Record<string, unknown> = {}) {
     setBusy(true);
@@ -62,6 +63,54 @@ export default function Admin() {
     } catch (e) {
       setError((e as Error).message);
       if (action === "verify") setAuthed(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Archive the whole pool: loop the "archive" action one batch at a time until
+  // every home's gallery + details are cached. Homes with no provider data (empty)
+  // or that errored (failed) are carried forward in `exclude` so the loop always
+  // terminates instead of rescanning the same un-fetchable homes forever.
+  async function archive() {
+    setBusy(true);
+    setError(null);
+    setMsg(null);
+    setProgress(null);
+    const exclude = new Set<string>();
+    let done = 0; // homes newly archived this run
+    let total = 462;
+    try {
+      for (;;) {
+        const res = await fetch("/api/admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password, action: "archive", batch: 12, exclude: [...exclude] }),
+        });
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : {};
+        if (!res.ok) {
+          throw new Error(
+            data.error ?? `Request failed (${res.status}). The photo service may be slow — try again.`,
+          );
+        }
+        done += data.archived ?? 0;
+        total = data.total ?? total;
+        for (const id of data.empty ?? []) exclude.add(id);
+        for (const id of data.failed ?? []) exclude.add(id);
+        const remaining = data.remaining ?? 0;
+        setProgress(`archived ${done} of ${total} · ${remaining} remaining`);
+        if (remaining <= 0) break;
+      }
+      const skipped = exclude.size;
+      setMsg(
+        `Archive complete — ${done} of ${total} homes cached${
+          skipped ? `, ${skipped} could not be fetched (no provider data)` : ""
+        }. The app will demo with full data even if the subscription lapses.`,
+      );
+      setProgress(null);
+    } catch (e) {
+      setError((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -153,6 +202,23 @@ export default function Admin() {
             >
               {busy ? "…" : dailyLimit ? "🔓 Turn limit OFF (endless bonus homes)" : "🔒 Turn limit ON (3 a day)"}
             </button>
+          </div>
+
+          <div className="border-t border-stone-100 pt-4">
+            <p className="text-xs uppercase tracking-wide text-stone-400">Archive</p>
+            <p className="mt-1 text-sm text-stone-600">
+              Fetches every pool home&apos;s full photo gallery + rich details into our own store —
+              one realtor16 request per home not yet archived — so the app still demos well if the
+              subscription ends. Runs in batches; leave the tab open until it finishes.
+            </p>
+            <button
+              onClick={archive}
+              disabled={busy}
+              className="mt-2 rounded-lg border border-emerald-600 px-5 py-2.5 font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-50"
+            >
+              {busy && progress ? "Archiving…" : "📦 Archive pool data"}
+            </button>
+            {progress && <p className="mt-2 text-sm tabular-nums text-stone-500">{progress}</p>}
           </div>
           {msg && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{msg}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}

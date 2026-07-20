@@ -163,6 +163,24 @@ export async function saveGallery(id: string, photos: string[]): Promise<void> {
   await redis.set(galleryKey(id), photos); // persist
 }
 
+// ── Archive: which pool homes already have a full cached payload? ─────────────
+// "Fully archived" = BOTH the gallery and the details key exist, so the home
+// survives a subscription lapse with everything the app needs. Checked with a
+// single pipeline of EXISTS calls (two per id) — key names only, no value
+// fetches — so scanning the whole pool costs one round-trip, not hundreds.
+export async function archivedFlags(
+  ids: string[],
+): Promise<{ gallery: boolean; details: boolean }[]> {
+  if (!redis || !ids.length) return ids.map(() => ({ gallery: false, details: false }));
+  const pipe = redis.pipeline();
+  for (const id of ids) {
+    pipe.exists(galleryKey(id));
+    pipe.exists(detailsKey(id));
+  }
+  const res = (await pipe.exec()) as number[]; // EXISTS → 1 present, 0 absent
+  return ids.map((_, i) => ({ gallery: res[i * 2] === 1, details: res[i * 2 + 1] === 1 }));
+}
+
 // ── Enrichment attempt marker ────────────────────────────────────────────────
 // Some listings can never be enriched (realtor16 has no richer gallery, or no
 // longer knows the listing). Without a marker, every page load that touches such
@@ -184,6 +202,14 @@ export async function wasWarmTried(id: string): Promise<boolean> {
 export async function markWarmTried(id: string, ttlSeconds = WARM_BACKOFF_ANSWERED): Promise<void> {
   if (!redis) return;
   await redis.set(warmTriedKey(id), 1, { ex: ttlSeconds });
+}
+
+// Clear the back-off marker so the next warm can re-fetch immediately. Used when
+// an admin deliberately (re)warms a home — explicit intent overrides the
+// automatic "don't retry for a day" throttle.
+export async function deleteWarmTried(id: string): Promise<void> {
+  if (!redis) return;
+  await redis.del(warmTriedKey(id));
 }
 
 // ── Rich detail cache ────────────────────────────────────────────────────────

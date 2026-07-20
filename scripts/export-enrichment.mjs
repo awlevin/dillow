@@ -1,0 +1,83 @@
+// Export the runtime enrichment archive (galleries + rich details, fetched from
+// realtor16 and cached in Redis) into a committed file: src/data/enrichment.json.
+// Git is the cold store — versioned, ships with every deploy, and survives a
+// Redis wipe or a lapsed realtor16 subscription. Run it locally after archiving
+// the pool from /admin ("📦 Archive pool data"):
+//
+//   node scripts/export-enrichment.mjs
+//
+// then commit the changed src/data/enrichment.json. The runtime reads it as the
+// fallback tier: Redis first, this file second, realtor16 last (see
+// src/lib/property-payload.ts).
+import { readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+const root = process.cwd();
+
+// .env.local is not loaded for plain node scripts — parse just the two keys.
+async function loadEnv() {
+  const env = { ...process.env };
+  try {
+    const raw = await readFile(path.join(root, ".env.local"), "utf8");
+    for (const line of raw.split("\n")) {
+      const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+      if (m && !(m[1] in env)) env[m[1]] = m[2].replace(/^"|"$/g, "");
+    }
+  } catch {
+    /* fall through to process.env */
+  }
+  return env;
+}
+
+const env = await loadEnv();
+const url = env.UPSTASH_REDIS_REST_URL ?? env.KV_REST_API_URL;
+const token = env.UPSTASH_REDIS_REST_TOKEN ?? env.KV_REST_API_TOKEN;
+if (!url || !token) {
+  console.error("No Upstash credentials found (.env.local / env).");
+  process.exit(1);
+}
+
+// Values are stored by @upstash/redis, which JSON-serializes them — so each MGET
+// result is a JSON string (or null) that parses back to the original value.
+async function mget(keys) {
+  const res = await fetch(`${url}/pipeline`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify([["MGET", ...keys]]),
+  });
+  if (!res.ok) throw new Error(`Upstash ${res.status}`);
+  const [{ result }] = await res.json();
+  return result.map((v) => (v === null ? null : JSON.parse(v)));
+}
+
+const pool = JSON.parse(await readFile(path.join(root, "src", "data", "pool.json"), "utf8"));
+const ids = pool.properties.map((p) => p.id);
+
+const galleries = {};
+const details = {};
+const CHUNK = 50;
+for (let i = 0; i < ids.length; i += CHUNK) {
+  const chunk = ids.slice(i, i + CHUNK);
+  const [gs, ds] = await Promise.all([
+    mget(chunk.map((id) => `gallery:v2:${id}`)),
+    mget(chunk.map((id) => `details:v2:${id}`)),
+  ]);
+  chunk.forEach((id, j) => {
+    if (gs[j]?.length) galleries[id] = gs[j];
+    if (ds[j]) details[id] = ds[j];
+  });
+  process.stdout.write(`\rscanned ${Math.min(i + CHUNK, ids.length)} / ${ids.length}`);
+}
+console.log();
+
+const out = path.join(root, "src", "data", "enrichment.json");
+await writeFile(
+  out,
+  JSON.stringify({ exportedAt: new Date().toISOString(), galleries, details }),
+);
+const stats = {
+  pool: ids.length,
+  galleries: Object.keys(galleries).length,
+  details: Object.keys(details).length,
+};
+console.log(`wrote ${out}`, stats);

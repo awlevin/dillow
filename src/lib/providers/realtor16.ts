@@ -130,9 +130,12 @@ export async function fetchDetails(
   const res = await rapidFetch(url, key, { cache: "no-store" });
   if (!res.ok) {
     // A 403 here is almost always "You are not subscribed to this API" — the
-    // RapidAPI subscription lapsed. Shout, or it just looks like thin listings.
+    // RapidAPI subscription lapsed. Shout AND throw a distinctive error so bulk
+    // callers (the pool archive) can abort instead of misfiling every home as
+    // "no data"; warm() catches it and just takes the short retry back-off.
     if (res.status === 403) {
       console.error("[realtor16] 403 on details — RapidAPI subscription lapsed? Enrichment is OFF.");
+      throw new Error("realtor16: not subscribed (403)");
     }
     return null;
   }

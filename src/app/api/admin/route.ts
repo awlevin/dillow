@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dayKey, getDailyProperty, getPremiumProperty } from "@/lib/game";
+import { dayKey, getDailyProperty, getPremiumProperty, getPool } from "@/lib/game";
 import type { Property } from "@/lib/types";
 import { fetchDetails } from "@/lib/providers/realtor16";
 import {
@@ -9,6 +9,8 @@ import {
   getGallery,
   saveGallery,
   saveDetails,
+  archivedFlags,
+  deleteWarmTried,
   leaderboardEnabled,
   dailyLimitEnabled,
   setDailyLimit,
@@ -60,7 +62,7 @@ async function enrich(p: Property): Promise<string[]> {
 }
 
 export async function POST(req: Request) {
-  let body: { password?: unknown; action?: unknown; on?: unknown };
+  let body: { password?: unknown; action?: unknown; on?: unknown; batch?: unknown; exclude?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -116,6 +118,86 @@ export async function POST(req: Request) {
       const property = getDailyProperty(date, offset);
       const photos = await enrich(property); // give the new property a full gallery
       return NextResponse.json({ ok: true, rotated: true, offset, cleared, current: summary(property, photos) });
+    }
+
+    // Archive the pool: bulk-warm every home's full gallery + rich details into
+    // Redis while the realtor16 subscription is live, so the app still demos with
+    // complete data if the subscription later lapses. One POST = one BATCH; the
+    // client loops until `remaining` hits 0. Each home costs one realtor16 request.
+    if (body.action === "archive") {
+      if (!leaderboardEnabled()) {
+        return NextResponse.json({ error: "Redis not configured — cannot archive." }, { status: 503 });
+      }
+      const pool = getPool(); // already id-sorted → a stable scan order across batches
+      const total = pool.length;
+      // Keep the batch inside maxDuration (30s) at concurrency 3: default 12,
+      // hard-clamped to 1–15 so a caller can't ask for a batch that would 504.
+      const rawBatch = typeof body.batch === "number" ? Math.floor(body.batch) : 12;
+      const batch = Math.max(1, Math.min(15, Number.isFinite(rawBatch) && rawBatch > 0 ? rawBatch : 12));
+      // Homes the client has already settled as unfetchable (empty/failed on a
+      // prior batch). Carrying them here is what guarantees the loop terminates —
+      // they never get a full pair of keys, so without this they'd rescan forever.
+      const exclude = new Set(
+        Array.isArray(body.exclude) ? body.exclude.filter((x): x is string => typeof x === "string") : [],
+      );
+
+      // One pipelined EXISTS pass over the whole pool (key names only, no values)
+      // to find the homes still missing a full gallery + details pair.
+      const flags = await archivedFlags(pool.map((p) => p.id));
+      const todo = pool.filter((p, i) => !(flags[i].gallery && flags[i].details) && !exclude.has(p.id));
+      const candidates = todo.slice(0, batch);
+
+      const empty: string[] = []; // provider has no data for these
+      const failed: string[] = []; // fetch threw (network/parse) — retryable
+      let archived = 0;
+      let lapsed = false; // subscription 403 — abort the whole batch, loudly
+
+      // Bounded concurrency 3 so a batch of 15 stays well inside maxDuration.
+      let next = 0;
+      async function worker() {
+        while (next < candidates.length && !lapsed) {
+          const p = candidates[next++];
+          try {
+            const det = await fetchDetails(p.id);
+            if (!det || det.photos.length === 0) {
+              empty.push(p.id); // counted as processed, but nothing to cache
+              continue;
+            }
+            // Cache the gallery even if it's not richer than the snapshot — for the
+            // archive, a guaranteed cache hit matters more than a size win.
+            await saveGallery(p.id, det.photos);
+            if (det.details) await saveDetails(p.id, det.details);
+            // No details means this home can never satisfy the both-keys check —
+            // report it as settled so the client excludes it and the loop can't
+            // re-buy the same fetch forever. (Unreachable today: parseDetails
+            // always returns an object — this guards a provider-shape change.)
+            else empty.push(p.id);
+            await deleteWarmTried(p.id); // admin intent overrides the enrich back-off
+            archived++;
+          } catch (err) {
+            if (err instanceof Error && err.message.includes("not subscribed")) {
+              lapsed = true;
+              break;
+            }
+            console.error(`[admin] archive ${p.id} failed:`, err);
+            failed.push(p.id);
+          }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(3, candidates.length) }, worker));
+
+      if (lapsed) {
+        return NextResponse.json(
+          { error: "realtor16 says the RapidAPI subscription is inactive (403) — archive aborted." },
+          { status: 503 },
+        );
+      }
+
+      // Everything in this batch is now settled: archived homes have both keys;
+      // empty/failed ones are returned so the client can exclude them next call.
+      // So the not-yet-archived count drops by exactly the batch we processed.
+      const remaining = todo.length - candidates.length;
+      return NextResponse.json({ ok: true, archived, empty, failed, remaining, total });
     }
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });

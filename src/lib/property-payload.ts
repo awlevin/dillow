@@ -13,6 +13,7 @@ import {
   WARM_BACKOFF_FAILED,
 } from "./leaderboard";
 import { fetchDetails } from "./providers/realtor16";
+import { archivedDetails, archivedGallery } from "./enrichment-archive";
 
 // The committed snapshot is realtor16-baked, so its galleries + details come from
 // realtor16 regardless of the runtime PROPERTY_PROVIDER. Skip the warm when the
@@ -25,6 +26,12 @@ const REALTOR_KEY = process.env.REALTOR_16_RAPID_API_KEY ?? process.env.REALTOR_
 // way — add a mode and it inherits both for free instead of silently missing them.
 async function warm(property: Property): Promise<{ gallery: string[] | null; details: PropertyDetails | null }> {
   let [gallery, details] = await Promise.all([getGallery(property.id), getDetails(property.id)]);
+  // Cold-store fallback: the committed archive fills anything Redis doesn't
+  // have, so a Redis wipe or a lapsed realtor16 subscription still serves full
+  // galleries + details — and a home the archive covers never spends an
+  // upstream request.
+  gallery ??= archivedGallery(property.id);
+  details ??= archivedDetails(property.id);
   if (
     REALTOR_KEY &&
     leaderboardEnabled() &&
