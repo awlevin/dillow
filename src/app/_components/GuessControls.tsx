@@ -67,6 +67,10 @@ export function GuessControls({
   // from a synthetic onPointerDown/onTouchStart is a no-op. Attach our own
   // non-passive listeners so the native control never touches the value; our
   // scrub logic is the sole driver on touch.
+  //
+  // Keyed on exactMode: a home now OPENS in manual entry, so the range input
+  // doesn't exist at mount — the listeners must (re)attach each time the slider
+  // branch renders, or the native control fights the scrub and flickers again.
   useEffect(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -77,7 +81,7 @@ export function GuessControls({
       el.removeEventListener("touchstart", stop);
       el.removeEventListener("touchmove", stop);
     };
-  }, []);
+  }, [exactMode]);
 
   const onPointerDown = (e: ReactPointerEvent<HTMLInputElement>) => {
     if (e.pointerType !== "touch") return; // mouse & pen keep the native slider
