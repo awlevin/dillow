@@ -4,6 +4,9 @@ Notes on what's changed. Newest first.
 
 ## July 20, 2026
 
+### 🐛 Bug fixes
+- **The map's zoom-out button works.** The old embedded map quietly refused to zoom out past its starting view; the map is now fully ours — smooth zooming both ways, a proper pin, and the gallery/photo view untouched.
+
 ### 💅 Nits
 - **The price rolls.** Slide the guess and the big number now flutters digit-by-digit like a ticker on its way to the new value, instead of snapping.
 
