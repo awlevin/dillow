@@ -138,7 +138,7 @@ export function GuessControls({
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-3 items-center text-xs text-stone-400">
+            <div className="mt-1.5 grid grid-cols-3 items-center text-xs text-stone-400">
               <span className="justify-self-start">{compact(lo)}</span>
               <button
                 type="button"
