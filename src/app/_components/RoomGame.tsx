@@ -7,11 +7,12 @@ import { narrowBounds, type Band } from "@/lib/feedback";
 import { buzz, shareOrCopy, smoothScrollTo } from "../_lib/browser-effects";
 import { getId, recordRecentHome, recordRoom } from "../_lib/client-storage";
 import { isoDay } from "../_lib/game-day";
-import { MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, propertyTitle, tToPrice, usd } from "../_lib/format";
+import { exactGuess, MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, priceToT, propertyTitle, tToPrice, usd } from "../_lib/format";
 import type { Reveal, RoomInfo, RoomMemberView, RoomRound, Row } from "../_lib/types";
 import { Confetti } from "./Confetti";
 import { PropertyCard } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
+import { PropertyLeaderboard } from "./PropertyLeaderboard";
 
 type RoundUI = {
   rows: Row[];
@@ -93,7 +94,10 @@ export function RoomGame({ roomId }: { roomId: string }) {
       const reveal: Reveal | null = r.done && r.property && r.result
         ? { result: r.result, property: r.property, details: r.details, communityStats: r.communityStats }
         : (saved?.reveal ?? null);
-      next[r.index] = { rows, lo, hi, t: 0.5, exactMode: false, exact: "", reveal };
+      // Park the slider on the last guess so a reload doesn't jump the value.
+      // A round with no guesses yet opens in manual entry for the blind guess.
+      const t = rows.length ? priceToT(rows[rows.length - 1].guess, lo, hi) : 0.5;
+      next[r.index] = { rows, lo, hi, t, exactMode: rows.length === 0, exact: "", reveal };
     }
     setUi(next);
     const firstUnfinished = rounds.find((r) => !r.done);
@@ -123,13 +127,20 @@ export function RoomGame({ roomId }: { roomId: string }) {
         if (data.room.name) recordRoom(roomId, data.room.date, `${data.room.name}’s room`);
 
         if (savedName) {
-          // Already named — register on the board, then sync.
-          await fetch(`/api/room/${roomId}`, {
+          // Already named — register on the board. The join response carries the
+          // updated board, so merge it in rather than re-running the full room
+          // GET (which warms every round's gallery — the expensive path) twice.
+          const res = await fetch(`/api/room/${roomId}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "join", id: playerId, name: savedName }),
           });
-          setInfo(await refresh(playerId));
+          const joined = await res.json().catch(() => null);
+          if (joined?.board) {
+            setInfo((prev) =>
+              prev ? { ...prev, board: joined.board, memberCount: joined.memberCount, me: joined.me } : prev,
+            );
+          }
         } else {
           setNeedName(true);
         }
@@ -146,11 +157,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
   const cur = ui[current];
 
   const pivot = cur ? tToPrice(cur.t, cur.lo, cur.hi) : 0;
-  const guessValue = cur
-    ? cur.exactMode
-      ? Math.min(cur.hi, Math.max(cur.lo, parsePriceInput(cur.exact)))
-      : pivot
-    : 0;
+  const guessValue = cur ? (cur.exactMode ? exactGuess(cur.exact, cur.lo, cur.hi) : pivot) : 0;
 
   const patch = (round: number, p: Partial<RoundUI>) =>
     setUi((prev) => ({ ...prev, [round]: { ...prev[round], ...p } }));
@@ -168,12 +175,18 @@ export function RoomGame({ roomId }: { roomId: string }) {
     localStorage.setItem("dillow:name", trimmed);
     setName(trimmed);
     setNeedName(false);
-    await fetch(`/api/room/${roomId}`, {
+    const res = await fetch(`/api/room/${roomId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "join", id, name: trimmed }),
     });
-    setInfo(await refresh(id));
+    // The join response already carries the updated board — no full re-fetch.
+    const joined = await res.json().catch(() => null);
+    if (joined?.board) {
+      setInfo((prev) =>
+        prev ? { ...prev, board: joined.board, memberCount: joined.memberCount, me: joined.me } : prev,
+      );
+    }
   }
 
   // The creator can retitle their room from the header; the title follows their name.
@@ -211,7 +224,18 @@ export function RoomGame({ roomId }: { roomId: string }) {
 
       if (!data.gameOver) {
         const { lo, hi } = narrowBounds(cur.lo, cur.hi, guessValue, data.direction, data.band as Band);
-        patch(current, { rows: newRows, lo, hi, t: 0.5, exact: "" });
+        // Keep the slider on the guess just made (now an edge of the narrowed
+        // range) so the value doesn't mysteriously jump to a new midpoint. The
+        // first guess (typed blind) also flips to the slider — once; after that
+        // the mode is the player's to choose.
+        patch(current, {
+          rows: newRows,
+          lo,
+          hi,
+          t: priceToT(guessValue, lo, hi),
+          exact: "",
+          ...(cur.rows.length === 0 ? { exactMode: false } : {}),
+        });
         saveLocal(current, newRows, null);
         buzz(12);
       } else {
@@ -220,6 +244,7 @@ export function RoomGame({ roomId }: { roomId: string }) {
           property: data.property,
           details: data.details,
           communityStats: data.communityStats,
+          leaderboard: data.leaderboard,
         };
         patch(current, { rows: newRows, reveal });
         saveLocal(current, newRows, reveal);
@@ -237,7 +262,30 @@ export function RoomGame({ roomId }: { roomId: string }) {
           zillowUrl: data.details?.zillowUrl ?? undefined,
         });
 
-        setInfo(await refresh(id));
+        // The attempt response already carries the reveal + updated board, so
+        // fold it into the room info locally instead of re-running the full
+        // room GET (the expensive gallery-warming path) after every round.
+        setInfo((prev) => {
+          if (!prev) return prev;
+          const rounds = (prev.rounds ?? []).map((r) =>
+            r.index === current
+              ? {
+                  ...r,
+                  done: true,
+                  property: data.property,
+                  details: data.details,
+                  communityStats: data.communityStats,
+                  result: data.result,
+                }
+              : r,
+          );
+          return {
+            ...prev,
+            rounds,
+            board: data.board ?? prev.board,
+            memberCount: data.memberCount ?? prev.memberCount,
+          };
+        });
       }
     } catch {
       setSubmitError("Something went wrong. Try again.");
@@ -319,12 +367,15 @@ export function RoomGame({ roomId }: { roomId: string }) {
             onSubmit={submit}
           />
           {cur.reveal && (
-            <button
-              onClick={() => goToRound(current + 1)}
-              className="self-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.98]"
-            >
-              {current < roundCount - 1 ? `Next round (${current + 2} of ${roundCount}) →` : "See final standings →"}
-            </button>
+            <>
+              <PropertyLeaderboard propertyId={rounds[current].clue.id} room={roomId} />
+              <button
+                onClick={() => goToRound(current + 1)}
+                className="self-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.98]"
+              >
+                {current < roundCount - 1 ? `Next round (${current + 2} of ${roundCount}) →` : "See final standings →"}
+              </button>
+            </>
           )}
         </>
       ) : (

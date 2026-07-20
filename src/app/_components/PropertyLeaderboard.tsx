@@ -10,14 +10,17 @@ const rankBadge = (rank: number) =>
 
 // All-time leaderboard for a single home: everyone who has ever guessed it,
 // ranked by their closest guess. Mounted under a home's reveal, so by the time
-// it loads the player has finished this home and the board is unlocked.
-export function PropertyLeaderboard({ propertyId }: { propertyId: string }) {
+// it loads the player has finished this home and the board is unlocked. In a
+// challenge room, pass `room` so the server can verify completion against the
+// room's round state instead of the daily game.
+export function PropertyLeaderboard({ propertyId, room }: { propertyId: string; room?: string }) {
   const [board, setBoard] = useState<PropertyBoard | null>(null);
 
   const fetchBoard = async (): Promise<PropertyBoard> => {
     const id = getId();
+    const roomParam = room ? `&room=${encodeURIComponent(room)}` : "";
     const res = await fetch(
-      `/api/leaderboard?propertyId=${encodeURIComponent(propertyId)}&id=${encodeURIComponent(id)}`,
+      `/api/leaderboard?propertyId=${encodeURIComponent(propertyId)}&id=${encodeURIComponent(id)}${roomParam}`,
     );
     return res.json();
   };

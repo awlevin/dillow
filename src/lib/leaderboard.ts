@@ -163,6 +163,24 @@ export async function saveGallery(id: string, photos: string[]): Promise<void> {
   await redis.set(galleryKey(id), photos); // persist
 }
 
+// ── Enrichment attempt marker ────────────────────────────────────────────────
+// Some listings can never be enriched (realtor16 has no richer gallery, or no
+// longer knows the listing). Without a marker, every page load that touches such
+// a listing re-spends an upstream request — and a room full of them re-fetches
+// on EVERY visit. Mark that we tried, and don't try again for a day.
+const warmTriedKey = (id: string) => `warmtried:${id}`;
+const WARM_RETRY_SECONDS = 60 * 60 * 24;
+
+export async function wasWarmTried(id: string): Promise<boolean> {
+  if (!redis) return false;
+  return (await redis.get(warmTriedKey(id))) !== null;
+}
+
+export async function markWarmTried(id: string): Promise<void> {
+  if (!redis) return;
+  await redis.set(warmTriedKey(id), 1, { ex: WARM_RETRY_SECONDS });
+}
+
 // ── Rich detail cache ────────────────────────────────────────────────────────
 // The "Advanced" modal's data (description + categorized features). Like the
 // gallery, it's fetched at runtime from the provider's details endpoint and kept
@@ -210,6 +228,22 @@ export async function getCommunityStats(propertyId: string, actual: number): Pro
   if (!Number.isFinite(n) || n < MIN_VALUATION_SAMPLE || !Number.isFinite(sumln)) return null;
   const typicalGuess = Math.exp(sumln / n);
   return { n, typicalGuess, deltaPct: (typicalGuess - actual) / actual };
+}
+
+// ── Feature flag: the classic 3-homes-per-day cap ───────────────────────────
+// OFF by default (players may keep playing bonus homes past the slate). An admin
+// can flip it back ON from /admin to restore the classic 3-per-day ritual —
+// /api/daily advertises the state and the bonus endpoint enforces it.
+const dailyLimitKey = "flag:daily-limit";
+
+export async function dailyLimitEnabled(): Promise<boolean> {
+  if (!redis) return false;
+  return (await redis.get(dailyLimitKey)) === "on";
+}
+
+export async function setDailyLimit(on: boolean): Promise<void> {
+  if (!redis) return;
+  await redis.set(dailyLimitKey, on ? "on" : "off");
 }
 
 // ── Admin: rotate the property of the day ────────────────────────────────────

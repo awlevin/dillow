@@ -6,11 +6,18 @@ import {
   MAX_ATTEMPTS,
   priceCeiling,
   priceFloor,
+  rankScore,
   scoreGuess,
   WIN_THRESHOLD,
 } from "@/lib/game";
 import { type Property } from "@/lib/types";
-import { getDetails, recordFirstGuess, getCommunityStats } from "@/lib/leaderboard";
+import {
+  getDetails,
+  recordFirstGuess,
+  getCommunityStats,
+  leaderboardEnabled,
+  submitPropertyEntry,
+} from "@/lib/leaderboard";
 import { roundPayload } from "@/lib/property-payload";
 import {
   buildMember,
@@ -30,7 +37,7 @@ export const dynamic = "force-dynamic";
 // headroom beyond the default so those upstream fetches don't 504.
 export const maxDuration = 30;
 
-const WIN_PCT = WIN_THRESHOLD; // "nailed it" / win threshold for the reveal (matches daily — 1%)
+const WIN_PCT = WIN_THRESHOLD; // "nailed it" / win threshold for the reveal (matches daily)
 
 type Ctx = { params: Promise<{ room: string }> };
 
@@ -213,6 +220,7 @@ export async function POST(req: Request, ctx: Ctx) {
         communityStats: await getCommunityStats(property.id, price),
         result: roundResult(prev),
         board,
+        leaderboard: { enabled: leaderboardEnabled() },
       });
     }
 
@@ -232,6 +240,25 @@ export async function POST(req: Request, ctx: Ctx) {
     if (state.done) {
       const member = buildMember(id, name, game, room.roundCount);
       await upsertRoomMember(roomId, member);
+
+      // A finished room round also lands on the home's ALL-TIME leaderboard —
+      // the same board (and the same ranking) daily players compete on, so the
+      // reveal can show what everyone else guessed on this home.
+      let leaderboard: { enabled: boolean; rank?: number | null; count?: number } = {
+        enabled: leaderboardEnabled(),
+      };
+      if (name) {
+        const r = await submitPropertyEntry(property.id, room.date, {
+          id,
+          name,
+          guess: state.bestGuess,
+          score: rankScore(state.bestPct, attempts),
+          pctError: state.bestPct,
+          attempts,
+        });
+        leaderboard = { enabled: true, rank: r.rank, count: r.count };
+      }
+
       const board = await roomBoard(roomId);
       return NextResponse.json({
         gameOver: true,
@@ -243,6 +270,7 @@ export async function POST(req: Request, ctx: Ctx) {
         result: roundResult(state),
         board,
         memberCount: board.length,
+        leaderboard,
       });
     }
 

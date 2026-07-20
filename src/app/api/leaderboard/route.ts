@@ -8,6 +8,7 @@ import {
   getGame,
   submitPropertyEntry,
 } from "@/lib/leaderboard";
+import { getRoom, getRoomGame } from "@/lib/room";
 
 // Join a home's all-time leaderboard AFTER finishing it, by name. Uses the
 // player's stored game state for that home (best guess, attempts) — they don't
@@ -64,7 +65,20 @@ export async function GET(req: Request) {
   try {
     const date = dayKey();
     const myGame = id ? await getGame(date, propertyId, id) : null;
-    const unlocked = myGame?.done === true;
+    let unlocked = myGame?.done === true;
+
+    // A room player has no daily game state for this home — their completion
+    // lives in the room's per-round state. `room` names the room to check, so a
+    // finished round unlocks the same board the daily reveal shows.
+    const roomId = url.searchParams.get("room");
+    if (!unlocked && roomId && id) {
+      const room = await getRoom(roomId);
+      const round = room?.propertyIds.indexOf(propertyId) ?? -1;
+      if (room && round >= 0) {
+        const roomGame = await getRoomGame(roomId, id);
+        unlocked = roomGame?.rounds?.[round]?.done === true;
+      }
+    }
 
     const count = await propertyBoardCount(propertyId);
     if (!unlocked) {

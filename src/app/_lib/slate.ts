@@ -13,6 +13,7 @@ const META: Record<SlotKind, HomeMeta> = {
   premium: { label: "Big spender", emoji: "💰" },
   local: { label: "Near you", emoji: "📍" },
   wildcard: { label: "Wildcard", emoji: "🃏" },
+  bonus: { label: "Bonus home", emoji: "🎁" },
 };
 
 export function homeMeta(kind: SlotKind): HomeMeta {

@@ -59,8 +59,8 @@ export type StatEntry = {
   city?: string; // added later — older saved entries won't have it
 };
 
-// ── The daily slate: three homes a day ───────────────────────────────────────
-export type SlotKind = "standard" | "premium" | "local" | "wildcard";
+// ── The daily slate: three homes a day (plus endless bonus homes) ────────────
+export type SlotKind = "standard" | "premium" | "local" | "wildcard" | "bonus";
 
 // One of the day's homes as /api/daily serves it: a price-scrubbed clue plus the
 // id used to score guesses and look up its all-time leaderboard.

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDailySlate, dayKey, priceCeiling, priceFloor } from "@/lib/game";
-import { getDailyOffset } from "@/lib/leaderboard";
+import { dailyLimitEnabled, getDailyOffset } from "@/lib/leaderboard";
 import { roundPayload } from "@/lib/property-payload";
 import { geoFromHeaders } from "@/lib/geo";
 
@@ -37,6 +37,8 @@ export async function GET(req: Request) {
       homes,
       priceFloor: priceFloor(),
       priceCeiling: priceCeiling(),
+      // Whether the player may keep playing bonus homes past the slate.
+      unlimited: !(await dailyLimitEnabled()),
     });
   } catch (err) {
     console.error("[/api/daily]", err);

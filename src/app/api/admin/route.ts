@@ -10,6 +10,8 @@ import {
   saveGallery,
   saveDetails,
   leaderboardEnabled,
+  dailyLimitEnabled,
+  setDailyLimit,
 } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +60,7 @@ async function enrich(p: Property): Promise<string[]> {
 }
 
 export async function POST(req: Request) {
-  let body: { password?: unknown; action?: unknown };
+  let body: { password?: unknown; action?: unknown; on?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -77,7 +79,21 @@ export async function POST(req: Request) {
   try {
     if (body.action === "verify") {
       const property = getDailyProperty(date, await getDailyOffset(date));
-      return NextResponse.json({ ok: true, current: summary(property, await effectivePhotos(property)) });
+      return NextResponse.json({
+        ok: true,
+        current: summary(property, await effectivePhotos(property)),
+        dailyLimit: await dailyLimitEnabled(),
+      });
+    }
+
+    // Flip the classic 3-homes-per-day cap on/off (off = endless bonus homes).
+    if (body.action === "limit") {
+      if (!leaderboardEnabled()) {
+        return NextResponse.json({ error: "Redis not configured — cannot store the flag." }, { status: 503 });
+      }
+      const on = body.on === true;
+      await setDailyLimit(on);
+      return NextResponse.json({ ok: true, dailyLimit: on });
     }
 
     if (body.action === "enrich") {

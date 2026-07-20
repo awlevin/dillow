@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Info } from "lucide-react";
-import { BANDS, WIN_THRESHOLD, type Band } from "@/lib/feedback";
+import { BANDS, WIN_LABEL, type Band } from "@/lib/feedback";
 import { usd } from "../_lib/format";
 import type { Row } from "../_lib/types";
 
-const WIN_PCT = Math.round(WIN_THRESHOLD * 100);
 // The coldest finite cap (🟥) — anything past it is the unbounded ❌.
 const COLD_PCT = Math.round((BANDS.find((b) => b.band === "🟥")?.maxPct ?? 3) * 100);
 
 // What a warmth band actually tells you about the guess, in plain English.
 function bandBlurb(band: Band): string {
-  if (band === "✅") return `Within ${WIN_PCT}% of the price — nailed it!`;
+  if (band === "✅") return `Within ${WIN_LABEL} of the price — nailed it!`;
   const cap = BANDS.find((b) => b.band === band);
   if (!cap) return "";
   return Number.isFinite(cap.maxPct)

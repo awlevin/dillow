@@ -298,6 +298,69 @@ export function getLocalProperty(
   return null;
 }
 
+// One row per city that has at least one playable home: its name, state, playable
+// count, and centroid (reused from the same CITY_CENTROIDS machinery the local slot
+// resolves against). Sorted by count (busiest first), then city name — the shape
+// Local mode's picker renders when we can't (or won't) geolocate the player.
+export function listCities(): { city: string; state: string; count: number; lat: number; lon: number }[] {
+  const counts = new Map<string, number>();
+  for (const p of basePool()) {
+    if (!isPlayable(p)) continue;
+    const k = `${p.city}|${p.state}`;
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  return CITY_CENTROIDS.map((c) => ({
+    city: c.city,
+    state: c.state,
+    count: counts.get(`${c.city}|${c.state}`) ?? 0,
+    lat: c.lat,
+    lon: c.lon,
+  }))
+    .filter((c) => c.count > 0)
+    .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city));
+}
+
+// The day's deterministic queue of homes near a point, for endless Local mode. The
+// anchor is the nearest city, honesty-capped exactly like the local slot: too far
+// from any pool city and it returns an empty queue with a null city, so the caller
+// can fall back to the picker. The queue is every playable home from all cities
+// whose centroid lies within the cap, grouped nearest-city-first; within each city
+// the order is a day-seeded shuffle keyed on the city (not the exact coords), so two
+// players in the same metro share a stable order regardless of their precise pin.
+// `exclude` drops already-served ids, `total` is counted AFTER exclusion, and
+// `start`/`count` page through what's left. Deterministic per day + coords, which is
+// what lets a client re-attach saved progress after a reload.
+export function getLocalQueue(
+  key: string,
+  lat: number,
+  lon: number,
+  start: number,
+  count: number,
+  exclude: Set<string>,
+): { city: { city: string; state: string } | null; homes: Property[]; total: number } {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !CITY_CENTROIDS.length) {
+    return { city: null, homes: [], total: 0 };
+  }
+  const byDistance = [...CITY_CENTROIDS].sort((a, b) => cityDistSq(lat, lon, a) - cityDistSq(lat, lon, b));
+  if (cityDistSq(lat, lon, byDistance[0]) > MAX_LOCAL_DIST_SQ) {
+    return { city: null, homes: [], total: 0 }; // nobody nearby → picker fallback
+  }
+  const anchor = byDistance[0];
+  const queue: Property[] = [];
+  for (const c of byDistance) {
+    // Sorted ascending, so once one city is past the cap the rest are too.
+    if (cityDistSq(lat, lon, c) > MAX_LOCAL_DIST_SQ) break;
+    const inCity = basePool().filter((p) => isPlayable(p) && p.city === c.city && p.state === c.state);
+    queue.push(...seededShuffle(inCity, `${key}:local:${c.city}|${c.state}`));
+  }
+  const filtered = queue.filter((p) => !exclude.has(p.id));
+  return {
+    city: { city: anchor.city, state: anchor.state },
+    homes: filtered.slice(start, start + count),
+    total: filtered.length,
+  };
+}
+
 // Assemble a player's three homes for the day. `coords` come from the request's
 // coarse IP geolocation; absent or unplaceable, the local slot becomes a wildcard.
 export function getDailySlate(opts: {
@@ -341,24 +404,48 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-// Deterministic, distinct property picks for a room's bonus rounds. Seeded by the
-// room id so every member plays the same set in the same order, with the daily
-// home excluded so the rooms feel like fresh listings.
-export function pickRoomProperties(seed: string, count: number, excludeId?: string): Property[] {
-  // Rooms show the same property card as the daily game, so hold them to the
-  // same completeness bar; fall back to the photos-only pool only if that would
-  // leave nothing to pick from.
-  const base = (ELIGIBLE.length ? ELIGIBLE : POOL).filter((p) => p.id !== excludeId);
-  const playable = base.filter(isPlayable);
-  const pool = playable.length ? playable : base;
-  if (!pool.length) throw new Error("Property pool is empty — run POST /api/refresh");
+// Deterministic Fisher–Yates: the same seed always yields the same order.
+function seededShuffle(pool: Property[], seed: string): Property[] {
   const rand = mulberry32(hash(seed));
   const order = [...pool];
   for (let i = order.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [order[i], order[j]] = [order[j], order[i]];
   }
+  return order;
+}
+
+// Held to the daily-game completeness bar; falls back to the photos-only pool
+// only if that would leave nothing to pick from.
+function playablePool(): Property[] {
+  const base = ELIGIBLE.length ? ELIGIBLE : POOL;
+  const playable = base.filter(isPlayable);
+  const pool = playable.length ? playable : base;
+  if (!pool.length) throw new Error("Property pool is empty — run POST /api/refresh");
+  return pool;
+}
+
+// Deterministic, distinct property picks for a room's bonus rounds. Seeded by the
+// room id so every member plays the same set in the same order, with the daily
+// home excluded so the rooms feel like fresh listings.
+export function pickRoomProperties(seed: string, count: number, excludeId?: string): Property[] {
+  const order = seededShuffle(playablePool().filter((p) => p.id !== excludeId), seed);
   return order.slice(0, Math.min(count, order.length));
+}
+
+// The day's endless "bonus" queue for the main mode: a date-seeded shuffle of the
+// whole playable pool, minus the caller's slate (which varies with their coarse
+// location, so the exclusions come from the request). Deterministic per day, so
+// a player reloading mid-run is served the exact same bonus homes in the same
+// order — that's what lets their saved progress re-attach.
+export function getBonusProperties(
+  key: string,
+  exclude: Set<string>,
+  start: number,
+  count: number,
+): Property[] {
+  const order = seededShuffle(playablePool(), `${key}:bonus`).filter((p) => !exclude.has(p.id));
+  return order.slice(start, start + count);
 }
 
 // ── Scoring ──────────────────────────────────────────────────────────────────

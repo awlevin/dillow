@@ -112,23 +112,11 @@ export function GuessControls({
   return (
     <div className="mt-1 flex flex-col gap-2 sm:gap-3">
       <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 sm:p-4">
-        <p className="text-center text-[11px] font-medium uppercase tracking-wide text-stone-400">
-          {rowCount === 0 ? "Drag, or tap Guess to start in the middle" : "Higher or lower?"}
-        </p>
         {!exactMode ? (
           <>
-            <div className="relative flex items-center justify-center">
-              <p className="text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">{usd(guessValue)}</p>
-              <button
-                type="button"
-                onClick={() => onExactModeChange(true)}
-                aria-label="Type an exact price"
-                title="Type an exact price"
-                className="absolute right-0 rounded-md p-1 text-emerald-600 transition hover:bg-stone-200/60 hover:text-emerald-700"
-              >
-                <Pencil size={18} aria-hidden="true" />
-              </button>
-            </div>
+            <p className="text-center text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">
+              {usd(guessValue)}
+            </p>
             <div className="relative mt-2 sm:mt-3">
               <input
                 ref={inputRef}
@@ -150,9 +138,17 @@ export function GuessControls({
                 </span>
               )}
             </div>
-            <div className="flex justify-between text-xs text-stone-400">
-              <span>{compact(lo)}</span>
-              <span>{compact(hi)}</span>
+            <div className="grid grid-cols-3 items-center text-xs text-stone-400">
+              <span className="justify-self-start">{compact(lo)}</span>
+              <button
+                type="button"
+                onClick={() => onExactModeChange(true)}
+                className="flex items-center gap-1.5 justify-self-center font-medium transition hover:text-emerald-600"
+              >
+                <Pencil size={12} aria-hidden="true" />
+                type guess
+              </button>
+              <span className="justify-self-end">{compact(hi)}</span>
             </div>
           </>
         ) : (
@@ -160,11 +156,25 @@ export function GuessControls({
             <div className="flex items-center gap-1 rounded-lg border border-stone-300 bg-white pl-3 pr-1.5 focus-within:border-emerald-500">
               <span className="text-lg font-black text-emerald-800">$</span>
               <input
-                autoFocus
+                // Focus only when the player deliberately switched to typing —
+                // a fresh home opens in this mode, and auto-popping the mobile
+                // keyboard on load would be jarring.
+                autoFocus={rowCount > 0}
                 inputMode="decimal"
                 value={exact}
                 onChange={(e) => onExactChange(formatPriceInput(e.target.value))}
-                onKeyDown={(e) => e.key === "Enter" && !submitting && onSubmit()}
+                onKeyDown={(e) => {
+                  // Typing K or M applies the unit, same as tapping the buttons.
+                  if (e.key === "k" || e.key === "K") {
+                    e.preventDefault();
+                    onApplyUnit(1_000);
+                  } else if (e.key === "m" || e.key === "M") {
+                    e.preventDefault();
+                    onApplyUnit(1_000_000);
+                  } else if (e.key === "Enter" && !submitting) {
+                    onSubmit();
+                  }
+                }}
                 placeholder="Enter a price"
                 className="min-w-0 flex-1 bg-transparent px-1 py-2 text-lg font-black text-emerald-800 outline-none placeholder:font-normal placeholder:text-stone-300"
               />
@@ -202,7 +212,7 @@ export function GuessControls({
         disabled={submitting}
         className="rounded-lg bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
       >
-        {submitting ? "…" : `Guess ${usd(guessValue)}`}
+        {submitting ? "…" : guessValue > 0 ? `Guess ${usd(guessValue)}` : "Guess"}
       </button>
 
       <div className="flex items-center justify-between text-xs text-stone-400">

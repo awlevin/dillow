@@ -2,7 +2,15 @@ import type { Property, PropertyClue } from "./types";
 import { toClue } from "./types";
 import type { PropertyDetails } from "./property-details";
 import { scrubDetails } from "./property-details";
-import { getGallery, getDetails, saveGallery, saveDetails, leaderboardEnabled } from "./leaderboard";
+import {
+  getGallery,
+  getDetails,
+  saveGallery,
+  saveDetails,
+  leaderboardEnabled,
+  wasWarmTried,
+  markWarmTried,
+} from "./leaderboard";
 import { fetchDetails } from "./providers/realtor16";
 
 // The committed snapshot is realtor16-baked, so its galleries + details come from
@@ -15,12 +23,23 @@ const REALTOR_KEY = process.env.REALTOR_16_RAPID_API_KEY ?? process.env.REALTOR_
 // game mode (daily, rooms) gets the richer gallery and the details modal the same
 // way — add a mode and it inherits both for free instead of silently missing them.
 async function warm(property: Property): Promise<{ gallery: string[] | null; details: PropertyDetails | null }> {
-  let gallery = await getGallery(property.id);
-  let details = await getDetails(property.id);
-  if (REALTOR_KEY && leaderboardEnabled() && (details === null || gallery === null)) {
+  let [gallery, details] = await Promise.all([getGallery(property.id), getDetails(property.id)]);
+  if (
+    REALTOR_KEY &&
+    leaderboardEnabled() &&
+    (details === null || gallery === null) &&
+    !(await wasWarmTried(property.id))
+  ) {
+    // Mark BEFORE fetching: if the fetch fails or yields nothing cacheable, the
+    // next request must not spend another upstream call — un-enrichable listings
+    // used to re-fetch on every single page load, which is what made cold rooms
+    // crawl. Retried after a day (see WARM_RETRY_SECONDS).
+    await markWarmTried(property.id);
     const det = await fetchDetails(property.id);
     if (det) {
-      if (det.photos.length > property.photos.length) {
+      if (det.photos.length) {
+        // Cache even a not-richer gallery so the next read is a hit; consumers
+        // only USE it when it beats the snapshot (see below).
         await saveGallery(property.id, det.photos);
         gallery = det.photos;
       }

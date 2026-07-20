@@ -1,6 +1,9 @@
 // Shared guess feedback rules. Kept separate from game.ts so client UI can
 // narrow price bounds without bundling the committed property pool.
-export const WIN_THRESHOLD = 0.01; // land within 1% to win
+export const WIN_THRESHOLD = 0.001; // land within 0.1% to win
+// The threshold as copy. Every surface that names the win bar uses this label,
+// so changing the threshold above can't leave stale percentages behind.
+export const WIN_LABEL = "0.1%";
 
 export type Direction = "higher" | "lower" | "match";
 export type Band = "✅" | "🟩" | "🟨" | "🟧" | "🟥" | "❌";

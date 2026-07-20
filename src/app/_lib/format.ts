@@ -65,11 +65,27 @@ export function tToPrice(t: number, lo: number, hi: number): number {
   return niceRound(Math.exp(Math.log(lo) + (Math.log(hi) - Math.log(lo)) * t));
 }
 
+// Inverse of tToPrice: price → log-scale position, clamped to 0..1. Falls back
+// to the middle when the bounds are degenerate.
+export function priceToT(price: number, lo: number, hi: number): number {
+  if (!(hi > lo) || price <= 0) return 0.5;
+  const t = (Math.log(price) - Math.log(lo)) / (Math.log(hi) - Math.log(lo));
+  return Math.min(1, Math.max(0, t));
+}
+
 export const digitsOnly = (value: string) => value.replace(/[^0-9]/g, "");
 
 // Parse a typed price into a number, tolerating commas and a single decimal
 // point (so "1.2" → 1.2, ready to be scaled by a K/M unit button).
 export const parsePriceInput = (value: string) => Number(value.replace(/[^0-9.]/g, "")) || 0;
+
+// The value of a typed exact guess, clamped into the current bounds — or 0 while
+// the field is still empty/unparseable, so callers can treat it as "no guess yet"
+// instead of silently submitting the lower bound.
+export function exactGuess(exact: string, lo: number, hi: number): number {
+  const p = parsePriceInput(exact);
+  return p > 0 ? Math.min(hi, Math.max(lo, p)) : 0;
+}
 
 // Format a typed price for display: group the integer part with commas while
 // preserving an in-progress decimal (e.g. "1.", "1.2") so the user can type

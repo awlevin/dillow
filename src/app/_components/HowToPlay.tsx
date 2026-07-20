@@ -1,10 +1,9 @@
 "use client";
 
-import { BANDS, WIN_THRESHOLD, type Band } from "@/lib/feedback";
+import { BANDS, WIN_LABEL, type Band } from "@/lib/feedback";
 import { MAX_ATTEMPTS } from "../_lib/format";
 import { Modal } from "./Modal";
 
-const WIN_PCT = Math.round(WIN_THRESHOLD * 100);
 // Cold → nailed it, derived from the live band config so this scale can never
 // drift from the real cutoffs: warm→cold bands reversed, then the win tick.
 const SCALE: Band[] = [...[...BANDS].reverse().map((b) => b.band), "✅"];
@@ -13,7 +12,7 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
   const examples = [
     { price: "$2,000,000", hint: "Lower ↓", band: "🟥" },
     { price: "$900,000", hint: "Higher ↑", band: "🟨" },
-    { price: "$1,150,000", hint: `Within ${WIN_PCT}%`, band: "✅" },
+    { price: "$1,150,000", hint: `Within ${WIN_LABEL}`, band: "✅" },
   ];
 
   return (
@@ -21,34 +20,28 @@ export function HowToPlay({ onClose }: { onClose: () => void }) {
       {(dismiss) => (
         <>
           <h2 className="text-2xl font-black text-emerald-900">How to play</h2>
-        <p className="mt-1 text-stone-500">Three homes a day. Guess each price in {MAX_ATTEMPTS} tries.</p>
+        <p className="mt-1 text-stone-500">Guess the price of each home in {MAX_ATTEMPTS} tries.</p>
 
         <ul className="mt-4 flex flex-col gap-2.5 text-sm text-stone-700">
-          <li className="flex gap-2">
+          <li className="flex items-center gap-2">
             <span>🏘️</span>
-            <span>
-              Play <b>three homes</b> each day or compete against friends.
-            </span>
+            <span>Play solo or with friends.</span>
           </li>
-          <li className="flex gap-2">
+          <li className="flex items-center gap-2">
             <span>📸</span>
-            <span>Study the photos, location, and stats of each real home.</span>
+            <span>Use each home&apos;s pics &amp; info as clues.</span>
           </li>
-          <li className="flex gap-2">
-            <span>🎚️</span>
-            <span>Guess the price on each home.</span>
-          </li>
-          <li className="flex gap-2">
+          <li className="flex items-center gap-2">
             <span>↕️</span>
             <span>
               Each guess tells you if the real price is <b>higher</b> or <b>lower</b>, and how close
               you are.
             </span>
           </li>
-          <li className="flex gap-2">
+          <li className="flex items-center gap-2">
             <span>🎯</span>
             <span>
-              Land within <b>{WIN_PCT}%</b> to win. The range narrows with every guess.
+              Land within <b>{WIN_LABEL}</b> to win.
             </span>
           </li>
         </ul>

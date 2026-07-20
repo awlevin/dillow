@@ -11,7 +11,7 @@ export function GameHeader({ onHelp }: { onHelp: () => void }) {
         dillow
       </h1>
       <p className="mt-1 hidden text-xs text-stone-500 sm:block sm:text-sm">
-        Three homes a day. Higher or lower? Nail each price in {MAX_ATTEMPTS} tries.
+        Higher or lower? Nail each price in {MAX_ATTEMPTS} tries.
       </p>
       <button
         onClick={onHelp}

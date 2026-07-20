@@ -21,11 +21,12 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [current, setCurrent] = useState<Current | null>(null);
+  const [dailyLimit, setDailyLimit] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  async function call(action: "verify" | "rotate" | "enrich") {
+  async function call(action: "verify" | "rotate" | "enrich" | "limit", extra: Record<string, unknown> = {}) {
     setBusy(true);
     setError(null);
     setMsg(null);
@@ -33,7 +34,7 @@ export default function Admin() {
       const res = await fetch("/api/admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, action }),
+        body: JSON.stringify({ password, action, ...extra }),
       });
       // Parse defensively: a timeout/crash can return an empty or non-JSON body,
       // which would otherwise throw "Unexpected end of JSON input" here.
@@ -45,11 +46,18 @@ export default function Admin() {
         );
       }
       setAuthed(true);
-      setCurrent(data.current);
+      if (data.current) setCurrent(data.current);
+      if (typeof data.dailyLimit === "boolean") setDailyLimit(data.dailyLimit);
       if (action === "rotate") {
         setMsg(`Rotated — now showing ${data.current.city}, ${data.current.state}.`);
       } else if (action === "enrich") {
         setMsg(`${data.current.photos} photos now loaded for ${data.current.city}.`);
+      } else if (action === "limit") {
+        setMsg(
+          data.dailyLimit
+            ? "Daily limit ON — players get the classic 3 homes a day."
+            : "Daily limit OFF — players can keep playing bonus homes.",
+        );
       }
     } catch (e) {
       setError((e as Error).message);
@@ -128,6 +136,24 @@ export default function Admin() {
             pre-warms the day&apos;s big-spender home) without rotating. Each costs one realtor16
             request.
           </p>
+
+          <div className="border-t border-stone-100 pt-4">
+            <p className="text-xs uppercase tracking-wide text-stone-400">3-per-day limit</p>
+            <p className="mt-1 text-sm text-stone-600">
+              {dailyLimit === null
+                ? "Unknown — reload to fetch."
+                : dailyLimit
+                  ? "ON — players get the classic 3 homes a day."
+                  : "OFF — players can keep playing bonus homes after the slate."}
+            </p>
+            <button
+              onClick={() => call("limit", { on: !dailyLimit })}
+              disabled={busy || dailyLimit === null}
+              className="mt-2 rounded-lg border border-emerald-600 px-5 py-2.5 font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-50"
+            >
+              {busy ? "…" : dailyLimit ? "🔓 Turn limit OFF (endless bonus homes)" : "🔒 Turn limit ON (3 a day)"}
+            </button>
+          </div>
           {msg && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{msg}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
