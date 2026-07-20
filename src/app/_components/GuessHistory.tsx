@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Info } from "lucide-react";
 import { BANDS, WIN_LABEL, type Band } from "@/lib/feedback";
 import { usd } from "../_lib/format";
 import type { Row } from "../_lib/types";
@@ -28,8 +27,9 @@ export function GuessHistory({ rows }: { rows: Row[] }) {
         <li key={i} className="animate-rowin flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2 text-sm">
           <span className="font-semibold text-stone-700">{usd(r.guess)}</span>
           <span className="flex items-center gap-2 text-stone-500">
-            {r.direction === "match" ? "Nailed it" : r.direction === "higher" ? "Higher ↑" : "Lower ↓"}
-            <span className="animate-bandpop inline-block text-base">{r.band}</span>
+            {/* direction is where the REAL price sits relative to the guess, so
+                "higher" (price is higher) reads as the guess being too low. */}
+            {r.direction === "match" ? "Nailed it" : r.direction === "higher" ? "Too low" : "Too high"}
             <BandInfo band={r.band as Band} />
           </span>
         </li>
@@ -38,34 +38,41 @@ export function GuessHistory({ rows }: { rows: Row[] }) {
   );
 }
 
-// A quiet ⓘ next to each band: tap it for a one-line "you're within X%" — the
-// warmth math on demand, rather than always-on copy that clutters the row.
+// The band emoji IS the info trigger: hover it for a one-line "you're within
+// X%" on desktop, tap it on touch — the warmth math on demand, with no extra
+// icon cluttering the row. Hover and tap-pin are tracked separately so a
+// desktop click can't cancel its own hover, and a tap stays open until the
+// player taps elsewhere.
 function BandInfo({ band }: { band: Band }) {
-  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!pinned) return;
     const onDown = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) setPinned(false);
     };
     window.addEventListener("pointerdown", onDown);
     return () => window.removeEventListener("pointerdown", onDown);
-  }, [open]);
+  }, [pinned]);
 
   const blurb = bandBlurb(band);
-  if (!blurb) return null;
+  if (!blurb) return <span className="animate-bandpop inline-block text-base">{band}</span>;
 
+  const open = hovered || pinned;
   return (
     <span ref={ref} className="relative inline-flex">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setPinned((p) => !p)}
+        onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
         aria-label="What this warmth means"
         aria-expanded={open}
-        className={`transition ${open ? "text-stone-500" : "text-stone-300 hover:text-stone-500"}`}
+        className="animate-bandpop inline-block cursor-help text-base"
       >
-        <Info size={13} aria-hidden="true" />
+        {band}
       </button>
       {open && (
         <span

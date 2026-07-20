@@ -10,8 +10,8 @@ const SCALE: Band[] = [...[...BANDS].reverse().map((b) => b.band), "✅"];
 
 export function HowToPlay({ onClose }: { onClose: () => void }) {
   const examples = [
-    { price: "$2,000,000", hint: "Lower ↓", band: "🟥" },
-    { price: "$900,000", hint: "Higher ↑", band: "🟨" },
+    { price: "$2,000,000", hint: "Too high", band: "🟥" },
+    { price: "$900,000", hint: "Too low", band: "🟨" },
     { price: "$1,150,000", hint: `Within ${WIN_LABEL}`, band: "✅" },
   ];
 
