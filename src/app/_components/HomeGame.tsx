@@ -342,8 +342,6 @@ export function HomeGame() {
         <p className="rounded-lg bg-red-50 px-4 py-3 text-center text-sm text-red-700">{error}</p>
       )}
 
-      {total > 0 && <SlateNav current={current} total={total} slateSize={slateSize} unlimited={unlimited} />}
-
       {!onRecap && home && cur && (
         <>
           <PropertyCard
@@ -359,6 +357,7 @@ export function HomeGame() {
             exact={cur.exact}
             submitting={submitting}
             error={submitError}
+            position={current < slateSize ? `${current + 1} of ${slateSize}` : `Bonus #${current - slateSize + 1}`}
             reveal={cur.reveal}
             revealRef={revealRef}
             onSliderChange={(v) => patch(current, { t: v })}
@@ -413,31 +412,6 @@ export function HomeGame() {
   );
 }
 
-// A minimal progress indicator — bonus homes past the slate count themselves.
-// "of N" totals only appear in classic limit mode; the unlimited game shows no
-// home counts at all. (Hidden on the recap.)
-function SlateNav({
-  current,
-  total,
-  slateSize,
-  unlimited,
-}: {
-  current: number;
-  total: number;
-  slateSize: number;
-  unlimited: boolean;
-}) {
-  if (current >= total) return null;
-  return (
-    <p className="text-center text-sm font-semibold text-stone-500">
-      {current >= slateSize
-        ? `Bonus home #${current - slateSize + 1}`
-        : unlimited
-          ? `Home ${current + 1}`
-          : `Home ${current + 1} of ${slateSize}`}
-    </p>
-  );
-}
 
 // End-of-day wrap-up once all three (or as many as were played) are revealed.
 function DailyRecap({

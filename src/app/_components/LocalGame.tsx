@@ -360,7 +360,6 @@ export function LocalGame() {
             exact={cur.exact}
             submitting={submitting}
             error={submitError}
-            position={total ? `${current + 1} of ${total}` : undefined}
             reveal={cur.reveal}
             revealRef={revealRef}
             onSliderChange={(v) => patch(current, { t: v })}
