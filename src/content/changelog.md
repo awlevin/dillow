@@ -9,6 +9,10 @@ Notes on what's changed. Newest first.
 
 ### 💅 Nits
 - **The price rolls.** Slide the guess and the big number now flutters digit-by-digit like a ticker on its way to the new value, instead of snapping.
+- **Recent homes got the full tour.** Tap a past home in the footer and you'll now see its photos, facts, map, and ⓘ details right inside Dillow — not just the price and the outbound links.
+- **Arrows on phones.** The photo carousel's prev/next arrows now show on mobile too — swipe still works, tap works now.
+- **Smoother exits.** The full-screen photo gallery fades out the way it fades in (and tapping the dark backdrop closes it), and switching between typing and sliding your guess cross-fades instead of snapping.
+- **The verdict explains itself.** Hover or tap "Too low / Too high" and its emoji to see what that warmth band actually means — the little ⓘ is gone.
 
 ## July 19, 2026
 

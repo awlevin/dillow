@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Info, Map as MapIcon, Maximize2 } from "lucide-react";
 import type { Clue, Reveal, Row } from "../_lib/types";
+import type { PropertyDetails } from "@/lib/property-details";
 import { propertyTitle } from "../_lib/format";
 import { AdvancedDetails } from "./AdvancedDetails";
 import { ClueUnlocks } from "./ClueUnlocks";
@@ -58,16 +59,75 @@ export function PropertyCard({
   onApplyUnit,
   onSubmit,
 }: PropertyCardProps) {
+  // Full details once the game's over, otherwise the price-scrubbed clue version.
+  // Either may be absent (no Redis, or a non-realtor16 provider) — the button
+  // only appears when there's something to show.
+  const details = reveal?.details ?? clue.details ?? null;
+
+  return (
+    <HomeShowcase clue={clue} details={details} revealed={done} unlockedTiers={done ? Infinity : rows.length}>
+      {(openDetails) => (
+        <>
+          <GuessHistory rows={rows} />
+
+          {!done && details && (
+            <ClueUnlocks details={details} guessCount={rows.length} onOpen={openDetails} />
+          )}
+
+          {!done ? (
+        <GuessControls
+          rows={rows}
+          remaining={remaining}
+          guessValue={guessValue}
+          lo={lo}
+          hi={hi}
+          t={t}
+          exactMode={exactMode}
+          exact={exact}
+          submitting={submitting}
+          error={error}
+          position={position}
+          onSliderChange={onSliderChange}
+          onExactModeChange={onExactModeChange}
+          onExactChange={onExactChange}
+          onApplyUnit={onApplyUnit}
+          onSubmit={onSubmit}
+        />
+          ) : (
+            <div ref={revealRef}>
+              <RevealCard reveal={reveal!} rows={rows} />
+            </div>
+          )}
+        </>
+      )}
+    </HomeShowcase>
+  );
+}
+
+// The non-game shell of a home: photo carousel with the map overlay, title +
+// ⓘ details modal, and the facts row — everything about the HOME, nothing about
+// guessing. PropertyCard wraps it with the game; the recent-home page (/h/[id])
+// wraps it with the earned reveal instead.
+export function HomeShowcase({
+  clue,
+  details,
+  revealed,
+  unlockedTiers,
+  children,
+}: {
+  clue: Clue;
+  details: PropertyDetails | null;
+  revealed: boolean;
+  unlockedTiers: number;
+  // Rendered inside the card body, below the facts row. The function form
+  // receives `openDetails` for children that launch the ⓘ modal (ClueUnlocks).
+  children?: ReactNode | ((openDetails: () => void) => ReactNode);
+}) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const [mapActive, setMapActive] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const loopResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Full details once the game's over, otherwise the price-scrubbed clue version.
-  // Either may be absent (no Redis, or a non-realtor16 provider) — the button
-  // only appears when there's something to show.
-  const details = reveal?.details ?? clue.details ?? null;
 
   const hasMap = clue.lat != null && clue.lon != null;
   const loop = clue.photos.length > 1;
@@ -115,44 +175,15 @@ export function PropertyCard({
           onToggleMap={hasMap ? () => setMapActive(!mapActive) : undefined}
           mapActive={mapActive}
         />
-        <GuessHistory rows={rows} />
-
-        {!done && details && (
-          <ClueUnlocks details={details} guessCount={rows.length} onOpen={() => setShowAdvanced(true)} />
-        )}
-
-        {!done ? (
-          <GuessControls
-            rows={rows}
-            remaining={remaining}
-            guessValue={guessValue}
-            lo={lo}
-            hi={hi}
-            t={t}
-            exactMode={exactMode}
-            exact={exact}
-            submitting={submitting}
-            error={error}
-            position={position}
-            onSliderChange={onSliderChange}
-            onExactModeChange={onExactModeChange}
-            onExactChange={onExactChange}
-            onApplyUnit={onApplyUnit}
-            onSubmit={onSubmit}
-          />
-        ) : (
-          <div ref={revealRef}>
-            <RevealCard reveal={reveal!} rows={rows} />
-          </div>
-        )}
+        {typeof children === "function" ? children(() => setShowAdvanced(true)) : children}
       </div>
 
       {showAdvanced && details && (
         <AdvancedDetails
           details={details}
           propertyId={clue.id}
-          revealed={done}
-          unlockedTiers={done ? Infinity : rows.length}
+          revealed={revealed}
+          unlockedTiers={unlockedTiers}
           onClose={() => setShowAdvanced(false)}
         />
       )}
