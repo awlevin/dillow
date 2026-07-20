@@ -26,24 +26,24 @@ export function GuessHistory({ rows }: { rows: Row[] }) {
       {rows.map((r, i) => (
         <li key={i} className="animate-rowin flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2 text-sm">
           <span className="font-semibold text-stone-700">{usd(r.guess)}</span>
-          <span className="flex items-center gap-2 text-stone-500">
-            {/* direction is where the REAL price sits relative to the guess, so
-                "higher" (price is higher) reads as the guess being too low. */}
-            {r.direction === "match" ? "Nailed it" : r.direction === "higher" ? "Too low" : "Too high"}
-            <BandInfo band={r.band as Band} />
-          </span>
+          {/* direction is where the REAL price sits relative to the guess, so
+              "higher" (price is higher) reads as the guess being too low. */}
+          <BandInfo
+            band={r.band as Band}
+            label={r.direction === "match" ? "Nailed it" : r.direction === "higher" ? "Too low" : "Too high"}
+          />
         </li>
       ))}
     </ul>
   );
 }
 
-// The band emoji IS the info trigger: hover it for a one-line "you're within
-// X%" on desktop, tap it on touch — the warmth math on demand, with no extra
-// icon cluttering the row. Hover and tap-pin are tracked separately so a
-// desktop click can't cancel its own hover, and a tap stays open until the
-// player taps elsewhere.
-function BandInfo({ band }: { band: Band }) {
+// The whole verdict cluster — "Too low/Too high" plus the band emoji — is the
+// info trigger: hover it for a one-line "you're within X%" on desktop, tap it
+// on touch — the warmth math on demand, with no extra icon cluttering the row.
+// Hover and tap-pin are tracked separately so a desktop click can't cancel its
+// own hover, and a tap stays open until the player taps elsewhere.
+function BandInfo({ band, label }: { band: Band; label: string }) {
   const [hovered, setHovered] = useState(false);
   const [pinned, setPinned] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
@@ -58,7 +58,13 @@ function BandInfo({ band }: { band: Band }) {
   }, [pinned]);
 
   const blurb = bandBlurb(band);
-  if (!blurb) return <span className="animate-bandpop inline-block text-base">{band}</span>;
+  if (!blurb)
+    return (
+      <span className="flex items-center gap-2 text-stone-500">
+        {label}
+        <span className="animate-bandpop inline-block text-base">{band}</span>
+      </span>
+    );
 
   const open = hovered || pinned;
   return (
@@ -70,9 +76,10 @@ function BandInfo({ band }: { band: Band }) {
         onPointerLeave={() => setHovered(false)}
         aria-label="What this warmth means"
         aria-expanded={open}
-        className="animate-bandpop inline-block cursor-help text-base"
+        className="flex cursor-help items-center gap-2 text-stone-500"
       >
-        {band}
+        {label}
+        <span className="animate-bandpop inline-block text-base">{band}</span>
       </button>
       {open && (
         <span
