@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Pencil } from "lucide-react";
+import { RollingNumber } from "./RollingNumber";
 import type { Row } from "../_lib/types";
 import { compact, formatPriceInput, MAX_ATTEMPTS, usd } from "../_lib/format";
 
@@ -119,7 +120,7 @@ export function GuessControls({
         {!exactMode ? (
           <>
             <p className="text-center text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">
-              {usd(guessValue)}
+              <RollingNumber text={usd(guessValue)} />
             </p>
             <div className="relative mt-2 sm:mt-3">
               <input

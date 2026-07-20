@@ -2,6 +2,11 @@
 
 Notes on what's changed. Newest first.
 
+## July 20, 2026
+
+### 💅 Nits
+- **The price rolls.** Slide the guess and the big number now flutters digit-by-digit like a ticker on its way to the new value, instead of snapping.
+
 ## July 19, 2026
 
 ### 🔥 New Features
