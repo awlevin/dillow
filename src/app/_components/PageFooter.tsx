@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { loadRecentHomes, loadRooms, type SavedHome, type SavedRoom } from "../_lib/client-storage";
 import { usd } from "../_lib/format";
@@ -13,6 +14,7 @@ type Panel = "friends" | "homes";
 // you have history; each expands in place as an accordion (one open at a time),
 // so the row stays a single tidy baseline instead of three stacked orphans.
 export function PageFooter() {
+  const pathname = usePathname();
   const [rooms, setRooms] = useState<SavedRoom[]>([]);
   const [homes, setHomes] = useState<SavedHome[]>([]);
   const [open, setOpen] = useState<Panel | null>(null);
@@ -57,6 +59,17 @@ export function PageFooter() {
   // Assemble the row from only the entries that apply, then interleave middot
   // separators — so a separator never brackets a hidden slot.
   const entries: ReactNode[] = [];
+  // The mode pair leads the row: the game you're in reads as the current one
+  // (Random is the default on the home page), the other is one tap away.
+  entries.push(
+    <span key="modes" className="flex items-center gap-1.5">
+      <ModeLink href="/" label="🎲 Random mode" current={pathname === "/"} />
+      <span aria-hidden="true" className="select-none text-stone-300">
+        /
+      </span>
+      <ModeLink href="/local" label="📍 Local mode" current={pathname === "/local"} />
+    </span>,
+  );
   if (rooms.length > 0)
     entries.push(
       <FooterToggle key="friends" label="Friends" active={open === "friends"} onClick={() => toggle("friends")} />,
@@ -125,6 +138,23 @@ export function PageFooter() {
         </ul>
       )}
     </footer>
+  );
+}
+
+// One side of the Random/Local pair: the current mode reads as a quiet label,
+// the other as a link inviting the switch.
+function ModeLink({ href, label, current }: { href: string; label: string; current: boolean }) {
+  if (current) {
+    return (
+      <span aria-current="page" className="font-semibold text-emerald-700">
+        {label}
+      </span>
+    );
+  }
+  return (
+    <Link href={href} className="text-stone-400 transition hover:text-emerald-600">
+      {label}
+    </Link>
   );
 }
 

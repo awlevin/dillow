@@ -2,6 +2,24 @@
 
 Notes on what's changed. Newest first.
 
+## July 19, 2026
+
+### 🔥 New Features
+- **📍 Local mode.** Play an endless run of real homes near you — share your location or pick a city, and switch between Random and Local mode from the footer anytime. The header always shows which city you're playing.
+- **Keep playing past three.** Finished the day's three homes and still hungry? The recap now has a "🎁 Keep playing — bonus home" button that serves up endless bonus homes, and your progress on them survives a reload.
+- **All-time boards land in rooms.** Finish a room round and you'll now see the home's all-time leaderboard under the reveal — the same board the daily game shows — and your room guesses now count toward it.
+
+### 🐛 Bug fixes
+- **Rooms load fast now.** Challenge rooms that used to crawl (or hang seemingly forever) now open much quicker — especially on repeat visits and between rounds.
+- **The slider stays where you guessed.** After each guess the slider now parks at the price you just picked, right at the edge of the narrowed range, instead of leaping to some mystery value in the middle — and it stays put across reloads.
+- **The $ found its way home.** Our share images had quietly lost the $ from the little house logo; it's back, and properly centered, everywhere the logo appears.
+
+### 💅 Nits
+- **Type your opening guess.** Your first guess on each home is now a blind number you type into a price box; the slider takes over after that. Switching between typing and sliding is a tidy pair of toggles under the control.
+- **The win bar just got meaner.** Nailing a home now takes landing within 0.1% (it was 1%) — the how-to-play copy is shorter and honest about it being harder.
+- **The map got its own button.** A labeled Map toggle now sits with the home's facts — tap it to peek, tap Done to get back. No more swiping past your photos into a surprise map.
+- **K and M work from the keyboard.** Typing a price on desktop? Hit K or M to apply thousands or millions, same as tapping the buttons.
+
 ## July 6, 2026
 
 ### 🐛 Bug fixes
