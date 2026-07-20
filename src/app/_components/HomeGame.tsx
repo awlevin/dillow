@@ -342,7 +342,7 @@ export function HomeGame() {
         <p className="rounded-lg bg-red-50 px-4 py-3 text-center text-sm text-red-700">{error}</p>
       )}
 
-      {total > 0 && <SlateNav current={current} total={total} slateSize={slateSize} />}
+      {total > 0 && <SlateNav current={current} total={total} slateSize={slateSize} unlimited={unlimited} />}
 
       {!onRecap && home && cur && (
         <>
@@ -378,7 +378,9 @@ export function HomeGame() {
                 {current < total - 1
                   ? current + 1 >= slateSize
                     ? "Next bonus home →"
-                    : `Next home (${current + 2} of ${slateSize}) →`
+                    : unlimited
+                      ? "Next home →"
+                      : `Next home (${current + 2} of ${slateSize}) →`
                   : "See your day →"}
               </button>
             </>
@@ -411,13 +413,28 @@ export function HomeGame() {
   );
 }
 
-// A minimal progress indicator for the day's three homes — bonus homes past the
-// slate count themselves instead. (Hidden on the recap.)
-function SlateNav({ current, total, slateSize }: { current: number; total: number; slateSize: number }) {
+// A minimal progress indicator — bonus homes past the slate count themselves.
+// "of N" totals only appear in classic limit mode; the unlimited game shows no
+// home counts at all. (Hidden on the recap.)
+function SlateNav({
+  current,
+  total,
+  slateSize,
+  unlimited,
+}: {
+  current: number;
+  total: number;
+  slateSize: number;
+  unlimited: boolean;
+}) {
   if (current >= total) return null;
   return (
     <p className="text-center text-sm font-semibold text-stone-500">
-      {current < slateSize ? `Home ${current + 1} of ${slateSize}` : `Bonus home #${current - slateSize + 1}`}
+      {current >= slateSize
+        ? `Bonus home #${current - slateSize + 1}`
+        : unlimited
+          ? `Home ${current + 1}`
+          : `Home ${current + 1} of ${slateSize}`}
     </p>
   );
 }
