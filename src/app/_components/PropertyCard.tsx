@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { Info, Map as MapIcon } from "lucide-react";
+import { Info, Map as MapIcon, Maximize2 } from "lucide-react";
 import type { Clue, Reveal, Row } from "../_lib/types";
 import { propertyTitle } from "../_lib/format";
 import { AdvancedDetails } from "./AdvancedDetails";
 import { ClueUnlocks } from "./ClueUnlocks";
 import { GuessControls } from "./GuessControls";
 import { GuessHistory } from "./GuessHistory";
+import { MapModal } from "./MapModal";
 import { PropertyCarousel } from "./PropertyCarousel";
+import { PropertyMap } from "./PropertyMap";
 import { RevealCard } from "./RevealCard";
 
 type PropertyCardProps = {
@@ -59,7 +61,6 @@ export function PropertyCard({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const loopResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevPhotoIdx = useRef(0);
 
   // Full details once the game's over, otherwise the price-scrubbed clue version.
   // Either may be absent (no Redis, or a non-realtor16 provider) — the button
@@ -67,43 +68,31 @@ export function PropertyCard({
   const details = reveal?.details ?? clue.details ?? null;
 
   const hasMap = clue.lat != null && clue.lon != null;
-  const loop = clue.photos.length > 0 && clue.photos.length + (hasMap ? 1 : 0) > 1;
-  const mapIdx = clue.photos.length;
-
-  const toggleMap = () => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const lead = loop ? 1 : 0;
-    if (photoIdx === mapIdx) {
-      // Already on the map — go back to whichever photo we came from.
-      el.scrollTo({ left: (prevPhotoIdx.current + lead) * el.clientWidth });
-      setMapActive(false);
-    } else {
-      prevPhotoIdx.current = photoIdx;
-      el.scrollTo({ left: (mapIdx + lead) * el.clientWidth });
-      setMapActive(true);
-    }
-  };
+  const loop = clue.photos.length > 1;
 
   useEffect(() => {
     const el = carouselRef.current;
     if (el && loop) el.scrollLeft = el.clientWidth;
   }, [loop, clue]);
 
+  // The map lives OVER the photos, not among them: it opens only from the Map
+  // button in the facts row and closes via Done or that same button — never by
+  // swiping, so browsing photos can't accidentally land you on a map.
   return (
     <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
-      <PropertyCarousel
-        clue={clue}
-        done={done}
-        hasMap={hasMap}
-        loop={loop}
-        mapActive={mapActive}
-        photoIdx={photoIdx}
-        carouselRef={carouselRef}
-        loopResetRef={loopResetRef}
-        setPhotoIdx={setPhotoIdx}
-        setMapActive={setMapActive}
-      />
+      <div className="relative">
+        <PropertyCarousel
+          clue={clue}
+          loop={loop}
+          photoIdx={photoIdx}
+          carouselRef={carouselRef}
+          loopResetRef={loopResetRef}
+          setPhotoIdx={setPhotoIdx}
+        />
+        {hasMap && mapActive && (
+          <MapOverlay lat={clue.lat!} lon={clue.lon!} onDone={() => setMapActive(false)} />
+        )}
+      </div>
 
       <div className="flex flex-col gap-2.5 p-3 sm:gap-3 sm:p-5">
         <div className="flex items-start justify-between gap-2">
@@ -119,7 +108,11 @@ export function PropertyCard({
           )}
         </div>
 
-        <PropertyFacts clue={clue} onToggleMap={hasMap ? toggleMap : undefined} mapActive={mapActive} />
+        <PropertyFacts
+          clue={clue}
+          onToggleMap={hasMap ? () => setMapActive(!mapActive) : undefined}
+          mapActive={mapActive}
+        />
         <GuessHistory rows={rows} />
 
         {!done && details && (
@@ -174,7 +167,7 @@ function PropertyFacts({
   mapActive?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-600">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-stone-600">
       {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
       {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
       {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
@@ -184,13 +177,39 @@ function PropertyFacts({
           onClick={onToggleMap}
           aria-label={mapActive ? "Hide the map view" : "Show the map view"}
           aria-pressed={mapActive}
-          className={`ml-auto transition ${
+          className={`ml-auto flex items-center gap-1 font-medium transition ${
             mapActive ? "text-emerald-600" : "text-stone-400 hover:text-emerald-600"
           }`}
         >
-          <MapIcon size={18} aria-hidden="true" />
+          <MapIcon size={17} aria-hidden="true" />
+          Map
         </button>
       )}
+    </div>
+  );
+}
+
+// The map, laid over the photo area while open. Done (or the Map toggle that
+// opened it) closes it; the corner control expands to the full-screen modal.
+function MapOverlay({ lat, lon, onDone }: { lat: number; lon: number; onDone: () => void }) {
+  const [fullMap, setFullMap] = useState(false);
+  return (
+    <div className="absolute inset-0 z-30 bg-stone-100">
+      <PropertyMap lat={lat} lon={lon} fill />
+      <button
+        onClick={onDone}
+        className="absolute left-2 top-2 z-10 rounded-full bg-stone-900/70 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-stone-900/85"
+      >
+        Done
+      </button>
+      <button
+        onClick={() => setFullMap(true)}
+        aria-label="Expand map to full screen"
+        className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-stone-900/70 text-white shadow transition hover:bg-stone-900/85"
+      >
+        <Maximize2 size={15} aria-hidden="true" />
+      </button>
+      {fullMap && <MapModal lat={lat} lon={lon} onClose={() => setFullMap(false)} />}
     </div>
   );
 }
