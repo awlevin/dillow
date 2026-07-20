@@ -84,20 +84,24 @@ export function PageFooter() {
     </Link>,
   );
 
-  const row: ReactNode[] = [];
-  entries.forEach((node, i) => {
-    if (i > 0)
-      row.push(
-        <span key={`sep-${i}`} aria-hidden="true" className="select-none text-stone-300">
+  // Each separator is bound to the entry it precedes (one nowrap unit), so a
+  // line break can never strand a lone "·" at the end of a wrapped line.
+  const row: ReactNode[] = entries.map((node, i) =>
+    i === 0 ? (
+      node
+    ) : (
+      <span key={`entry-${i}`} className="flex items-center gap-x-3">
+        <span aria-hidden="true" className="select-none text-stone-300">
           ·
-        </span>,
-      );
-    row.push(node);
-  });
+        </span>
+        {node}
+      </span>
+    ),
+  );
 
   return (
     <footer className="mx-auto w-full max-w-xl px-4 pb-8 pt-4 sm:mt-auto sm:pt-6">
-      <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 border-t border-stone-200/70 pt-3 text-xs font-medium">
+      <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2.5 border-t border-stone-200/70 pt-3 text-xs font-medium">
         {row}
       </nav>
 
