@@ -94,6 +94,20 @@ body {
 .animate-modalfadeout {
   animation: modalfadeout 0.3s ease-in forwards;
 }
+
+/* Guess-box mode switch (slider ↔ typed): the entering panel fades in while the
+   box height glides (see GuessControls' AnimatedHeight). */
+@keyframes guessfade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-guessfade {
+  animation: guessfade 0.18s ease-out both;
+}
 .animate-modalpopout {
   animation: modalpopout 0.32s cubic-bezier(0.45, 0, 0.7, 1) forwards;
 }
@@ -311,6 +325,7 @@ input[type="range"]::-moz-range-thumb {
   .animate-confetti,
   .animate-pricepop,
   .animate-bandpop,
+  .animate-guessfade,
   .animate-rowin,
   .animate-tickpop,
   .animate-nextglow,

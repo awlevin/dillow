@@ -347,9 +347,6 @@ export function LocalGame() {
 
       {!loading && home && cur && (
         <>
-          <p className="text-center text-sm font-semibold text-stone-500">
-            Home {current + 1} near {spot?.city}
-          </p>
           <PropertyCard
             clue={home.clue}
             rows={cur.rows}
@@ -363,6 +360,7 @@ export function LocalGame() {
             exact={cur.exact}
             submitting={submitting}
             error={submitError}
+            position={total ? `${current + 1} of ${total}` : undefined}
             reveal={cur.reveal}
             revealRef={revealRef}
             onSliderChange={(v) => patch(current, { t: v })}

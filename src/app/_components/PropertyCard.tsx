@@ -26,6 +26,7 @@ type PropertyCardProps = {
   exact: string;
   submitting: boolean;
   error: string | null;
+  position?: string; // forwarded to GuessControls' attempts row
   reveal: Reveal | null;
   revealRef: RefObject<HTMLDivElement | null>;
   onSliderChange: (value: number) => void;
@@ -48,6 +49,7 @@ export function PropertyCard({
   exact,
   submitting,
   error,
+  position,
   reveal,
   revealRef,
   onSliderChange,
@@ -131,6 +133,7 @@ export function PropertyCard({
             exact={exact}
             submitting={submitting}
             error={error}
+            position={position}
             onSliderChange={onSliderChange}
             onExactModeChange={onExactModeChange}
             onExactChange={onExactChange}

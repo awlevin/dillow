@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Pencil } from "lucide-react";
 import { RollingNumber } from "./RollingNumber";
 import type { Row } from "../_lib/types";
@@ -17,12 +17,41 @@ type GuessControlsProps = {
   exact: string;
   submitting: boolean;
   error: string | null;
+  // Optional "where am I in the run" label (e.g. "1 of 47"), rendered quietly
+  // at the right end of the attempts row instead of as a heading up top.
+  position?: string;
   onSliderChange: (value: number) => void;
   onExactModeChange: (enabled: boolean) => void;
   onExactChange: (value: string) => void;
   onApplyUnit: (mult: number) => void;
   onSubmit: () => void;
 };
+
+// Glides its own height to match whatever its content measures — the guess box
+// swaps panels of different heights, and this turns that snap into a smooth
+// resize with no layout jolt. A ResizeObserver keeps the pixel height synced
+// (mode swaps, breakpoint changes), and the CSS transition does the gliding.
+// Height starts undefined (auto) so first paint never animates from zero.
+function AnimatedHeight({ children }: { children: ReactNode }) {
+  const inner = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    const el = inner.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setHeight(el.offsetHeight));
+    ro.observe(el);
+    setHeight(el.offsetHeight);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div
+      style={{ height }}
+      className="overflow-hidden transition-[height] duration-200 ease-out motion-reduce:transition-none"
+    >
+      <div ref={inner}>{children}</div>
+    </div>
+  );
+}
 
 // iOS-scrub feel: vertical distance from the track scales horizontal sensitivity
 // down from 1:1 at the track to ~0.1x once the finger is ~150px above/below.
@@ -41,6 +70,7 @@ export function GuessControls({
   exact,
   submitting,
   error,
+  position,
   onSliderChange,
   onExactModeChange,
   onExactChange,
@@ -114,9 +144,30 @@ export function GuessControls({
 
   const scrubChip = showHint ? "slide up for fine control" : null;
 
+  // Mode switches (slider ↔ typed) animate in three overlapping beats: the old
+  // panel fades out (100ms), the box height glides to the new panel's size (see
+  // AnimatedHeight), and the new panel fades in. `switching` gates re-entry so a
+  // double-tap can't strand the box mid-fade.
+  const [switching, setSwitching] = useState(false);
+  const switchMode = (next: boolean) => {
+    if (switching || next === exactMode) return;
+    setSwitching(true);
+    setTimeout(() => {
+      onExactModeChange(next);
+      setSwitching(false);
+    }, 100);
+  };
+
   return (
     <div className="mt-1 flex flex-col gap-2 sm:gap-3">
       <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 sm:p-4">
+        <AnimatedHeight>
+          <div
+            key={String(exactMode)}
+            className={`animate-guessfade transition-opacity duration-100 ${
+              switching ? "opacity-0" : "opacity-100"
+            }`}
+          >
         {!exactMode ? (
           <>
             <p className="text-center text-2xl font-black tracking-tight text-emerald-800 sm:text-3xl">
@@ -147,7 +198,7 @@ export function GuessControls({
               <span className="justify-self-start">{compact(lo)}</span>
               <button
                 type="button"
-                onClick={() => onExactModeChange(true)}
+                onClick={() => switchMode(true)}
                 className="flex items-center gap-1.5 justify-self-center font-medium transition hover:text-emerald-600"
               >
                 <Pencil size={12} aria-hidden="true" />
@@ -200,7 +251,7 @@ export function GuessControls({
             </div>
             <button
               type="button"
-              onClick={() => onExactModeChange(false)}
+              onClick={() => switchMode(false)}
               className="mx-auto mt-2 flex items-center gap-1.5 text-xs font-medium text-stone-400 transition hover:text-emerald-600"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -210,6 +261,8 @@ export function GuessControls({
             </button>
           </>
         )}
+          </div>
+        </AnimatedHeight>
       </div>
 
       <button
@@ -229,6 +282,7 @@ export function GuessControls({
           </span>
           <span>{remaining} left</span>
         </span>
+        {position && <span>{position}</span>}
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
