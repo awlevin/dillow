@@ -63,11 +63,11 @@ export function PageFooter() {
   // (Random is the default on the home page), the other is one tap away.
   entries.push(
     <span key="modes" className="flex items-center gap-1.5">
-      <ModeLink href="/" label="🎲 Random mode" current={pathname === "/"} />
+      <ModeLink href="/" label="🎲 Random" current={pathname === "/"} />
       <span aria-hidden="true" className="select-none text-stone-300">
         /
       </span>
-      <ModeLink href="/local" label="📍 Local mode" current={pathname === "/local"} />
+      <ModeLink href="/local" label="📍 Local" current={pathname === "/local"} />
     </span>,
   );
   if (rooms.length > 0)
@@ -76,7 +76,7 @@ export function PageFooter() {
     );
   if (homes.length > 0)
     entries.push(
-      <FooterToggle key="homes" label="Recent homes" active={open === "homes"} onClick={() => toggle("homes")} />,
+      <FooterToggle key="homes" label="Recent" active={open === "homes"} onClick={() => toggle("homes")} />,
     );
   entries.push(
     <Link key="whatsnew" href="/changelog" className="text-stone-400 transition hover:text-stone-600">
