@@ -46,3 +46,13 @@ next-env.d.ts
 
 # machine-local Claude Code symlink farm (points into ~/Projects/VellumOrg/claude-skills)
 .claude/
+.agents/
+
+# maintainer scratch notes — not part of the project
+.private/
+
+# editors / OS cruft
+.idea/
+.vscode/
+*.swp
+Thumbs.db

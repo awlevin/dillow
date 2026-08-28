@@ -16,14 +16,20 @@ const geistMono = Geist_Mono({
 
 const DESCRIPTION = "A new home every day. Guess the price and see if you can win!";
 
+// The canonical origin. metadataBase turns the relative OG/Twitter image paths
+// Next generates into absolute URLs, so this must be the domain we actually
+// want in a link preview — not the *.vercel.app deployment alias. Override it
+// per-environment with NEXT_PUBLIC_SITE_URL (e.g. a preview deployment).
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://dillow.homes";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://dillow.vercel.app"),
+  metadataBase: new URL(SITE_URL),
   title: "Dillow — Guess the Price",
   description: DESCRIPTION,
   openGraph: {
     title: "Dillow — Guess the Price",
     description: DESCRIPTION,
-    url: "https://dillow.vercel.app",
+    url: SITE_URL,
     siteName: "Dillow",
     type: "website",
     // og image is auto-attached from app/opengraph-image.tsx

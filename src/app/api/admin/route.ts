@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { dayKey, getDailyProperty, getPremiumProperty, getPool } from "@/lib/game";
 import type { Property } from "@/lib/types";
@@ -22,8 +23,20 @@ export const dynamic = "force-dynamic";
 // body (which surfaces to the client as "Unexpected end of JSON input").
 export const maxDuration = 30;
 
-// Set ADMIN_PASSWORD to override; defaults to the value Aaron chose.
-const PASSWORD = process.env.ADMIN_PASSWORD ?? "8228";
+// The admin secret. There is deliberately NO fallback: this repo is public, so
+// any default baked in here would be a published credential. Unset means the
+// whole endpoint is closed — every request below is rejected before it can
+// rotate the day, wipe the leaderboard, or spend upstream API quota.
+const PASSWORD = process.env.ADMIN_PASSWORD;
+
+// Constant-time compare so response latency can't leak how much of the secret
+// a guess got right. Hash first: timingSafeEqual throws on a length mismatch,
+// and the digests are always the same length.
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
+}
 
 function summary(p: Property, photos: string[]) {
   return {
@@ -69,7 +82,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (typeof body.password !== "string" || body.password !== PASSWORD) {
+  // Fail closed when the secret is not configured, so a deploy that forgets to
+  // set ADMIN_PASSWORD is locked rather than wide open.
+  if (!PASSWORD) {
+    return NextResponse.json(
+      { error: "Admin is disabled: ADMIN_PASSWORD is not set on this deployment." },
+      { status: 503 },
+    );
+  }
+
+  if (typeof body.password !== "string" || !timingSafeEqualStr(body.password, PASSWORD)) {
     return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
   }
 
