@@ -7,6 +7,11 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/awlevin/dillow/actions/workflows/ci.yml"><img src="https://github.com/awlevin/dillow/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+</p>
+
+<p align="center">
   <a href="https://dillow.homes/"><b>▶ play at dillow.homes</b></a>
   &nbsp;·&nbsp;
   <a href="https://dillow.homes/changelog">what’s new</a>
