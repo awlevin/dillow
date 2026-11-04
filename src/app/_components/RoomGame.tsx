@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Pencil, Trophy } from "lucide-react";
 import { narrowBounds, type Band } from "@/lib/feedback";
 import { buzz, shareOrCopy, smoothScrollTo } from "../_lib/browser-effects";
-import { getId, recordRecentHome, recordRoom } from "../_lib/client-storage";
+import { forgetRoom, getId, recordRecentHome, recordRoom } from "../_lib/client-storage";
 import { isoDay } from "../_lib/game-day";
 import { exactGuess, MAX_ATTEMPTS, parsePriceInput, PRICE_MAX, PRICE_MIN, priceToT, propertyTitle, tToPrice, usd } from "../_lib/format";
 import type { Reveal, RoomInfo, RoomMemberView, RoomRound, Row } from "../_lib/types";
@@ -105,26 +105,36 @@ export function RoomGame({ roomId }: { roomId: string }) {
   }
 
   useEffect(() => {
-    recordRoom(roomId, new Date().toISOString().slice(0, 10));
-
     (async () => {
       const playerId = getId();
       const savedName = localStorage.getItem("dillow:name") ?? "";
       setId(playerId);
       setName(savedName);
       try {
-        const data = await refresh(playerId);
-        if (!data?.enabled) {
+        const res = await fetch(`/api/room/${roomId}?id=${encodeURIComponent(playerId)}`);
+        if (res.status === 404) {
+          // Expired (rooms last a few days) or a mistyped link. Either way it is
+          // not coming back, so drop it from the player's room list too.
+          forgetRoom(roomId);
+          setError("This room has ended or does not exist. Challenge rooms last three days.");
+          return;
+        }
+        const data: RoomInfo = await res.json();
+        if (data.enabled === false) {
           setError("Challenge rooms aren't available right now.");
           return;
         }
         if (data.error || !data.room || !data.rounds) {
-          setError(data.error ?? "This room could not be found.");
+          setError(data.error ?? "This room could not be loaded.");
           return;
         }
         initRounds(data);
         setInfo(data);
-        if (data.room.name) recordRoom(roomId, data.room.date, `${data.room.name}’s room`);
+        recordRoom(
+          roomId,
+          new Date().toISOString().slice(0, 10),
+          data.room.name ? `${data.room.name}’s room` : undefined,
+        );
 
         if (savedName) {
           // Already named — register on the board. The join response carries the

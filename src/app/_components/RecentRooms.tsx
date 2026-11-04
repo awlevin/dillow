@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { useFlag } from "../_lib/flags";
-import { loadRooms, type SavedRoom } from "../_lib/client-storage";
+import { forgetRoom, loadRooms, type SavedRoom } from "../_lib/client-storage";
 
 // Post-game list of challenge rooms the player recently created or joined, so
 // they can hop back in. Gated by its own "recentRooms" flag.
@@ -30,7 +30,15 @@ export function RecentRooms() {
     let cancelled = false;
     for (const r of shown) {
       fetch(`/api/room/${r.roomId}?summary=1`)
-        .then((res) => (res.ok ? res.json() : null))
+        .then((res) => {
+          if (res.status === 404) {
+            // The room expired — stop listing it.
+            forgetRoom(r.roomId);
+            setRooms((rs) => rs.filter((x) => x.roomId !== r.roomId));
+            return null;
+          }
+          return res.ok ? res.json() : null;
+        })
         .then((data) => {
           if (cancelled || !data || typeof data.playedCount !== "number") return;
           setPlayed((p) => ({ ...p, [r.roomId]: data.playedCount }));

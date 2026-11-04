@@ -79,6 +79,17 @@ export function recordRoom(roomId: string, date: string, title?: string) {
   }
 }
 
+// Rooms expire server-side (a few days after creation). Drop one from the list
+// once the server says it is gone, so menus stop linking to a dead room.
+export function forgetRoom(roomId: string) {
+  try {
+    const next = loadRooms().filter((r) => r.roomId !== roomId);
+    localStorage.setItem("dillow:rooms", JSON.stringify(next));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function loadRooms(): SavedRoom[] {
   try {
     const raw = localStorage.getItem("dillow:rooms");

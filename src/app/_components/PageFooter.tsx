@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import { loadRecentHomes, loadRooms, type SavedHome, type SavedRoom } from "../_lib/client-storage";
+import { forgetRoom, loadRecentHomes, loadRooms, type SavedHome, type SavedRoom } from "../_lib/client-storage";
 import { usd } from "../_lib/format";
 
 type Panel = "friends" | "homes";
@@ -41,7 +41,15 @@ export function PageFooter() {
     for (const r of shownRooms) {
       if (r.roomId in played) continue;
       fetch(`/api/room/${r.roomId}?summary=1`)
-        .then((res) => (res.ok ? res.json() : null))
+        .then((res) => {
+          if (res.status === 404) {
+            // The room expired — stop listing it.
+            forgetRoom(r.roomId);
+            setRooms((rs) => rs.filter((x) => x.roomId !== r.roomId));
+            return null;
+          }
+          return res.ok ? res.json() : null;
+        })
         .then((data) => {
           if (cancelled || !data || typeof data.playedCount !== "number") return;
           setPlayed((p) => ({ ...p, [r.roomId]: data.playedCount }));

@@ -2,6 +2,11 @@
 
 Notes on what's changed. Newest first.
 
+## November 4, 2026
+
+### 🐛 Bug fixes
+- **Old room links say so.** Opening a challenge room that has ended now tells you it ended, instead of claiming rooms are down — and ended rooms drop out of your Friends list.
+
 ## July 20, 2026
 
 ### 🐛 Bug fixes
