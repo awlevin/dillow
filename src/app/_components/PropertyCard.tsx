@@ -204,8 +204,8 @@ function PropertyFacts({
     // -mt-2 pulls the facts up against the title (the card's stack gap reads too
     // airy just here); pl-px optically aligns the first stat with the title's glyph edge.
     <div className="-mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 pl-px text-[13px] text-stone-600 sm:text-sm">
-      {clue.beds != null && <Stat label="Beds" value={clue.beds} />}
-      {clue.baths != null && <Stat label="Baths" value={clue.baths} />}
+      {clue.beds != null && <Stat label={clue.beds === 1 ? "Bed" : "Beds"} value={clue.beds} />}
+      {clue.baths != null && <Stat label={clue.baths === 1 ? "Bath" : "Baths"} value={clue.baths} />}
       {clue.sqft != null && <Stat label="Sq Ft" value={clue.sqft.toLocaleString()} />}
       {clue.yearBuilt != null && <Stat label="Built" value={clue.yearBuilt} />}
       {onToggleMap && (

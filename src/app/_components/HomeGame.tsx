@@ -476,11 +476,15 @@ function DailyRecap({
               onClick={() => onReplay(i)}
               className="flex items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-white px-3 py-2 text-sm transition hover:border-emerald-300"
             >
-              <span className="flex items-center gap-2 text-stone-700">
+              {/* Label and city stack on phones instead of wrapping mid-phrase
+                  (buttons center their text, so wrapped lines looked ragged). */}
+              <span className="flex min-w-0 items-center gap-2 text-left text-stone-700">
                 <span>{meta.emoji}</span>
-                <span className="font-semibold">{meta.label}</span>
-                <span className="text-stone-400">
-                  {h.clue.city}, {h.clue.state}
+                <span className="flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                  <span className="whitespace-nowrap font-semibold">{meta.label}</span>
+                  <span className="truncate text-stone-400">
+                    {h.clue.city}, {h.clue.state}
+                  </span>
                 </span>
               </span>
               <span className="shrink-0 text-stone-500">
