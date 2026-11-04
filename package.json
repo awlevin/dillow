@@ -3,11 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/data.mjs prepare",
     "dev": "next dev",
+    "prebuild": "node scripts/data.mjs prepare",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "pretypecheck": "node scripts/data.mjs prepare",
+    "typecheck": "tsc --noEmit",
+    "data:pull": "node scripts/data.mjs pull",
+    "data:push": "node scripts/data.mjs push",
+    "data:status": "node scripts/data.mjs status",
+    "data:sample": "node scripts/generate-sample-data.mjs"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.0",

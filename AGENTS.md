@@ -21,3 +21,7 @@ Format:
 - Under each day, group items by `### 🔥 New Features`, then `### 🐛 Bug fixes`, then `### 💅 Nits` — in that order. Only include the categories that have items.
 - Reserve `🔥 New Features` for substantial, net-new capabilities. Smaller polish goes under `💅 Nits` — including extending an existing feature to another surface (e.g. "X now also shows in rooms"), display/formatting tweaks, and minor UX refinements. When torn between Features and Nits, choose Nits.
 - `-` bullets; bold a short lead-in on notable items. Keep it concise and lightly playful.
+
+# Data
+
+The real dataset (`src/data/pool.json`, `src/data/enrichment.json`) is listing content and the answer key. It lives in a private Vercel Blob store and is git-ignored — never commit it, never paste it into an issue or PR. After regenerating it, run `npm run data:push` and redeploy. Only `src/data/sample/` (fake homes) is committed. See the README's "The dataset" section.

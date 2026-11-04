@@ -26,6 +26,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # The real dataset is listing content and the answer key; it lives in
+      # private storage. Only the fake sample may ever be tracked.
+      - name: No real data committed
+        run: |
+          leaked=$(git ls-files src/data | grep -v '^src/data/sample/' || true)
+          if [ -n "$leaked" ]; then echo "::error::Real data is tracked: $leaked"; exit 1; fi
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck

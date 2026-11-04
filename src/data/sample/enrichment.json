@@ -1,0 +1,1478 @@
+{
+  "sample": true,
+  "exportedAt": "2026-01-01T00:00:00.000Z",
+  "galleries": {
+    "sample-001": [
+      "/sample/exterior-0.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-002": [
+      "/sample/exterior-1.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-003": [
+      "/sample/building-2.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-004": [
+      "/sample/building-3.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-005": [
+      "/sample/exterior-4.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-006": [
+      "/sample/exterior-5.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-007": [
+      "/sample/exterior-6.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-008": [
+      "/sample/exterior-7.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-009": [
+      "/sample/exterior-0.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-010": [
+      "/sample/exterior-1.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-011": [
+      "/sample/townhouse-2.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-012": [
+      "/sample/townhouse-3.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-013": [
+      "/sample/exterior-4.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-014": [
+      "/sample/exterior-5.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-015": [
+      "/sample/exterior-6.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-016": [
+      "/sample/exterior-7.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-017": [
+      "/sample/exterior-0.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-018": [
+      "/sample/exterior-1.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-019": [
+      "/sample/exterior-2.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-020": [
+      "/sample/exterior-3.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-021": [
+      "/sample/townhouse-0.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-022": [
+      "/sample/exterior-5.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-023": [
+      "/sample/building-2.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-024": [
+      "/sample/townhouse-3.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-025": [
+      "/sample/exterior-0.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-026": [
+      "/sample/townhouse-1.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-027": [
+      "/sample/exterior-2.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ],
+    "sample-028": [
+      "/sample/building-3.svg",
+      "/sample/living-1.svg",
+      "/sample/kitchen-1.svg",
+      "/sample/bedroom-1.svg",
+      "/sample/bath-1.svg",
+      "/sample/yard-1.svg"
+    ],
+    "sample-029": [
+      "/sample/exterior-4.svg",
+      "/sample/living-2.svg",
+      "/sample/kitchen-2.svg",
+      "/sample/bedroom-2.svg",
+      "/sample/bath-2.svg",
+      "/sample/yard-2.svg"
+    ],
+    "sample-030": [
+      "/sample/townhouse-1.svg",
+      "/sample/living-0.svg",
+      "/sample/kitchen-0.svg",
+      "/sample/bedroom-0.svg",
+      "/sample/bath-0.svg",
+      "/sample/yard-0.svg"
+    ]
+  },
+  "details": {
+    "sample-001": {
+      "text": "Sample listing for local development — not a real home. This made-up 5-bedroom home in Austin has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 10030,
+      "stories": 1,
+      "garage": 2,
+      "pricePerSqft": 388,
+      "listDate": "2026-03-07",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 5"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-002": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Austin has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7680,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 421,
+      "listDate": "2026-08-25",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-003": {
+      "text": "Sample listing for local development — not a real home. This made-up 2-bedroom condo in Austin has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": null,
+      "stories": 1,
+      "garage": null,
+      "pricePerSqft": 190,
+      "listDate": "2026-02-14",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 2"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-004": {
+      "text": "Sample listing for local development — not a real home. This made-up 2-bedroom condo in Austin has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": null,
+      "stories": 1,
+      "garage": null,
+      "pricePerSqft": 379,
+      "listDate": "2026-06-27",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 2"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-005": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Austin has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7680,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 394,
+      "listDate": "2026-03-01",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-006": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Austin has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 4230,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 384,
+      "listDate": "2026-02-17",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-007": {
+      "text": "Sample listing for local development — not a real home. This made-up 5-bedroom home in Denver has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7740,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 527,
+      "listDate": "2026-09-11",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 5"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-008": {
+      "text": "Sample listing for local development — not a real home. This made-up 2-bedroom home in Denver has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7880,
+      "stories": 1,
+      "garage": 2,
+      "pricePerSqft": 349,
+      "listDate": "2026-05-27",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 2"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-009": {
+      "text": "Sample listing for local development — not a real home. This made-up 2-bedroom home in Denver has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7100,
+      "stories": 1,
+      "garage": 2,
+      "pricePerSqft": 214,
+      "listDate": "2026-09-24",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 2"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-010": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Denver has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 4880,
+      "stories": 2,
+      "garage": 3,
+      "pricePerSqft": 461,
+      "listDate": "2026-05-22",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-011": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Denver has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 6260,
+      "stories": 1,
+      "garage": 3,
+      "pricePerSqft": 307,
+      "listDate": "2026-05-04",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-012": {
+      "text": "Sample listing for local development — not a real home. This made-up 3-bedroom home in Denver has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7580,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 182,
+      "listDate": "2026-01-28",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 3"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-013": {
+      "text": "Sample listing for local development — not a real home. This made-up 5-bedroom home in Columbus has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 20720,
+      "stories": 1,
+      "garage": 1,
+      "pricePerSqft": 336,
+      "listDate": "2026-04-10",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 5"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-014": {
+      "text": "Sample listing for local development — not a real home. This made-up 3-bedroom home in Columbus has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 5050,
+      "stories": 2,
+      "garage": 3,
+      "pricePerSqft": 193,
+      "listDate": "2026-05-19",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 3"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-015": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Columbus has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 6430,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 100,
+      "listDate": "2026-08-11",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-016": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Columbus has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 3450,
+      "stories": 1,
+      "garage": 2,
+      "pricePerSqft": 157,
+      "listDate": "2026-03-10",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-017": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Columbus has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 5780,
+      "stories": 2,
+      "garage": 3,
+      "pricePerSqft": 214,
+      "listDate": "2026-04-18",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-018": {
+      "text": "Sample listing for local development — not a real home. This made-up 3-bedroom home in Columbus has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7420,
+      "stories": 2,
+      "garage": 3,
+      "pricePerSqft": 121,
+      "listDate": "2026-03-23",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 3"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-019": {
+      "text": "Sample listing for local development — not a real home. This made-up 5-bedroom home in Portland has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 25110,
+      "stories": 1,
+      "garage": 2,
+      "pricePerSqft": 364,
+      "listDate": "2026-01-26",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 5"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-020": {
+      "text": "Sample listing for local development — not a real home. This made-up 3-bedroom home in Portland has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 8390,
+      "stories": 2,
+      "garage": 1,
+      "pricePerSqft": 345,
+      "listDate": "2026-01-08",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 3"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-021": {
+      "text": "Sample listing for local development — not a real home. This made-up 3-bedroom home in Portland has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 4750,
+      "stories": 2,
+      "garage": 1,
+      "pricePerSqft": 166,
+      "listDate": "2026-08-15",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 3"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-022": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Portland has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7980,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 270,
+      "listDate": "2026-07-10",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-023": {
+      "text": "Sample listing for local development — not a real home. This made-up 1-bedroom condo in Portland has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": null,
+      "stories": 1,
+      "garage": null,
+      "pricePerSqft": 340,
+      "listDate": "2026-07-09",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 1"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-024": {
+      "text": "Sample listing for local development — not a real home. This made-up 4-bedroom home in Portland has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 7700,
+      "stories": 1,
+      "garage": 3,
+      "pricePerSqft": 201,
+      "listDate": "2026-09-23",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 4"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-025": {
+      "text": "Sample listing for local development — not a real home. This made-up 5-bedroom home in Raleigh has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 33950,
+      "stories": 1,
+      "garage": 1,
+      "pricePerSqft": 394,
+      "listDate": "2026-09-10",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 5"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-026": {
+      "text": "Sample listing for local development — not a real home. This made-up 3-bedroom home in Raleigh has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 4090,
+      "stories": 2,
+      "garage": 3,
+      "pricePerSqft": 307,
+      "listDate": "2026-04-08",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 3"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-027": {
+      "text": "Sample listing for local development — not a real home. This made-up 2-bedroom home in Raleigh has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 5410,
+      "stories": 1,
+      "garage": 2,
+      "pricePerSqft": 233,
+      "listDate": "2026-09-21",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 2"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-028": {
+      "text": "Sample listing for local development — not a real home. This made-up 1-bedroom condo in Raleigh has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": null,
+      "stories": 1,
+      "garage": null,
+      "pricePerSqft": 233,
+      "listDate": "2026-02-19",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 1"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-029": {
+      "text": "Sample listing for local development — not a real home. This made-up 3-bedroom home in Raleigh has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 3500,
+      "stories": 2,
+      "garage": 2,
+      "pricePerSqft": 226,
+      "listDate": "2026-08-17",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 3"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    },
+    "sample-030": {
+      "text": "Sample listing for local development — not a real home. This made-up 2-bedroom home in Raleigh has a bright living room, an updated kitchen and a small yard. Every detail here is invented so contributors can run Dillow without real listing data.",
+      "lotSqft": 5830,
+      "stories": 1,
+      "garage": 3,
+      "pricePerSqft": 200,
+      "listDate": "2026-04-26",
+      "listingUrl": null,
+      "zillowUrl": null,
+      "sections": [
+        {
+          "parent": "Interior",
+          "category": "Bedrooms",
+          "items": [
+            "Bedrooms: 2"
+          ]
+        },
+        {
+          "parent": "Interior",
+          "category": "Interior Features",
+          "items": [
+            "Sample feature: hardwood floors",
+            "Sample feature: walk-in closet"
+          ]
+        },
+        {
+          "parent": "Exterior",
+          "category": "Lot",
+          "items": [
+            "Sample feature: fenced yard"
+          ]
+        },
+        {
+          "parent": "Other",
+          "category": "Sample data",
+          "items": [
+            "Generated by scripts/generate-sample-data.mjs"
+          ]
+        }
+      ]
+    }
+  }
+}

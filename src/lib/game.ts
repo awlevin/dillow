@@ -8,11 +8,13 @@ export {
   type Direction,
 } from "./feedback";
 
-// ── Property pool (committed snapshot) ───────────────────────────────────────
-// Play-time makes ZERO upstream API calls — it reads a snapshot baked at build
-// time by POST /api/refresh (which spends one realtor16 request). This keeps the
-// ~30 requests/month budget intact and guarantees every player sees the same
-// property. Run a refresh to rotate in fresh listings.
+// ── Property pool (build-time snapshot) ──────────────────────────────────────
+// Play-time makes ZERO upstream API calls — it reads a snapshot baked in at
+// build time. The real snapshot is made by POST /api/refresh and kept in a
+// private data store (scripts/data.mjs); without credentials the build uses the
+// fake sample in src/data/sample. This keeps the ~30 requests/month budget
+// intact and guarantees every player sees the same property. Run a refresh to
+// rotate in fresh listings.
 // Never feature a property with a thin gallery — a clue with one photo is a poor
 // game. The snapshot is baked with full galleries (POST /api/refresh enriches +
 // filters), and selection is restricted to eligible properties as a hard guard.

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+<rect width="800" height="600" fill="#e0e7ff"/>
+<rect y="430" width="800" height="170" fill="#c2a27c"/>
+<rect x="470" y="110" width="220" height="190" rx="6" fill="#e0f2fe" stroke="#ffffff" stroke-width="10"/>
+<rect x="120" y="320" width="320" height="130" rx="26" fill="#0f766e"/>
+<rect x="100" y="300" width="60" height="150" rx="20" fill="#0f766e"/>
+<rect x="400" y="300" width="60" height="150" rx="20" fill="#0f766e"/>
+<rect x="560" y="390" width="140" height="60" rx="8" fill="#a8a29e"/>
+<rect x="210" y="140" width="140" height="100" rx="4" fill="#fef3c7" stroke="#78716c" stroke-width="6"/>
+<g transform="translate(40 64)"><rect width="112" height="36" rx="18" fill="#1c1917" fill-opacity="0.72"/><text x="56" y="24" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700" letter-spacing="2" fill="#fafaf9">SAMPLE</text></g>
+</svg>

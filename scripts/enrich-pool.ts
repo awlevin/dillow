@@ -1,4 +1,4 @@
-// One-off maintenance: enrich the committed snapshot's galleries in place and
+// One-off maintenance: enrich the build-time snapshot's galleries in place and
 // drop any listing below the minimum-photo guarantee — WITHOUT pulling a fresh
 // batch of listings (that's what POST /api/refresh does). Spends one realtor16
 // request per under-filled listing.

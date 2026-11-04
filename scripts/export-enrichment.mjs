@@ -1,35 +1,23 @@
 // Export the runtime enrichment archive (galleries + rich details, fetched from
-// realtor16 and cached in Redis) into a committed file: src/data/enrichment.json.
-// Git is the cold store — versioned, ships with every deploy, and survives a
-// Redis wipe or a lapsed realtor16 subscription. Run it locally after archiving
-// the pool from /admin ("📦 Archive pool data"):
+// realtor16 and cached in Redis) into src/data/enrichment.json — the cold store.
+// It ships with every build and survives a Redis wipe or a lapsed realtor16
+// subscription. Run it locally after archiving the pool from /admin
+// ("📦 Archive pool data"):
 //
 //   node scripts/export-enrichment.mjs
+//   npm run data:push        # upload to the private data store, then redeploy
 //
-// then commit the changed src/data/enrichment.json. The runtime reads it as the
+// The file is NOT committed: it is listing content, so it lives in the private
+// Vercel Blob store (see scripts/data.mjs). The runtime reads it as the
 // fallback tier: Redis first, this file second, realtor16 last (see
 // src/lib/property-payload.ts).
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { loadEnv } from "./env.mjs";
 // Node 23.6+ strips types natively, so the one scrubbing rule lives in one place.
 import { stripContactInfo } from "../src/lib/property-details.ts";
 
 const root = process.cwd();
-
-// .env.local is not loaded for plain node scripts — parse just the two keys.
-async function loadEnv() {
-  const env = { ...process.env };
-  try {
-    const raw = await readFile(path.join(root, ".env.local"), "utf8");
-    for (const line of raw.split("\n")) {
-      const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-      if (m && !(m[1] in env)) env[m[1]] = m[2].replace(/^"|"$/g, "");
-    }
-  } catch {
-    /* fall through to process.env */
-  }
-  return env;
-}
 
 const env = await loadEnv();
 const url = env.UPSTASH_REDIS_REST_URL ?? env.KV_REST_API_URL;

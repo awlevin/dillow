@@ -15,7 +15,7 @@ const HOST = "realtor16.p.rapidapi.com";
 
 // The runtime gallery (warmed once per home, cached in Redis) keeps effectively
 // the whole listing's photo set — a richer "study the home" carousel. The
-// committed snapshot stays lean (a cold-start fallback); runtime warming supplies
+// build-time snapshot stays lean (a cold-start fallback); runtime warming supplies
 // the rest. Bounded so a pathological 100-photo mansion can't blow up the payload.
 const MAX_GALLERY_PHOTOS = 40;
 const SNAPSHOT_PHOTOS = 8;
@@ -215,7 +215,7 @@ function parseDetails(node: RawDetailNode): PropertyDetails {
 }
 
 // Enrich a batch of listings with full galleries — one details request each,
-// with bounded concurrency — so the committed snapshot carries real galleries
+// with bounded concurrency — so the build-time snapshot carries real galleries
 // instead of the 1–2 photos the search endpoint returns. Listings that already
 // have a full gallery are skipped; failures keep the original photos.
 export async function enrichPool(props: Property[], concurrency = 2): Promise<Property[]> {
@@ -229,7 +229,7 @@ export async function enrichPool(props: Property[], concurrency = 2): Promise<Pr
       try {
         const det = await fetchDetails(p.id);
         if (det && det.photos.length > p.photos.length) {
-          // Keep the committed snapshot lean; the runtime gallery (Redis) carries
+          // Keep the build-time snapshot lean; the runtime gallery (Redis) carries
           // the full set for the homes that actually get played.
           out[idx] = {
             ...p,

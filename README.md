@@ -50,7 +50,8 @@ No accounts. Your id is an anonymous UUID in `localStorage`.
   rooms (optional locally)
 - **Leaflet** maps, **`next/og`** for the link-preview images
 - Hosted on **Vercel**. Listing data from realtor.com via the
-  [realtor16][r16] RapidAPI wrapper, snapshotted into the repo (read
+  [realtor16][r16] RapidAPI wrapper, kept in a **private Vercel Blob store**
+  and pulled in at build time, never committed (read
   [Data source and terms](#data-source-and-terms))
 
 ## Local development
@@ -64,10 +65,13 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**No environment variables needed.** The homes come from the committed
-snapshot in `src/data/`, so you get the real game. With no Redis, game state
-lives in server memory (lost on restart) and the leaderboards, crowd stats and
-challenge rooms switch off.
+**No environment variables needed.** With no credentials you play a small,
+clearly fake **sample dataset** (`src/data/sample/`): 30 made-up homes in five
+cities, with illustrated placeholder photos. Every game mode works on it. With
+no Redis, game state lives in server memory (lost on restart) and the
+leaderboards, crowd stats and challenge rooms switch off.
+
+The real homes are not in this repo. See [The dataset](#the-dataset).
 
 To turn those on, copy the template and add Upstash credentials:
 
@@ -90,6 +94,7 @@ CI runs the same three on every pull request.
 ## Contents
 
 - [Data source and terms](#data-source-and-terms) ← read before forking
+- [The dataset](#the-dataset)
 - [The request budget](#the-request-budget)
 - [Architecture](#architecture)
 - [Environment variables](#environment-variables)
@@ -112,15 +117,15 @@ realtor.com's `rdcpix` CDN (hotlinked, never copied into this repo).
 
 What that means in practice:
 
-- **The MIT license in [LICENSE](LICENSE) covers the source code only.** It
-  does not and cannot cover the contents of `src/data/pool.json` and
-  `src/data/enrichment.json`. Listing descriptions are written by listing
-  agents and brokers and are their copyright; the photos are the copyright of
-  whoever shot them. None of it is the maintainer's to relicense.
-- **Do not treat `src/data/` as reusable open data.** It is committed so the
-  game has content and so gameplay never touches the network — not as a
-  dataset release. If you fork this for anything beyond running it locally,
-  regenerate it from a source you have rights to.
+- **The listing content is not in this repo, and never will be.** Listing
+  descriptions are written by listing agents and brokers and are their
+  copyright; the photos are the copyright of whoever shot them. None of it is
+  the maintainer's to publish or relicense. The live game's dataset lives in
+  private storage (see [The dataset](#the-dataset)); this repo ships only a
+  fake sample.
+- **The MIT license in [LICENSE](LICENSE) covers the source code and the
+  sample dataset.** If you fork this to run with real homes, build the dataset
+  from a source you have rights to.
 - **The legitimate path is IDX.** A licensed broker or agent signs an IDX
   agreement with their MLS, which gets you RESO Web API credentials and a
   photo-bearing feed you are actually permitted to display — subject to that
@@ -147,8 +152,8 @@ monthly request quota, so the whole design is built to spend as few requests as
 possible:
 
 - **Gameplay spends zero upstream requests.** `/api/daily`, `/api/attempt`,
-  `/api/leaderboard`, `/api/local` and friends read only the committed snapshot
-  in `src/data/` plus Redis.
+  `/api/leaderboard`, `/api/local` and friends read only the build-time
+  snapshot in `src/data/` plus Redis.
 - Requests are spent **only** by explicit, manual actions:
   - `POST /api/refresh` — rebuild the pool. One request per city (~12).
   - `POST /api/enrich?days=N` — full galleries for the next N daily homes. One
@@ -158,7 +163,7 @@ possible:
   header from realtor16.
 
 **If you are about to write code that calls a provider on a request path,
-stop.** Warm the data into Redis or the committed snapshot out of band instead.
+stop.** Warm the data into Redis or the snapshot out of band instead.
 
 ---
 
@@ -172,6 +177,7 @@ Browser ──GET  /api/daily───────► snapshot pick (+offset) (+
 
 Admin   ──POST /api/admin───────► verify | rotate | enrich | archive | limit  [<=1 call each]
 Manual  ──POST /api/refresh─────► realtor16 search x N cities -> pool.json    [N calls, dev only]
+Build   ──scripts/data.mjs──────► private Blob store -> src/data/*.json      [0 provider calls]
 Manual  ──POST /api/enrich──────► realtor16 details for upcoming dailies      [N calls, dev only]
 ```
 
@@ -188,15 +194,39 @@ Providers live in `src/lib/providers/` and are chosen by `PROPERTY_PROVIDER`:
 To add one, write a module returning `Property[]` and wire it into the switch in
 `providers/index.ts`.
 
-### The committed snapshot
+### The dataset
 
-- `src/data/pool.json` — the playable homes (currently 462), imported
-  statically by `src/lib/game.ts` and therefore baked in at build time.
+The app imports two JSON files statically, so they are baked into the server
+bundle at build time and gameplay never waits on storage:
+
+- `src/data/pool.json` — the playable homes, imported by `src/lib/game.ts`.
+  This is also the **answer key**: the prices and, through the deterministic
+  pick, every future daily home.
 - `src/data/enrichment.json` — the cold store of full photo galleries and rich
-  details (459 homes), exported from Redis by
-  `scripts/export-enrichment.mjs`. Git is the durable copy, so the app still
-  demos with complete data if Redis is wiped or the realtor16 subscription
+  details, exported from Redis by `scripts/export-enrichment.mjs`, so the app
+  still has complete data if Redis is wiped or the realtor16 subscription
   lapses.
+
+Neither file is committed (`.gitignore` covers `src/data/*`). The real pair
+lives in a **private Vercel Blob store** (`dillow-data`) connected to the
+Vercel project. `scripts/data.mjs prepare` runs before `dev`, `build` and
+`typecheck` and puts the right pair in place:
+
+| Where | What you get |
+|---|---|
+| Vercel builds | The real data from the store. **The build fails** if it cannot be fetched, so production can never quietly ship the sample. |
+| Local, no credentials (contributors, CI) | A copy of the fake sample in `src/data/sample/`. |
+| Local, with `BLOB_READ_WRITE_TOKEN` | The real data, pulled once. Local real data is never overwritten automatically; `npm run data:pull` refreshes it. |
+
+Set `DILLOW_DATA_SOURCE=sample` to force the sample anywhere (for example a
+fork deployed to its own Vercel project), or `DILLOW_DATA_SOURCE=blob` to
+require the store. `npm run data:status` shows which dataset is active.
+
+Why build time, and why Blob: the game reads the pool synchronously all over
+`src/lib/game.ts`, so baking it into the bundle keeps that design and adds no
+runtime dependency or latency. A private Blob store is Vercel-native: its
+token is injected into every environment of the project, it is not tied to a
+Git repository, and anonymous reads are refused.
 
 Read order at runtime is **Redis → `enrichment.json` → realtor16**
 (`src/lib/property-payload.ts`).
@@ -215,9 +245,8 @@ getDailyProperty(dayKey(), offset) => pool[(hash(dayKey) + offset) % pool.length
 worldwide gets the same homes on the same day. `offset` lives in Redis and lets
 an admin rotate the day's pick.
 
-Because the pick is deterministic and the pool is committed, **anyone with the
-repo can compute every answer.** That is inherent to the design, not a bug —
-see [SECURITY.md](SECURITY.md).
+The algorithm is public, but the pool is not, so the code alone does not give
+away any answer. See [SECURITY.md](SECURITY.md) for what is and is not in scope.
 
 ### Server-authoritative guessing
 
@@ -252,7 +281,9 @@ process memory and the leaderboard, crowd stats and rooms turn off.
 
 Photos come from realtor.com's `rdcpix` CDN, which encodes the size in the
 filename. A custom `next/image` loader (`src/lib/rdcpix.ts`) rewrites the token
-to resize **at the CDN**, bypassing Vercel's billed image optimisation.
+to resize **at the CDN**, bypassing Vercel's billed image optimisation. Other
+URLs pass through untouched — the sample dataset uses the SVG illustrations in
+`public/sample/`.
 
 ### Client state
 
@@ -271,6 +302,8 @@ commit real values.
 
 | Variable | Required | Where to get it |
 |---|---|---|
+| `BLOB_READ_WRITE_TOKEN` | for the real dataset | Injected by Vercel when the private `dillow-data` Blob store is connected to the project. Locally: `vercel env pull .env.local`. Unset means the sample dataset |
+| `DILLOW_DATA_SOURCE` | no | `sample` or `blob` to override the dataset choice (see [The dataset](#the-dataset)) |
 | `PROPERTY_PROVIDER` | no | `realtor16` or `simplyrets` (default `simplyrets`) |
 | `REALTOR_16_RAPID_API_KEY` | for realtor16 | A RapidAPI account **subscribed** to [realtor16][r16]; Basic (free) is enough |
 | `REALTOR16_LOCATIONS` | no | Your own comma-separated `City, ST` list |
@@ -283,7 +316,9 @@ commit real values.
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | no | Google Cloud browser key with the Maps Embed API. **Ships to the browser** — restrict it by HTTP referrer. Unset uses the keyless OSM/Leaflet map |
 
 `.env.local` is git-ignored. Note that `vercel env pull` overwrites it with only
-the Vercel project's variables, so keep a copy of anything local-only.
+the Vercel project's variables, so keep a copy of anything local-only. It also
+brings in the **production** Redis credentials: a local game then writes to the
+real leaderboards.
 
 ---
 
@@ -298,10 +333,13 @@ curl -X POST http://localhost:3000/api/refresh
 # Full galleries for the next N daily homes. DEV ONLY.
 curl -X POST "http://localhost:3000/api/enrich?days=10"
 
-# Export the Redis enrichment archive into the committed cold store.
+# Export the Redis enrichment archive into src/data/enrichment.json.
 node scripts/export-enrichment.mjs
 
-git add src/data && git commit -m "Refresh pool"
+# Upload both files to the private store (keeps a timestamped archive copy),
+# then redeploy so the build picks them up. Never commit them.
+npm run data:push
+vercel redeploy dillow.homes --target production
 ```
 
 ### Admin
@@ -318,7 +356,8 @@ never ships to the client. Actions:
 
 ### Deploy
 
-Vercel builds and deploys `main`. The committed snapshot ships with the build.
+Vercel builds and deploys `main`. Each build pulls the dataset from the
+private store and bakes it in, so a data change ships with the next deploy.
 
 ---
 
@@ -328,6 +367,8 @@ Vercel builds and deploys `main`. The committed snapshot ships with the build.
 - **`getDailyProperty` reads the snapshot synchronously.** The route layer
   applies the Redis offset and gallery override.
 - **Do not write to `src/data/` at runtime** — read-only filesystem on Vercel.
+- **Never commit real listing data.** `src/data/*` is git-ignored except the
+  sample, and CI fails if anything else under `src/data/` is tracked.
 - **Points are internal.** Compute them for ranking; never render a raw score.
 - **Watch the `react-hooks/set-state-in-effect` rule** (Next 16): wrap
   `localStorage`-reading effects that call `setState` in an async IIFE.
@@ -340,6 +381,6 @@ Vercel builds and deploys `main`. The committed snapshot ships with the build.
 
 - **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Security:** [SECURITY.md](SECURITY.md) — report privately, never as an issue
-- **License:** [MIT](LICENSE) © Aaron Levin, for the **source code only**. The listing data in
-  `src/data/` is not covered — see
+- **License:** [MIT](LICENSE) © Aaron Levin, for the source code and the
+  sample dataset. The live game's listing data is not part of this repo — see
   [Data source and terms](#data-source-and-terms).

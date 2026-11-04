@@ -159,7 +159,7 @@ export async function propertyStanding(
 
 // ── Gallery cache ────────────────────────────────────────────────────────────
 // Full photo galleries fetched at runtime (admin/cron) live in Redis, since
-// Vercel's filesystem is read-only and can't update the committed snapshot.
+// Vercel's filesystem is read-only and can't update the build-time snapshot.
 // Bump the version suffix when the gallery's max size changes so already-cached
 // (smaller) galleries are treated as a miss and re-warmed with the fuller set.
 const galleryKey = (id: string) => `gallery:v2:${id}`;

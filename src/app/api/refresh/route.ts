@@ -6,7 +6,8 @@ import { MIN_PHOTOS, isPlayable } from "@/lib/game";
 
 // MANUAL refresh only. A search spends one realtor16 request and enrichment
 // spends one per listing, so this is never triggered automatically — you POST to
-// it on purpose to rebuild the committed snapshot at src/data/pool.json.
+// it on purpose to rebuild the snapshot at src/data/pool.json, then upload it
+// with `npm run data:push` (the file is never committed — see scripts/data.mjs).
 //
 // Each listing is enriched to its full gallery, then dropped unless it carries
 // every gameplay-critical field (>= MIN_PHOTOS photos, a price, and real

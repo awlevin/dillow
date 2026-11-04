@@ -56,3 +56,9 @@ next-env.d.ts
 .vscode/
 *.swp
 Thumbs.db
+
+# The real dataset (listing content + every future answer) lives in a private
+# Vercel Blob store and is pulled at build time — see scripts/data.mjs. Only
+# the fake sample dataset is committed.
+/src/data/*
+!/src/data/sample/

@@ -21,9 +21,11 @@ cp .env.example .env.local   # optional; the app runs with no env at all
 npm run dev
 ```
 
-With no environment variables the app plays the committed snapshot in
-`src/data/`. Game state lives in server memory, and the leaderboards and rooms
-switch off until you add Upstash Redis credentials.
+With no environment variables the app plays the fake sample dataset in
+`src/data/sample/` (made-up homes, illustrated photos). Game state lives in
+server memory, and the leaderboards and rooms switch off until you add Upstash
+Redis credentials. The live game's real homes are private and not needed for
+development.
 
 ## Pull requests
 
@@ -49,18 +51,23 @@ changed and why.
 
 Listing data comes from the `realtor16` RapidAPI actor on a **small monthly
 request quota**. Gameplay is designed to spend **zero** upstream requests: it
-reads the committed snapshot in `src/data/` plus Redis.
+reads the build-time snapshot in `src/data/` plus Redis.
 
 **Never add a provider call on a request path.** If a change makes the app
 fetch from `realtor16` while somebody is playing, it will not be merged. Warm
-data into Redis or into the committed snapshot instead, out of band.
+data into Redis or into the snapshot instead, out of band.
 
 ## Data files
 
-`src/data/pool.json` and `src/data/enrichment.json` are generated, not written
-by hand. Do not edit them manually and please do not add listing data from new
-sources in a PR — the licensing on that content is the maintainer's problem to
-sort out. See the README's data-source section.
+`src/data/pool.json` and `src/data/enrichment.json` are git-ignored build
+inputs: a copy of the sample, or the private real data on the maintainer's
+machine and on Vercel. **Never commit real listing data** — CI fails if
+anything outside `src/data/sample/` is tracked under `src/data/`.
+
+To change the sample, edit `scripts/generate-sample-data.mjs` and run
+`npm run data:sample`. Keep it obviously fake: invented addresses and
+descriptions, illustrated photos. See the README's
+[dataset](README.md#the-dataset) and data-source sections.
 
 ## Style
 

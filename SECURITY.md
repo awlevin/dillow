@@ -27,9 +27,14 @@ In scope:
 
 Out of scope:
 
-- The daily home is deterministic by design (`hash(dayKey) + offset`). Anyone
-  who runs the app locally knows every answer. That is a property of the data
-  model, not a bug.
+- The daily pick is deterministic (`hash(dayKey) + offset`) and the code is
+  public, but the pool it picks from is not: the real dataset lives in private
+  storage, outside this repo. Reading a future answer out of the deployed app
+  (or getting at the private dataset) **is** in scope.
+- Playing a home reveals its price once you finish it. Bonus and Local mode let
+  anyone play any home in the pool, so a player can learn a price by playing
+  it — including a home that later becomes a daily. That is how the game
+  works, not a bug.
 - Anonymous player ids are client-generated (`crypto.randomUUID()`). There are
   no accounts and no authentication, so impersonating another display name on a
   leaderboard is expected and not a vulnerability.

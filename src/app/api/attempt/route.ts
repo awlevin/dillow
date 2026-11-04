@@ -38,7 +38,13 @@ export async function POST(req: Request) {
   if (typeof guess !== "number" || !Number.isFinite(guess) || guess <= 0) {
     return NextResponse.json({ error: "Guess must be a positive number." }, { status: 400 });
   }
-  const id = typeof body.id === "string" ? body.id : null;
+  // The player id is what the attempt cap is enforced against, so it is
+  // required: without one there would be no cap, and a single anonymous request
+  // could read any home's price.
+  const id = typeof body.id === "string" && body.id.length > 0 && body.id.length <= 64 ? body.id : null;
+  if (!id) {
+    return NextResponse.json({ error: "Missing player id." }, { status: 400 });
+  }
   const name = typeof body.name === "string" ? body.name.trim().slice(0, 24) : "";
 
   // The home is whichever of today's served homes the client is guessing on. We
@@ -56,28 +62,6 @@ export async function POST(req: Request) {
     const fb = feedback(guess, price);
     const thisScore = scoreGuess(guess, price).score;
     const pctError = (guess - price) / price;
-
-    // No player id → nothing to track attempts against, so reveal in one shot.
-    // (Without Redis, getGame/saveGame fall back to process memory.)
-    if (!id) {
-      return NextResponse.json({
-        gameOver: true,
-        within: fb.within,
-        attemptsUsed: 1,
-        band: fb.band,
-        property,
-        details: await getDetails(property.id), // full set — the game is over
-        communityStats: await getCommunityStats(property.id, price),
-        result: {
-          bestGuess: guess,
-          bestScore: thisScore,
-          pctError,
-          within: fb.within,
-          attemptsUsed: 1,
-        },
-        leaderboard: { enabled: leaderboardEnabled() },
-      });
-    }
 
     const prev: GameState = (await getGame(date, property.id, id)) ?? {
       attempts: 0,

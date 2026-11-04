@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+<rect width="800" height="600" fill="#e0f2fe"/>
+<rect y="440" width="800" height="160" fill="#86efac"/>
+<rect x="160" y="250" width="160" height="200" fill="#d9f99d"/>
+<polygon points="154,256 240,170 326,256" fill="#3f6212"/>
+<rect x="215" y="360" width="50" height="90" rx="4" fill="#7c2d12"/>
+<rect x="190" y="280" width="40" height="44" rx="3" fill="#e0f2fe"/><rect x="250" y="280" width="40" height="44" rx="3" fill="#e0f2fe"/><rect x="320" y="250" width="160" height="200" fill="#e7e5e4"/>
+<polygon points="314,256 400,170 486,256" fill="#3f6212"/>
+<rect x="375" y="360" width="50" height="90" rx="4" fill="#7c2d12"/>
+<rect x="350" y="280" width="40" height="44" rx="3" fill="#e0f2fe"/><rect x="410" y="280" width="40" height="44" rx="3" fill="#e0f2fe"/><rect x="480" y="250" width="160" height="200" fill="#d9f99d"/>
+<polygon points="474,256 560,170 646,256" fill="#3f6212"/>
+<rect x="535" y="360" width="50" height="90" rx="4" fill="#7c2d12"/>
+<rect x="510" y="280" width="40" height="44" rx="3" fill="#e0f2fe"/><rect x="570" y="280" width="40" height="44" rx="3" fill="#e0f2fe"/>
+<g transform="translate(40 64)"><rect width="112" height="36" rx="18" fill="#1c1917" fill-opacity="0.72"/><text x="56" y="24" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700" letter-spacing="2" fill="#fafaf9">SAMPLE</text></g>
+</svg>

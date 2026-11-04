@@ -1,0 +1,606 @@
+{
+  "sample": true,
+  "fetchedAt": "2026-01-01T00:00:00.000Z",
+  "properties": [
+    {
+      "id": "sample-001",
+      "price": 2242000,
+      "city": "Austin",
+      "state": "TX",
+      "address": "107 Placeholder Ave",
+      "lat": 30.309736,
+      "lon": -97.750096,
+      "beds": 5,
+      "baths": 4.5,
+      "sqft": 5780,
+      "yearBuilt": 1990,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-0.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-002",
+      "price": 959000,
+      "city": "Austin",
+      "state": "TX",
+      "address": "114 Example Way",
+      "lat": 30.283534,
+      "lon": -97.754929,
+      "beds": 4,
+      "baths": 4,
+      "sqft": 2280,
+      "yearBuilt": 1994,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-1.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-003",
+      "price": 299000,
+      "city": "Austin",
+      "state": "TX",
+      "address": "121 Demo Dr",
+      "lat": 30.310332,
+      "lon": -97.770566,
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1570,
+      "yearBuilt": 2005,
+      "propertyType": "condos",
+      "photos": [
+        "/sample/building-2.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-004",
+      "price": 508000,
+      "city": "Austin",
+      "state": "TX",
+      "address": "128 Fixture Ct",
+      "lat": 30.297296,
+      "lon": -97.796402,
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1340,
+      "yearBuilt": 1934,
+      "propertyType": "condos",
+      "photos": [
+        "/sample/building-3.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-005",
+      "price": 1032000,
+      "city": "Austin",
+      "state": "TX",
+      "address": "135 Mock Ln",
+      "lat": 30.256101,
+      "lon": -97.775653,
+      "beds": 4,
+      "baths": 3.5,
+      "sqft": 2620,
+      "yearBuilt": 1981,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-4.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-006",
+      "price": 857000,
+      "city": "Austin",
+      "state": "TX",
+      "address": "142 Sample St",
+      "lat": 30.284338,
+      "lon": -97.706872,
+      "beds": 4,
+      "baths": 4.5,
+      "sqft": 2230,
+      "yearBuilt": 1941,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-5.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-007",
+      "price": 2729000,
+      "city": "Denver",
+      "state": "CO",
+      "address": "149 Placeholder Ave",
+      "lat": 39.745135,
+      "lon": -104.948079,
+      "beds": 5,
+      "baths": 4.5,
+      "sqft": 5180,
+      "yearBuilt": 2013,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-6.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-008",
+      "price": 572000,
+      "city": "Denver",
+      "state": "CO",
+      "address": "156 Example Way",
+      "lat": 39.737764,
+      "lon": -104.980399,
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1640,
+      "yearBuilt": 1976,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-7.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-009",
+      "price": 270000,
+      "city": "Denver",
+      "state": "CO",
+      "address": "163 Demo Dr",
+      "lat": 39.701711,
+      "lon": -104.94306,
+      "beds": 2,
+      "baths": 1.5,
+      "sqft": 1260,
+      "yearBuilt": 1967,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-0.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-010",
+      "price": 1314000,
+      "city": "Denver",
+      "state": "CO",
+      "address": "170 Fixture Ct",
+      "lat": 39.760808,
+      "lon": -104.986851,
+      "beds": 4,
+      "baths": 4.5,
+      "sqft": 2850,
+      "yearBuilt": 1961,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-1.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-011",
+      "price": 754000,
+      "city": "Denver",
+      "state": "CO",
+      "address": "177 Mock Ln",
+      "lat": 39.692986,
+      "lon": -104.974495,
+      "beds": 4,
+      "baths": 3.5,
+      "sqft": 2460,
+      "yearBuilt": 2000,
+      "propertyType": "townhomes",
+      "photos": [
+        "/sample/townhouse-2.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-012",
+      "price": 383000,
+      "city": "Denver",
+      "state": "CO",
+      "address": "184 Sample St",
+      "lat": 39.680434,
+      "lon": -105.02419,
+      "beds": 3,
+      "baths": 3,
+      "sqft": 2110,
+      "yearBuilt": 1963,
+      "propertyType": "townhomes",
+      "photos": [
+        "/sample/townhouse-3.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-013",
+      "price": 1628000,
+      "city": "Columbus",
+      "state": "OH",
+      "address": "191 Placeholder Ave",
+      "lat": 39.975227,
+      "lon": -83.033643,
+      "beds": 5,
+      "baths": 4.5,
+      "sqft": 4840,
+      "yearBuilt": 2014,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-4.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-014",
+      "price": 381000,
+      "city": "Columbus",
+      "state": "OH",
+      "address": "198 Example Way",
+      "lat": 39.976115,
+      "lon": -82.969104,
+      "beds": 3,
+      "baths": 2,
+      "sqft": 1970,
+      "yearBuilt": 1987,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-5.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-015",
+      "price": 225000,
+      "city": "Columbus",
+      "state": "OH",
+      "address": "205 Demo Dr",
+      "lat": 39.949154,
+      "lon": -83.041936,
+      "beds": 4,
+      "baths": 4.5,
+      "sqft": 2240,
+      "yearBuilt": 1949,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-6.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-016",
+      "price": 351000,
+      "city": "Columbus",
+      "state": "OH",
+      "address": "212 Fixture Ct",
+      "lat": 39.941897,
+      "lon": -83.013673,
+      "beds": 4,
+      "baths": 4,
+      "sqft": 2240,
+      "yearBuilt": 2022,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-7.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-017",
+      "price": 573000,
+      "city": "Columbus",
+      "state": "OH",
+      "address": "219 Mock Ln",
+      "lat": 39.938228,
+      "lon": -83.032918,
+      "beds": 4,
+      "baths": 4.5,
+      "sqft": 2680,
+      "yearBuilt": 1957,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-0.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-018",
+      "price": 227000,
+      "city": "Columbus",
+      "state": "OH",
+      "address": "226 Sample St",
+      "lat": 39.912637,
+      "lon": -83.031586,
+      "beds": 3,
+      "baths": 3,
+      "sqft": 1870,
+      "yearBuilt": 1993,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-1.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-019",
+      "price": 2284000,
+      "city": "Portland",
+      "state": "OR",
+      "address": "233 Placeholder Ave",
+      "lat": 45.559526,
+      "lon": -122.650184,
+      "beds": 5,
+      "baths": 4.5,
+      "sqft": 6270,
+      "yearBuilt": 1942,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-2.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-020",
+      "price": 603000,
+      "city": "Portland",
+      "state": "OR",
+      "address": "240 Example Way",
+      "lat": 45.474645,
+      "lon": -122.633394,
+      "beds": 3,
+      "baths": 2,
+      "sqft": 1750,
+      "yearBuilt": 1998,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-3.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-021",
+      "price": 381000,
+      "city": "Portland",
+      "state": "OR",
+      "address": "247 Demo Dr",
+      "lat": 45.46178,
+      "lon": -122.675762,
+      "beds": 3,
+      "baths": 3,
+      "sqft": 2300,
+      "yearBuilt": 1991,
+      "propertyType": "townhomes",
+      "photos": [
+        "/sample/townhouse-0.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-022",
+      "price": 820000,
+      "city": "Portland",
+      "state": "OR",
+      "address": "254 Fixture Ct",
+      "lat": 45.57316,
+      "lon": -122.622945,
+      "beds": 4,
+      "baths": 4.5,
+      "sqft": 3040,
+      "yearBuilt": 1960,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-5.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-023",
+      "price": 296000,
+      "city": "Portland",
+      "state": "OR",
+      "address": "261 Mock Ln",
+      "lat": 45.521204,
+      "lon": -122.686143,
+      "beds": 1,
+      "baths": 1,
+      "sqft": 870,
+      "yearBuilt": 1931,
+      "propertyType": "condos",
+      "photos": [
+        "/sample/building-2.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-024",
+      "price": 539000,
+      "city": "Portland",
+      "state": "OR",
+      "address": "268 Sample St",
+      "lat": 45.466616,
+      "lon": -122.672804,
+      "beds": 4,
+      "baths": 3.5,
+      "sqft": 2680,
+      "yearBuilt": 1958,
+      "propertyType": "townhomes",
+      "photos": [
+        "/sample/townhouse-3.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-025",
+      "price": 2207000,
+      "city": "Raleigh",
+      "state": "NC",
+      "address": "275 Placeholder Ave",
+      "lat": 35.780351,
+      "lon": -78.593693,
+      "beds": 5,
+      "baths": 4.5,
+      "sqft": 5600,
+      "yearBuilt": 1989,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-0.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-026",
+      "price": 734000,
+      "city": "Raleigh",
+      "state": "NC",
+      "address": "282 Example Way",
+      "lat": 35.775539,
+      "lon": -78.578851,
+      "beds": 3,
+      "baths": 2,
+      "sqft": 2390,
+      "yearBuilt": 1953,
+      "propertyType": "townhomes",
+      "photos": [
+        "/sample/townhouse-1.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-027",
+      "price": 312000,
+      "city": "Raleigh",
+      "state": "NC",
+      "address": "289 Demo Dr",
+      "lat": 35.827575,
+      "lon": -78.580156,
+      "beds": 2,
+      "baths": 1.5,
+      "sqft": 1340,
+      "yearBuilt": 1925,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-2.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    },
+    {
+      "id": "sample-028",
+      "price": 219000,
+      "city": "Raleigh",
+      "state": "NC",
+      "address": "296 Fixture Ct",
+      "lat": 35.783504,
+      "lon": -78.65605,
+      "beds": 1,
+      "baths": 1.5,
+      "sqft": 940,
+      "yearBuilt": 1958,
+      "propertyType": "condos",
+      "photos": [
+        "/sample/building-3.svg",
+        "/sample/living-1.svg",
+        "/sample/kitchen-1.svg",
+        "/sample/bedroom-1.svg"
+      ]
+    },
+    {
+      "id": "sample-029",
+      "price": 496000,
+      "city": "Raleigh",
+      "state": "NC",
+      "address": "303 Mock Ln",
+      "lat": 35.795845,
+      "lon": -78.592068,
+      "beds": 3,
+      "baths": 2.5,
+      "sqft": 2190,
+      "yearBuilt": 1987,
+      "propertyType": "single_family",
+      "photos": [
+        "/sample/exterior-4.svg",
+        "/sample/living-2.svg",
+        "/sample/kitchen-2.svg",
+        "/sample/bedroom-2.svg"
+      ]
+    },
+    {
+      "id": "sample-030",
+      "price": 332000,
+      "city": "Raleigh",
+      "state": "NC",
+      "address": "310 Sample St",
+      "lat": 35.761094,
+      "lon": -78.597732,
+      "beds": 2,
+      "baths": 2.5,
+      "sqft": 1660,
+      "yearBuilt": 1995,
+      "propertyType": "townhomes",
+      "photos": [
+        "/sample/townhouse-1.svg",
+        "/sample/living-0.svg",
+        "/sample/kitchen-0.svg",
+        "/sample/bedroom-0.svg"
+      ]
+    }
+  ]
+}
