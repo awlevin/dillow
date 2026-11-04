@@ -59,3 +59,21 @@ export function scrubDetails(d: PropertyDetails): PropertyDetails {
       .filter((s) => s.items.length > 0),
   };
 }
+
+// Some MLS feature lists carry contact details for real people — HOA phone
+// lines, a park manager's name or personal email. None of it is a clue, and none
+// of it is ours to republish, so it is dropped at ingest (parseDetails), on every
+// Redis read (getDetails, for entries cached before this existed), and before
+// the cold store is exported (scripts/export-enrichment.mjs).
+const CONTACT_LINE = /^[^:]*\b(phone|e-?mail|fax|manager name|agent|contact)\b[^:]*:|[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
+const CONTACT_TEXT = /[\w.+-]+@[\w-]+(\.[\w-]+)+|\(?\b\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b/g;
+
+export function stripContactInfo(d: PropertyDetails): PropertyDetails {
+  return {
+    ...d,
+    text: d.text ? d.text.replace(CONTACT_TEXT, "").replace(/\s{2,}/g, " ").trim() || null : d.text,
+    sections: d.sections
+      .map((s) => ({ ...s, items: s.items.filter((i) => !CONTACT_LINE.test(i)) }))
+      .filter((s) => s.items.length > 0),
+  };
+}

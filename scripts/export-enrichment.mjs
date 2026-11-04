@@ -11,6 +11,8 @@
 // src/lib/property-payload.ts).
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+// Node 23.6+ strips types natively, so the one scrubbing rule lives in one place.
+import { stripContactInfo } from "../src/lib/property-details.ts";
 
 const root = process.cwd();
 
@@ -64,7 +66,7 @@ for (let i = 0; i < ids.length; i += CHUNK) {
   ]);
   chunk.forEach((id, j) => {
     if (gs[j]?.length) galleries[id] = gs[j];
-    if (ds[j]) details[id] = ds[j];
+    if (ds[j]) details[id] = stripContactInfo(ds[j]);
   });
   process.stdout.write(`\rscanned ${Math.min(i + CHUNK, ids.length)} / ${ids.length}`);
 }

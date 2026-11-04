@@ -22,7 +22,7 @@ import {
 } from "@/lib/leaderboard";
 
 // One guess on one of the day's homes. Returns hidden-price feedback (aim
-// higher/lower + a proximity band) until the player wins (within 5%) or uses all
+// higher/lower + a proximity band) until the player wins (within 0.1%) or uses all
 // 5 attempts — then it reveals the home and records the result on THAT home's
 // all-time leaderboard. The home is identified by `propertyId` (one of the three
 // the player was served by /api/daily), so the same endpoint scores any of them.
@@ -57,8 +57,9 @@ export async function POST(req: Request) {
     const thisScore = scoreGuess(guess, price).score;
     const pctError = (guess - price) / price;
 
-    // No persistence (Redis off) or no id → fall back to single-shot reveal.
-    if (!leaderboardEnabled() || !id) {
+    // No player id → nothing to track attempts against, so reveal in one shot.
+    // (Without Redis, getGame/saveGame fall back to process memory.)
+    if (!id) {
       return NextResponse.json({
         gameOver: true,
         within: fb.within,
@@ -138,13 +139,13 @@ async function finalReveal(
   const lastGuess = state.guesses[state.guesses.length - 1] ?? state.bestGuess;
   const lastFb = feedback(lastGuess, property.price);
   // "Won" (and the celebratory reveal) means landing within the game's win
-  // threshold — the SAME 1% you have to hit to end the round early — not the
+  // threshold — the SAME 0.1% you have to hit to end the round early — not the
   // looser 5% the reveal used to flag.
   const within = Math.abs(state.bestPct) <= WIN_THRESHOLD;
   let leaderboard: { enabled: boolean; rank?: number | null; count?: number } = {
     enabled: leaderboardEnabled(),
   };
-  if (record && name) {
+  if (record && name && leaderboardEnabled()) {
     const r = await submitPropertyEntry(property.id, date, {
       id,
       name,

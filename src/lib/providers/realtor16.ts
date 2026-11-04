@@ -1,5 +1,6 @@
 import type { Property } from "../types";
 import type { DetailSection, PropertyDetails } from "../property-details";
+import { stripContactInfo } from "../property-details";
 
 // realtor16 (RapidAPI, by s.mahmoud97) — wraps realtor.com listings: real list
 // prices, photos, and coordinates. Requires a RapidAPI subscription to realtor16
@@ -200,7 +201,7 @@ function parseDetails(node: RawDetailNode): PropertyDetails {
       ),
     }))
     .filter((s) => s.category && s.items.length > 0);
-  return {
+  return stripContactInfo({
     text,
     lotSqft: num(de.lot_sqft),
     stories: num(de.stories),
@@ -210,7 +211,7 @@ function parseDetails(node: RawDetailNode): PropertyDetails {
     listingUrl: typeof node.href === "string" && node.href.startsWith("http") ? node.href : null,
     zillowUrl: zillowFromPermalink(node.permalink),
     sections,
-  };
+  });
 }
 
 // Enrich a batch of listings with full galleries — one details request each,

@@ -1,11 +1,12 @@
 import { ImageResponse } from "next/og";
+import { ogFonts } from "./_lib/og-fonts";
 import { MARK } from "./_lib/mark";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "Dillow — guess the home's price, a new home every day";
 
-export default function OpengraphImage() {
+export default async function OpengraphImage() {
   const bands = ["#ef4444", "#f97316", "#eab308", "#22c55e"];
   return new ImageResponse(
     (
@@ -19,7 +20,8 @@ export default function OpengraphImage() {
           justifyContent: "center",
           background: "linear-gradient(135deg, #065f46, #059669)",
           color: "#ffffff",
-          fontFamily: "sans-serif",
+          fontFamily: "Geist",
+          fontWeight: 500,
         }}
       >
         <div
@@ -52,9 +54,9 @@ export default function OpengraphImage() {
             />
           </svg>
         </div>
-        <div style={{ fontSize: 132, fontWeight: 800, letterSpacing: -5 }}>dillow</div>
+        <div style={{ fontSize: 132, fontWeight: 900, letterSpacing: -5 }}>dillow</div>
         <div style={{ fontSize: 40, opacity: 0.92, marginTop: 6 }}>
-          Guess the home&apos;s price. New home every day.
+          Guess the home’s price. New home every day.
         </div>
         <div style={{ display: "flex", gap: 16, marginTop: 44 }}>
           {bands.map((c, i) => (
@@ -87,6 +89,6 @@ export default function OpengraphImage() {
         </div>
       </div>
     ),
-    { ...size },
+    { ...size, fonts: await ogFonts() },
   );
 }

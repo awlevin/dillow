@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis";
 import type { PropertyDetails } from "./property-details";
+import { stripContactInfo } from "./property-details";
 import type { CommunityStats } from "./types";
 
 // Leaderboard storage backed by Upstash Redis sorted sets — one set per day,
@@ -32,8 +33,14 @@ export type GameState = {
 // track their own attempts independently.
 const gameKey = (date: string, propertyId: string, id: string) => `game:${date}:${propertyId}:${id}`;
 
+// Without Redis (local dev with no env), game state lives in process memory so
+// the five-guess loop still works. It is per-instance and lost on restart, which
+// is fine for development; deployments are expected to configure Redis.
+const memoryGames = new Map<string, GameState>();
+const MEMORY_GAMES_MAX = 10_000; // bound it; Map iterates oldest-first
+
 export async function getGame(date: string, propertyId: string, id: string): Promise<GameState | null> {
-  if (!redis) return null;
+  if (!redis) return memoryGames.get(gameKey(date, propertyId, id)) ?? null;
   return (await redis.get<GameState>(gameKey(date, propertyId, id))) ?? null;
 }
 
@@ -43,7 +50,11 @@ export async function saveGame(
   id: string,
   state: GameState,
 ): Promise<void> {
-  if (!redis) return;
+  if (!redis) {
+    memoryGames.set(gameKey(date, propertyId, id), state);
+    if (memoryGames.size > MEMORY_GAMES_MAX) memoryGames.delete(memoryGames.keys().next().value!);
+    return;
+  }
   await redis.set(gameKey(date, propertyId, id), state, { ex: 60 * 60 * 24 * 3 }); // 3-day TTL
 }
 
@@ -222,7 +233,8 @@ const detailsKey = (id: string) => `details:v2:${id}`;
 
 export async function getDetails(id: string): Promise<PropertyDetails | null> {
   if (!redis) return null;
-  return (await redis.get<PropertyDetails>(detailsKey(id))) ?? null;
+  const d = await redis.get<PropertyDetails>(detailsKey(id));
+  return d ? stripContactInfo(d) : null;
 }
 
 export async function saveDetails(id: string, details: PropertyDetails): Promise<void> {

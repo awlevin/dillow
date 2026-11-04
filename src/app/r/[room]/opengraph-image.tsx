@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { ogFonts } from "@/app/_lib/og-fonts";
 import { getRoom, roomTitle } from "@/lib/room";
 
 export const size = { width: 1200, height: 630 };
@@ -25,7 +26,8 @@ export default async function Image({ params }: { params: Promise<{ room: string
           justifyContent: "center",
           background: "linear-gradient(135deg, #065f46, #047857)",
           color: "#ffffff",
-          fontFamily: "sans-serif",
+          fontFamily: "Geist",
+          fontWeight: 500,
           padding: 60,
         }}
       >
@@ -59,11 +61,11 @@ export default async function Image({ params }: { params: Promise<{ room: string
             <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
           </svg>
         </div>
-        <div style={{ fontSize: 86, fontWeight: 800, letterSpacing: -3, textAlign: "center", lineHeight: 1.05 }}>
+        <div style={{ fontSize: 86, fontWeight: 900, letterSpacing: -3, textAlign: "center", lineHeight: 1.05 }}>
           {title}
         </div>
         <div style={{ fontSize: 38, opacity: 0.92, marginTop: 16 }}>
-          {`Dillow Challenge · ${rounds} bonus rounds`}
+          {r ? `Dillow Challenge · ${rounds} bonus rounds` : `${rounds} bonus rounds · guess the price`}
         </div>
         <div style={{ display: "flex", gap: 14, marginTop: 42 }}>
           {bands.map((c, i) => (
@@ -96,6 +98,6 @@ export default async function Image({ params }: { params: Promise<{ room: string
         </div>
       </div>
     ),
-    { ...size },
+    { ...size, fonts: await ogFonts() },
   );
 }

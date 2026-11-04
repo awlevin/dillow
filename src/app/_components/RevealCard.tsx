@@ -102,17 +102,16 @@ export function RevealCard({
         <p className={`text-xl font-bold ${mood.headlineColor}`}>{headline}</p>
         <p className="mt-0.5 text-sm text-stone-500">{quip}</p>
       </div>
-      <div className="flex items-end justify-center gap-6">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-stone-400">Your closest</p>
-          <p className="text-lg font-semibold text-stone-600">{usd(result.bestGuess)}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-stone-400">Actual</p>
-          <p className="animate-pricepop text-2xl font-black tabular-nums text-emerald-700">
-            {usd(animatedPrice)}
-          </p>
-        </div>
+      {/* A 2x2 grid, not two stacked columns: each row baseline-aligns on its
+          own, so the labels share one line and the two prices share another
+          even though the prices are different sizes. */}
+      <div className="grid grid-cols-[auto_auto] items-baseline justify-center gap-x-6">
+        <p className="text-xs uppercase tracking-wide text-stone-400">Your closest</p>
+        <p className="text-xs uppercase tracking-wide text-stone-400">Actual</p>
+        <p className="text-lg font-semibold text-stone-600">{usd(result.bestGuess)}</p>
+        <p className="animate-pricepop text-2xl font-black tabular-nums text-emerald-700">
+          {usd(animatedPrice)}
+        </p>
       </div>
       <p className="text-sm text-stone-600">
         {formatPct(result.pctError)}% off ·{" "}

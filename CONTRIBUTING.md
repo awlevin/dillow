@@ -21,9 +21,9 @@ cp .env.example .env.local   # optional; the app runs with no env at all
 npm run dev
 ```
 
-With no environment variables the app falls back to the SimplyRETS public demo
-feed. Prices there are randomised, so the game is playable but not truthful —
-which is fine for working on UI, layout and mechanics.
+With no environment variables the app plays the committed snapshot in
+`src/data/`. Game state lives in server memory, and the leaderboards and rooms
+switch off until you add Upstash Redis credentials.
 
 ## Pull requests
 
@@ -35,10 +35,11 @@ Before you open a PR:
 
 ```bash
 npm run lint
+npm run typecheck
 npm run build
 ```
 
-Both must pass. There is no test suite yet; if you add one, that is a welcome
+All three must pass. CI runs them on every PR. There is no test suite yet; if you add one, that is a welcome
 contribution on its own.
 
 Keep PRs focused — one concern per PR. Write commit messages that say what

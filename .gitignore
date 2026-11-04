@@ -44,7 +44,7 @@ next-env.d.ts
 !.env.example
 .env*.local
 
-# machine-local Claude Code symlink farm (points into ~/Projects/VellumOrg/claude-skills)
+# machine-local agent tooling
 .claude/
 .agents/
 

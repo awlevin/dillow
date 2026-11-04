@@ -1,52 +1,101 @@
-# Dillow
+<p align="center">
+  <a href="https://dillow.homes/"><img src="docs/banner.png" alt="dillow — guess the home’s price, a new home every day" width="100%"></a>
+</p>
 
-A daily home-price guessing game. Every day it shows you real US homes — study
-the photos, the map, and the facts, then guess what each one is listed for. You
-get five tries per home; each guess tells you *higher* or *lower* plus a warmth
-band, and the slider narrows to the range you have proven the price sits in.
-Land within 0.1% and you nail it.
+<p align="center">
+  <b>a daily home-price guessing game.</b> real us homes, hidden list prices, five tries each.
+</p>
 
-**Play it: [dillow.homes](https://dillow.homes/)**
+<p align="center">
+  <a href="https://dillow.homes/"><b>▶ play at dillow.homes</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://dillow.homes/changelog">what’s new</a>
+  &nbsp;·&nbsp;
+  <a href="#local-development">run it locally</a>
+</p>
 
-[![Dillow — guess the home's price, a new home every day](https://dillow.homes/opengraph-image)](https://dillow.homes/)
+<p align="center">
+  <img src="docs/screenshots.png" alt="Three phone screenshots: a home with its facts and a price box, three guesses marked too high with warmth colors, and the win screen showing the actual price" width="100%">
+</p>
 
-There are per-home all-time leaderboards, a streak, personal stats, private
-challenge rooms you can share with friends, and a Local mode that serves an
-endless run of homes near you.
+> Screenshots use a placeholder illustration and address. The live game shows
+> real listing photos.
+
+---
+
+## How it plays
+
+Every day there are a few new homes. Study the photos, the facts and the map,
+then guess what each one is listed for.
+
+- 🎯 **Five tries per home.** Each guess says *higher* or *lower* and how warm you
+  are: 🟥 🟧 🟨 🟩 ✅. Land within **0.1%** to nail it.
+- 🔓 **Clues unlock as you go.** Lot size and list date after one guess, the
+  listing description after two, the full feature list after three.
+- 🎚️ **The slider narrows** to the range your guesses have proven.
+- 🏆 **Per-home leaderboards**, ranked by closest guess, with fewest tries as the
+  tie-break. Plus a daily streak and personal stats.
+- 👯 **Challenge rooms.** Share a link and play bonus rounds against friends.
+- 📍 **Local mode.** An endless run of homes near you.
+- 🗺️ **A real map** (Leaflet + OpenStreetMap), a full photo gallery, and a link
+  to the real listing once you finish.
+
+No accounts. Your id is an anonymous UUID in `localStorage`.
+
+## Tech stack
+
+- **[Next.js 16](https://nextjs.org/)** (App Router) · **React 19** ·
+  **TypeScript** (strict) · **Tailwind CSS v4**
+- **[Upstash Redis](https://upstash.com/)** for game state, leaderboards and
+  rooms (optional locally)
+- **Leaflet** maps, **`next/og`** for the link-preview images
+- Hosted on **Vercel**. Listing data from realtor.com via the
+  [realtor16][r16] RapidAPI wrapper, snapshotted into the repo (read
+  [Data source and terms](#data-source-and-terms))
+
+## Local development
+
+Needs **Node 20.9+** and npm.
+
+```bash
+git clone https://github.com/awlevin/dillow.git
+cd dillow
+npm install
+npm run dev        # http://localhost:3000
+```
+
+**No environment variables needed.** The homes come from the committed
+snapshot in `src/data/`, so you get the real game. With no Redis, game state
+lives in server memory (lost on restart) and the leaderboards, crowd stats and
+challenge rooms switch off.
+
+To turn those on, copy the template and add Upstash credentials:
+
+```bash
+cp .env.example .env.local
+```
+
+Before you open a PR:
+
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
+
+CI runs the same three on every pull request.
 
 ---
 
 ## Contents
 
-- [Quick start](#quick-start)
 - [Data source and terms](#data-source-and-terms) ← read before forking
 - [The request budget](#the-request-budget)
 - [Architecture](#architecture)
 - [Environment variables](#environment-variables)
 - [Common workflows](#common-workflows)
 - [Conventions and gotchas](#conventions-and-gotchas)
-- [Contributing, security, licence](#contributing-security-licence)
-
----
-
-## Quick start
-
-```bash
-npm install
-cp .env.example .env.local   # optional — see below
-npm run dev                  # http://localhost:3000
-```
-
-**It runs with no environment variables at all.** With nothing set it falls
-back to the public SimplyRETS demo feed and disables the leaderboard, streaks
-and rooms. The demo feed's prices are randomised, so the game is playable but
-not truthful — which is exactly right for working on UI and mechanics.
-
-For production-like data you need a realtor16 key and Upstash Redis
-credentials. See [Environment variables](#environment-variables).
-
-Stack: **Next.js 16 (App Router) + React 19 + Tailwind v4 + TypeScript**, Node
-20+. Checks are `npm run lint` and `npm run build`; both must pass.
+- [Contributing, security, license](#contributing-security-license)
 
 ---
 
@@ -63,7 +112,7 @@ realtor.com's `rdcpix` CDN (hotlinked, never copied into this repo).
 
 What that means in practice:
 
-- **The MIT licence in [LICENSE](LICENSE) covers the source code only.** It
+- **The MIT license in [LICENSE](LICENSE) covers the source code only.** It
   does not and cannot cover the contents of `src/data/pool.json` and
   `src/data/enrichment.json`. Listing descriptions are written by listing
   agents and brokers and are their copyright; the photos are the copyright of
@@ -78,6 +127,10 @@ What that means in practice:
   MLS's attribution and display rules. `src/lib/providers/simplyrets.ts` is
   already a RESO-shaped adapter, so that swap is small. `RESEARCH.md` has the
   original survey of the options.
+
+Dillow is an independent hobby project. It is not affiliated with, endorsed
+by or sponsored by Zillow, realtor.com, Move, Inc. or any MLS. "View on Zillow"
+and "realtor.com" links are plain outbound links.
 
 If you are the copyright holder of any listing content shown here and want it
 removed, open an issue or contact [@awlevin](https://github.com/awlevin) and it
@@ -182,8 +235,8 @@ same curve. **Score is internal** — it orders leaderboards and is never shown.
 
 Provisioned through the Vercel Marketplace Upstash integration, which injects
 `KV_REST_API_URL` / `KV_REST_API_TOKEN` (`UPSTASH_REDIS_REST_*` also accepted).
-Everything degrades gracefully to a no-op when Redis is absent — single-player
-still works.
+Everything degrades gracefully when Redis is absent: game state falls back to
+process memory and the leaderboard, crowd stats and rooms turn off.
 
 | Key | Type | Purpose |
 |---|---|---|
@@ -283,10 +336,10 @@ Vercel builds and deploys `main`. The committed snapshot ships with the build.
 
 ---
 
-## Contributing, security, licence
+## Contributing, security, license
 
 - **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Security:** [SECURITY.md](SECURITY.md) — report privately, never as an issue
-- **Licence:** [MIT](LICENSE), for the **source code only**. The listing data in
+- **License:** [MIT](LICENSE) © Aaron Levin, for the **source code only**. The listing data in
   `src/data/` is not covered — see
   [Data source and terms](#data-source-and-terms).
