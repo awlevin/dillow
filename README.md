@@ -15,11 +15,11 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots.png" alt="Three phone screenshots: a home with its facts and a price box, three guesses marked too high with warmth colors, and the win screen showing the actual price" width="100%">
+  <img src="docs/screenshots.png" alt="Three phone screenshots of a sample condo: its facts and a price box, three guesses marked too high with warmth colors, and the win screen showing the actual price" width="100%">
 </p>
 
-> Screenshots use a placeholder illustration and address. The live game shows
-> real listing photos.
+> Screenshots show the fake sample dataset this repo ships with. The live game
+> shows real listing photos.
 
 ---
 
