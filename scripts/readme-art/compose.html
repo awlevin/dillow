@@ -1,0 +1,116 @@
+<!doctype html>
+<!--
+  Lays out the README art from the phone frames that capture.mjs writes.
+  render.mjs opens this file as compose.html?kind=strip|banner|social&frames=<dir>.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: GeistBlack; src: url("../../src/assets/fonts/Geist-Black.ttf"); }
+  @font-face { font-family: GeistMedium; src: url("../../src/assets/fonts/Geist-Medium.ttf"); }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { overflow: hidden; }
+  .phone {
+    position: absolute;
+    background: #1c1917;
+    padding: var(--bezel);
+    border-radius: var(--outer);
+    box-shadow: 0 40px 80px rgba(0,0,0,.28), 0 8px 24px rgba(0,0,0,.18);
+  }
+  .screen {
+    width: var(--sw);
+    height: var(--sh);
+    border-radius: calc(var(--outer) - var(--bezel));
+    overflow: hidden;
+    background: #faf9f7 var(--img) no-repeat;
+    background-size: var(--sw) auto;
+    background-position: 0 var(--y, 0px);
+  }
+  /* README strip: three phones on warm stone */
+  body.strip { width: 2560px; height: 1440px; background: #efece7; }
+  body.strip .phone { top: 96px; --bezel: 20px; --outer: 76px; --sw: 560px; --sh: 1208px; }
+  /* Hero layouts on the brand gradient */
+  body.hero { background: linear-gradient(135deg, #065f46 0%, #047857 45%, #10a36f 100%); color: #fff; font-family: GeistMedium, system-ui; }
+  .mark { background: #fff; display: flex; align-items: center; justify-content: center; }
+  .word { font-family: GeistBlack; letter-spacing: -0.03em; line-height: 0.9; }
+  .tag { line-height: 1.22; letter-spacing: -0.01em; }
+  .bands { display: flex; }
+  .bands div { display: flex; align-items: center; justify-content: center; }
+  .pill { display: inline-block; background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.24); font-family: GeistBlack; letter-spacing: -0.01em; }
+  .left { position: absolute; }
+  .row { display: flex; align-items: center; }
+  body.banner { width: 2560px; height: 800px; }
+  body.social { width: 1280px; height: 640px; }
+</style>
+</head>
+<body>
+<script>
+const params = new URLSearchParams(location.search);
+const kind = params.get("kind");
+const frame = (name) => `${params.get("frames")}/${name}`;
+document.body.className = kind === "strip" ? "strip" : `hero ${kind}`;
+
+const markSvg = (size) => `
+  <svg width="${size}" height="${size}" viewBox="18 18 64 64">
+    <path d="M50 22 L82 50 H74 V80 H26 V50 H18 Z" fill="#059669"/>
+    <path d="M57.3 60.4 C57.3 57.7 54.2 56.5 50 56.5 C45.8 56.5 42.7 57.9 42.7 60.6 C42.7 63.3 46.2 64.4 50 65 C53.9 65.6 57.3 66.7 57.3 69.4 C57.3 72.1 54.2 73.5 50 73.5 C45.8 73.5 42.7 72.3 42.7 69.6" fill="none" stroke="#fff" stroke-width="4.25" stroke-linecap="round"/>
+    <path d="M50 54.6 V75.4" fill="none" stroke="#fff" stroke-width="4.25" stroke-linecap="round"/>
+  </svg>`;
+const check = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function phone({ x, y, rot = 0, img, offset = 0, scale = 1 }) {
+  const el = document.createElement("div");
+  el.className = "phone";
+  el.style.left = x + "px";
+  if (y != null) el.style.top = y + "px";
+  el.style.transform = `rotate(${rot}deg) scale(${scale})`;
+  el.style.transformOrigin = "top left";
+  el.innerHTML = `<div class="screen" style="--img:url('${img}');--y:${-offset}px"></div>`;
+  document.body.appendChild(el);
+  return el;
+}
+
+function hero(s) {
+  // s = scale unit: 1 for the 1280x640 card, 2 for the 2560x800 banner.
+  const left = document.createElement("div");
+  left.className = "left";
+  left.style.left = (kind === "banner" ? 150 : 104) + "px";
+  left.style.top = (kind === "banner" ? 72 : 114) + "px";
+  const tile = 96 * s, word = 140 * s;
+  left.innerHTML = `
+    <div class="row" style="gap:${28 * s}px">
+      <div class="mark" style="width:${tile}px;height:${tile}px;border-radius:${24 * s}px">${markSvg(tile * 0.72)}</div>
+      <div class="word" style="font-size:${word}px;margin-top:-${8 * s}px">dillow</div>
+    </div>
+    <div class="tag" style="font-size:${40 * s}px;margin-top:${44 * s}px">Guess the home’s price.<br>A new home every day.</div>
+    <div class="bands" style="gap:${13 * s}px;margin-top:${40 * s}px">
+      ${["#ef4444", "#f97316", "#eab308", "#22c55e"].map((c) => `<div style="width:${46 * s}px;height:${46 * s}px;border-radius:${8 * s}px;background:${c}"></div>`).join("")}
+      <div style="width:${46 * s}px;height:${46 * s}px;border-radius:${8 * s}px;background:#16a34a">${check(28 * s)}</div>
+    </div>
+    <div class="pill" style="margin-top:${42 * s}px;font-size:${26 * s}px;padding:${12 * s}px ${26 * s}px;border-radius:999px">dillow.homes</div>`;
+  document.body.appendChild(left);
+  // Centre the block vertically on the short banner.
+  if (kind === "banner") left.style.top = Math.round((800 - left.offsetHeight) / 2) + "px";
+}
+
+if (kind === "strip") {
+  const w = 600, gap = 140, x0 = (2560 - (3 * w + 2 * gap)) / 2;
+  phone({ x: x0, img: frame("phone-start.png") });
+  phone({ x: x0 + w + gap, img: frame("phone-mid.png") });
+  phone({ x: x0 + 2 * (w + gap), img: frame("phone-done.png") });
+  document.querySelectorAll(".screen").forEach((el) => (el.style.backgroundSize = "560px auto"));
+} else if (kind === "social") {
+  hero(1);
+  const p = phone({ x: 836, y: 52, rot: 4, img: frame("phone-mid-exterior.png"), scale: 0.62 });
+  p.style.setProperty("--bezel", "20px"); p.style.setProperty("--outer", "76px");
+  p.style.setProperty("--sw", "560px"); p.style.setProperty("--sh", "1208px");
+} else {
+  hero(1.3);
+  const p = phone({ x: 1640, y: 70, rot: 4, img: frame("phone-mid-exterior.png"), scale: 0.95 });
+  p.style.setProperty("--bezel", "20px"); p.style.setProperty("--outer", "76px");
+  p.style.setProperty("--sw", "560px"); p.style.setProperty("--sh", "1208px");
+}
+</script>
+</body>
+</html>

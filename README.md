@@ -20,11 +20,8 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots.png" alt="Three phone screenshots of a sample condo: its facts and a price box, three guesses marked too high with warmth colors, and the win screen showing the actual price" width="100%">
+  <img src="docs/screenshots.png" alt="Three phone screenshots of a past daily home, a house in Miami: its photo, facts and a price box; three guesses with warmth colors while browsing the kitchen photo; and the win screen showing the actual price" width="100%">
 </p>
-
-> Screenshots show the fake sample dataset this repo ships with. The live game
-> shows real listing photos.
 
 ---
 
@@ -76,13 +73,14 @@ cities, with illustrated placeholder photos. Every game mode works on it. With
 no Redis, game state lives in server memory (lost on restart) and the
 leaderboards, crowd stats and challenge rooms switch off.
 
-The real homes are not in this repo. See [The dataset](#the-dataset).
-
 To turn those on, copy the template and add Upstash credentials:
 
 ```bash
 cp .env.example .env.local
 ```
+
+The live game's real homes are not in this repo. See
+[The dataset](#the-dataset).
 
 Before you open a PR:
 
@@ -117,8 +115,8 @@ source of your own.**
 The listing content — addresses, prices, descriptions, and photo URLs — comes
 from **realtor.com**, reached through **[realtor16][r16]**, a third-party
 community wrapper on RapidAPI. realtor16 is *not* an official realtor.com API
-and Move, Inc. does not license it. Photos are served straight from
-realtor.com's `rdcpix` CDN (hotlinked, never copied into this repo).
+and Move, Inc. does not license it. The game serves photos straight from
+realtor.com's `rdcpix` CDN (hotlinked, not copied into this repo).
 
 What that means in practice:
 
@@ -127,10 +125,13 @@ What that means in practice:
   copyright; the photos are the copyright of whoever shot them. None of it is
   the maintainer's to publish or relicense. The live game's dataset lives in
   private storage (see [The dataset](#the-dataset)); this repo ships only a
-  fake sample.
+  fake sample. The one exception is the README art in `docs/`: screenshots
+  of a home that was already played as a past daily, showing its photos,
+  city, basic facts and revealed price, as players saw them.
 - **The MIT license in [LICENSE](LICENSE) covers the source code and the
-  sample dataset.** If you fork this to run with real homes, build the dataset
-  from a source you have rights to.
+  sample dataset**, not the listing photos in the `docs/` screenshots. If you
+  fork this to run with real homes, build the dataset from a source you have
+  rights to.
 - **The legitimate path is IDX.** A licensed broker or agent signs an IDX
   agreement with their MLS, which gets you RESO Web API credentials and a
   photo-bearing feed you are actually permitted to display — subject to that
@@ -359,6 +360,15 @@ never ships to the client. Actions:
   each, so the app survives a lapsed subscription.
 - **limit** — toggle the classic three-homes-a-day cap.
 
+### Refresh the README art
+
+`docs/banner.png`, `docs/screenshots.png` and `docs/social-preview.png` (the
+GitHub social preview) come from `scripts/readme-art/`. The header of
+`capture.mjs` has the steps: a local build on the real data, no Redis, its
+clock set to a past game day, played in headless Chrome. Use only a home that
+was already a past daily and is not due again soon, and keep street addresses
+out of frame.
+
 ### Deploy
 
 Vercel builds and deploys `main`. Each build pulls the dataset from the
@@ -387,5 +397,6 @@ private store and bakes it in, so a data change ships with the next deploy.
 - **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Security:** [SECURITY.md](SECURITY.md) — report privately, never as an issue
 - **License:** [MIT](LICENSE) © Aaron Levin, for the source code and the
-  sample dataset. The live game's listing data is not part of this repo — see
+  sample dataset. The live game's listing data is not part of this repo, and
+  the listing photos in the `docs/` screenshots are not covered — see
   [Data source and terms](#data-source-and-terms).
